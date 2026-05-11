@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://laibench.laudos.ai/schemas/prediction-record.schema.json",
+  "title": "LAIBench prediction record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["instance_id", "model_output"],
+  "properties": {
+    "instance_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Case ID from the locked suite manifest."
+    },
+    "model_name_or_path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Public display label for the evaluated system."
+    },
+    "model_output": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Generated report HTML using the allowed report subset."
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional public-safe metadata. Do not include prompts, routes, credentials, private case content, raw retrieval text, or implementation details.",
+      "properties": {
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "description": "Optional public-safe evidence identifiers, not raw evidence text."
+        }
+      }
+    }
+  }
+}

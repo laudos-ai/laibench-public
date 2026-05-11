@@ -1,0 +1,31 @@
+{
+  "name": "laibench",
+  "version": "1.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "description": "CLI-first reference benchmark and leaderboard harness for radiology finding-to-report generation.",
+  "scripts": {
+    "bench": "tsx src/cli.ts",
+    "typecheck": "tsc --noEmit",
+    "suite": "tsx src/cli.ts suite",
+    "single": "tsx src/cli.ts single",
+    "validate": "tsx src/cli.ts validate-submission",
+    "eval": "tsx src/cli.ts eval-submission",
+    "leaderboard": "tsx src/cli.ts leaderboard",
+    "compare": "tsx src/cli.ts compare",
+    "smoke:mock": "tsx src/cli.ts suite --suite suites/lite-public.pt-BR.json --provider command --cmd \"node examples/mock-agent.mjs\" --run-name mock-agent --out runs/mock-agent.json",
+    "smoke:leaderboard": "tsx src/cli.ts leaderboard --inputs runs/mock-agent.json --out runs/leaderboard.json --markdown runs/leaderboard.md",
+    "smoke:openai-compatible": "node examples/smoke-openai-compatible.mjs",
+    "test": "node --import tsx --test src/**/*.test.ts"
+  },
+  "engines": {
+    "node": ">=20",
+    "bun": ">=1.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.19",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3"
+  }
+}

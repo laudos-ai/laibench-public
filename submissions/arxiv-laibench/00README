@@ -1,0 +1,8 @@
+Top-level file: main.tex
+Processor: PDFLaTeX
+
+This source package intentionally contains only the manuscript source needed for
+arXiv processing. It has no figures or ancillary data files.
+
+The manuscript is a LAIBench-related preprint draft and explicitly does not
+claim radiologist-adjudicated ground truth or clinical deployment validation.

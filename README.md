@@ -1,0 +1,121 @@
+# LAIBench
+
+LAIBench is a governance-oriented benchmark framework for AI-assisted radiology reporting.
+
+**LAIBench is a technical benchmark framework, not a medical device, not regulatory approval, and not clinical validation. It must not be used as the sole basis for clinical deployment decisions. All clinical use requires qualified human oversight, local validation, institutional governance, and applicable legal/regulatory review.**
+
+Website: [laibench.laudos.ai](https://laibench.laudos.ai)  
+Preprint PDF: [site/laibench-preprint.pdf](site/laibench-preprint.pdf)  
+arXiv draft source: [submissions/arxiv-laibench/main.tex](submissions/arxiv-laibench/main.tex)  
+By: [Laudos.AI](https://laudos.ai)
+
+## Current Status
+
+This repository is a public-safe technical preview export. It contains code, schemas, documentation, site assets, paper draft materials, and a tiny synthetic demo suite.
+
+It does not include:
+
+- raw clinical reports;
+- the full clinical corpus;
+- clinical CSV/XLSX/DICOM/NIfTI files;
+- hidden test sets;
+- answer keys;
+- private scoring criteria;
+- gated evaluation artifacts.
+
+## What It Evaluates
+
+LAIBench evaluates reporting behavior from provided text evidence. The current public harness focuses on whether a system can convert an exam descriptor and concise findings into a faithful radiology-style report while preserving clinically relevant information.
+
+The framework is intended to make failure modes visible:
+
+- clinically relevant omissions;
+- hallucinated or unsupported findings;
+- factual contradictions;
+- critical-finding preservation;
+- structured-report compliance;
+- privacy hygiene;
+- auditability of submissions and leaderboard rows.
+
+The current public demo does not evaluate primary image interpretation from DICOM studies. It is not a diagnostic accuracy study and does not prove clinical safety.
+
+## Public Data Boundary
+
+The only public cases in this repository are synthetic demo cases under [cases/public/synthetic-demo.pt-BR.json](cases/public/synthetic-demo.pt-BR.json). They are for installation checks, smoke tests, and framework review.
+
+The full clinical corpus is private/gated. The hidden test set is private. Official evaluation requires hosted evaluation or controlled access under written terms. See [DATA_ACCESS_POLICY.md](DATA_ACCESS_POLICY.md).
+
+## Scoring
+
+LAIBench reports weighted finding-to-report scores and strict gate outcomes. A high average score should not hide critical failures. Critical finding omissions, unsafe negations, contradictions, unsupported normalizing language, and guideline/structure failures remain visible as separate error gates.
+
+| Dimension | Weight | Purpose |
+| --- | ---: | --- |
+| CRIT | 30% | Critical finding preservation and unsafe-negation checks |
+| QUAL | 25% | Clinical quality, finding preservation, hallucination resistance |
+| TERM | 20% | Locale, modality, section, and report terminology |
+| GUIDE | 15% | Guideline and anatomical coverage expectations |
+| RAG | 10% | Evidence fidelity, section order, laterality, levels, and measurements |
+
+## Quickstart
+
+```bash
+npm ci
+npm test
+npm run typecheck
+npm run smoke:mock
+npm run smoke:leaderboard
+```
+
+Run the synthetic demo suite with a local command adapter:
+
+```bash
+npm run bench -- suite \
+  --suite suites/lite-public.pt-BR.json \
+  --provider command \
+  --cmd "node examples/mock-agent.mjs" \
+  --run-name mock-agent \
+  --track mini-agent \
+  --out runs/mock-agent.json
+```
+
+Build a local leaderboard from run artifacts:
+
+```bash
+npm run bench -- leaderboard \
+  --inputs runs/mock-agent.json \
+  --out runs/leaderboard.json \
+  --markdown runs/leaderboard.md
+```
+
+## Frozen Predictions
+
+Use predictions mode when reports were generated outside the harness. The public submission contract is documented in [docs/public-submissions.md](docs/public-submissions.md); each JSONL line follows [schemas/prediction-record.schema.json](schemas/prediction-record.schema.json).
+
+```bash
+npm run bench -- validate-submission \
+  --suite suites/lite-public.pt-BR.json \
+  --predictions predictions/my-agent.jsonl
+
+npm run bench -- eval-submission \
+  --suite suites/lite-public.pt-BR.json \
+  --predictions predictions/my-agent.jsonl \
+  --run-name my-agent \
+  --model-label my-agent \
+  --track mini-agent \
+  --out runs/my-agent.json
+```
+
+## Leaderboard Governance
+
+Leaderboard rows should disclose benchmark version, suite hash, track, scaffold class, judged/frozen status, evaluated entity, validation status, cost, latency, and the scoring mode used. Incompatible runs must not be mixed as equivalent comparisons.
+
+Public artifacts must not include private prompts, product routes, credentials, private file paths, raw validation ID lists, private case content, hidden judge configuration, answer keys, or private scoring criteria.
+
+## arXiv Status
+
+The paper material is draft-ready for human review, not automatic submission. arXiv submission remains blocked until authors, affiliations, corresponding contact, conflicts, ethics/IRB/CEP language, repository URL, release tag, DOI, and license language are confirmed.
+
+## License
+
+This public framework repository is source-available under the terms in [LICENSE](LICENSE). The clinical corpus, gated datasets, hidden tests, answer keys, private scoring criteria, and protected evaluation artifacts are not licensed for public reuse and are not part of this repository.

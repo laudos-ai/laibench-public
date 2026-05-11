@@ -1,0 +1,17 @@
+{
+  "benchmarkName": "laibench",
+  "benchmarkVersion": "1.0.0",
+  "id": "lite-public.pt-BR",
+  "label": "Synthetic Demo Public (pt-BR)",
+  "description": "Tiny synthetic-only public demo for local smoke testing. It is not a clinical corpus and is not a public benchmark split.",
+  "locale": "pt-BR",
+  "visibility": "public",
+  "evaluationMode": "local",
+  "casesPath": "../cases/public/synthetic-demo.pt-BR.json",
+  "caseCount": 4,
+  "tags": ["synthetic", "demo", "pt-BR"],
+  "recommendedTrack": "mini-agent",
+  "canonicalScaffold": "mini-laibench-agent-v1",
+  "canonicalJudgeModel": null,
+  "notes": "All public cases in this repository are synthetic demos. The clinical corpus and hidden test set are private/gated and are not open-download assets."
+}

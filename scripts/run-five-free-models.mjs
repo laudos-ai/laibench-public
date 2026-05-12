@@ -23,7 +23,7 @@ import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { resolve, basename } from "node:path";
 
 const FREE_MODELS = [
-  { id: "inclusionai/ring-2.6-1t:free", label: "inclusionAI Ring-2.6-1T" },
+  { id: "openrouter/free-model-a", label: "OpenRouter Free Model A" },
   { id: "nvidia/nemotron-3-super-120b-a12b:free", label: "NVIDIA Nemotron 3 Super 120B" },
   { id: "google/gemma-4-31b-it:free", label: "Google Gemma 4 31B IT" },
   { id: "minimax/minimax-m2.5:free", label: "MiniMax M2.5" },

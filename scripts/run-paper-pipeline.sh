@@ -35,7 +35,7 @@ cd "$(dirname "$0")/.."
 SUITE="suites/lite-public.pt-BR.json"
 SUITE_LABEL="lite-public.pt-BR"
 CONCURRENCY="${LAIBENCH_CONCURRENCY:-1}"
-JUDGE_MODEL="${LAIBENCH_CANONICAL_JUDGE_MODEL:-deepseek/deepseek-v4-pro}"
+JUDGE_MODEL="${LAIBENCH_CANONICAL_JUDGE_MODEL:-provider/controlled-model-b}"
 RUNS_DIR="runs/paper"
 FIGURES_DIR="paper/figures"
 ANALYSIS_DIR="paper/analysis"
@@ -80,7 +80,7 @@ for MODEL in "${MODELS[@]}"; do
     --judge-provider openrouter \
     --judge-model "$JUDGE_MODEL" \
     --judge-provider-label hidden \
-    --judge-label frontier-blind-v1 \
+    --judge-label controlled-hosted-v1 \
     --score-mode judge-primary \
     --out "$OUT" || {
       echo "❌ $MODEL failed — continuing"
@@ -150,12 +150,12 @@ DIM_COLORS = {"CRIT": "#E74C3C", "QUAL": "#3498DB", "TERM": "#2ECC71", "GUIDE": 
 # Clean model labels
 def short_name(label):
     replacements = {
-        "openai/gpt-5.5": "GPT-5.5",
+        "provider/controlled-model-a": "gated model.5",
         "google/gemini-3.1-pro-preview": "Gemini 3.1 Pro",
-        "deepseek/deepseek-v4-pro": "DeepSeek V4 Pro",
-        "openai/gpt-5.4-mini": "GPT-5.4 Mini",
+        "provider/controlled-model-b": "Controlled Model B",
+        "provider/controlled-model-c": "gated model.4 Mini",
         "google/gemini-3.1-flash-lite-preview": "Gemini 3.1 Flash Lite",
-        "deepseek/deepseek-v4-flash": "DeepSeek V4 Flash",
+        "provider/controlled-model-d": "Controlled Model D",
         "laudos.ai": "Laudos.AI Engine",
     }
     return replacements.get(label, label.split("/")[-1])

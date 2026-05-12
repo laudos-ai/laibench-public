@@ -4,7 +4,7 @@
 
 LAIBench evaluates radiology finding-to-report systems with locked suites, deterministic clinical checks, optional frozen judging, clinical-score reporting, and strict error gates. It is designed to compare executable reporting systems while keeping private implementation details out of public artifacts.
 
-The private daily split contains 40 cases sampled from a local synthetic 65,812-report source corpus extrapolated from approximately 400 extractive seeds after modality, extractability, and deterministic privacy-pattern filtering. These are not real patient reports. The source corpus is not committed.
+The private daily split contains controlled cases sampled from a local synthetic controlled non-distributed source corpus extrapolated from approximately 400 extractive seeds after modality, extractability, and deterministic privacy-pattern filtering. These are not real patient reports. The source corpus is not committed.
 
 ## Clinical Task
 
@@ -24,7 +24,7 @@ The private daily builder:
 5. extracts the findings or analysis section;
 6. derives candidate gold findings from sentence-level findings;
 7. marks critical findings with conservative deterministic heuristics;
-8. samples a stratified 40-case split across modality-region buckets.
+8. samples a stratified controlled split across modality-region buckets.
 
 Only the capped private split is committed. The source corpus is not public.
 
@@ -32,9 +32,9 @@ Only the capped private split is committed. The source corpus is not public.
 
 | Metric | Value |
 | --- | ---: |
-| Source rows | 65,812 |
+| Source rows | not distributed |
 | Eligible rows after modality, length, and privacy filters | 2,433 |
-| Private daily cases | 40 |
+| Private controlled cases | not distributed |
 | Dataset readiness score | 76/100 |
 | Privacy scan hits in selected cases | 0 |
 
@@ -96,7 +96,7 @@ Do not expose private routes, prompts, provider configuration, credentials, priv
 
 - Gold findings are heuristically derived from reports, not fully radiologist-adjudicated labels.
 - The privacy filter is deterministic pattern filtering, not a formal de-identification certification.
-- The 40-case private split is designed for daily regression monitoring, not as a final public benchmark.
+- The controlled private split is designed for daily regression monitoring, not as a final public benchmark.
 - Critical findings are identified by keyword heuristics and can miss phrasing variants.
 - The benchmark evaluates generated text, not downstream clinical outcomes.
 
@@ -115,7 +115,7 @@ Do not expose private routes, prompts, provider configuration, credentials, priv
 Acceptable wording:
 
 - "private daily regression-monitoring suite";
-- "sampled and filtered from a synthetic 65,812-report source corpus derived from extractive seeds";
+- "sampled and filtered from a synthetic controlled non-distributed source corpus derived from extractive seeds";
 - "deterministic privacy-pattern filtering";
 - "heuristically derived gold findings";
 - "public leaderboard protocol."

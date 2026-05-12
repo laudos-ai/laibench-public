@@ -31,7 +31,7 @@ Three external blockers, all out of harness scope:
 
 1. **Real frontier-model baselines.** The leaderboard ships with 3 deterministic
    mocks (good / medium / bad) but no actual API runs against
-   Sonnet 4.6 / Opus 4.6 / GPT-5 / Gemini 2.5 / Llama-3.3 70B. Closing this gap
+   Sonnet 4.6 / Opus 4.6 / gated model / Gemini 2.5 / Llama-3.3 70B. Closing this gap
    needs API spend, not code. With a populated leaderboard:
    - real bootstrap CIs across providers
    - paired discrimination tests with effect sizes
@@ -42,8 +42,8 @@ Three external blockers, all out of harness scope:
    actual human-rater study has been run on a 50-case subset to publish gold
    reliability numbers. Needs 3 radiologists × 50 cases × ~2h.
 
-3. **Case-level critical-finding enrichment.** Only 4/49 reference cases and
-   0/10 lite cases have populated `criticalFindings`. The CRIT evaluator falls
+3. **Case-level critical-finding enrichment.** Only 4/public synthetic demo cases and
+   0/4 demo cases have populated `criticalFindings`. The CRIT evaluator falls
    back to structural checks when gold is absent, which is why deterministic
    perturbation catch rate is 50% on lite-public. Enriching 50+ cases with
    critical labels would unlock CRIT eval on the rest of the corpus and push

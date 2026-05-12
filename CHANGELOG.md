@@ -120,7 +120,7 @@ validation layers a reviewer needs to trust a leaderboard.
 ## v1.0.0 — 2026-04 — First public release
 
 - 62 reference cases (49 pt-BR + 13 en-US) + 2,670 corpus cases + 96 complex
-  supplement + 4 challenge suites, extracted from 65,812 real clinical reports.
+  supplement + 4 challenge suites, extracted from controlled non-distributed source material.
 - Five-dimension scoring (CRIT, QUAL, TERM, GUIDE, RAG) on 0–100% scale with
   conservative `min(det, adv)` combination.
 - Five dedicated evaluators (severity-weighted finding matching, negation-aware

@@ -1,6 +1,6 @@
 # Radiologist-Adjudicated Validation Protocol
 
-This protocol defines the locked validation subset required before LAIBench can make stronger clinical validation claims.
+This protocol defines the locked validation subset required before LAIBench can make stronger stronger public claims.
 
 ## Status
 

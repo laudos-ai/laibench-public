@@ -1,5 +1,27 @@
 {
   "outputDirectory": "site",
   "buildCommand": "",
-  "framework": null
+  "framework": null,
+  "redirects": [
+    {
+      "source": "/source-package",
+      "destination": "/arxiv-laibench-source.zip",
+      "permanent": false
+    },
+    {
+      "source": "/preprint",
+      "destination": "/laibench-preprint.pdf",
+      "permanent": false
+    },
+    {
+      "source": "/beyond-templates",
+      "destination": "/laibench-preprint.pdf",
+      "permanent": false
+    },
+    {
+      "source": "/github",
+      "destination": "https://github.com/Laudos-AI/laibench-public",
+      "permanent": false
+    }
+  ]
 }

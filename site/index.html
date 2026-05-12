@@ -4,15 +4,15 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>laibench — A register of radiology report-generation failures</title>
-<meta name="description" content="LAIBench public technical preview: synthetic harness demo, public method, and controlled official evaluation for radiology finding-to-report assessment." />
+<meta name="description" content="LAIBench preview técnico público: demo sintética do harness, método público e avaliação oficial controlada para avaliação achado-para-laudo em radiologia." />
 <link rel="canonical" href="https://laibench.laudos.ai" />
 <meta property="og:url" content="https://laibench.laudos.ai" />
-<meta property="og:title" content="laibench — public technical preview" />
-<meta property="og:description" content="Synthetic public harness demo; official evaluation remains controlled and hosted." />
+<meta property="og:title" content="laibench — preview técnico público" />
+<meta property="og:description" content="Demo sintética pública do harness; a avaliação oficial permanece controlada e hospedada." />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:url" content="https://laibench.laudos.ai" />
-<meta name="twitter:title" content="laibench — public technical preview" />
-<meta name="twitter:description" content="Synthetic public harness demo; official evaluation remains controlled and hosted." />
+<meta name="twitter:title" content="laibench — preview técnico público" />
+<meta name="twitter:description" content="Demo sintética pública do harness; a avaliação oficial permanece controlada e hospedada." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Geist+Mono:wght@400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -453,17 +453,17 @@
 
 <!-- ─── vertical gutter nav ─── -->
 <aside class="gutter" aria-label="Sections">
-  <a href="#top">§ Cover</a>
+  <a href="#top">§ Capa</a>
   <span class="tick"></span>
   <a href="#leaderboard">§ Standing</a>
   <span class="tick"></span>
-  <a href="#method">§ Method</a>
+  <a href="#method">§ Método</a>
   <span class="tick"></span>
   <a href="#dimensions">§ Dimensões</a>
   <span class="tick"></span>
-  <a href="#validation">§ Integrity</a>
+  <a href="#validation">§ Integridade</a>
   <span class="tick"></span>
-  <a href="#submit">§ Submission</a>
+  <a href="#submit">§ Submissão</a>
   <span class="tick"></span>
   <a href="#paper">§ Preprint</a>
 </aside>
@@ -475,9 +475,7 @@
       <span>VOL II · EDIÇÃO 1 · MAIO 2026 · SÃO PAULO</span>
       <span>FUNDADO EM 2025 · POR LAUDOS.AI</span>
       <span class="strip-toggles">
-        <button data-lang="pt">PT-BR</button><button data-lang="en" class="on">EN</button><button data-lang="es">ES</button>
-        <span class="sep">·</span>
-        <button data-theme="light" class="on">LIGHT</button><button data-theme="dark">DARK</button>
+        <button data-theme="light" class="on">CLARO</button><button data-theme="dark">ESCURO</button>
       </span>
     </div>
     <div class="hr"></div>
@@ -520,41 +518,41 @@
 <section class="flow wrap" aria-label="LAIBench flow">
   <div class="frame">
     <div class="col">
-      <div class="kk" data-i18n="fl_c1_k">Visible task input</div>
-      <h4 data-i18n="fl_c1_h">What the system <em>is allowed to see.</em></h4>
+      <div class="kk" data-i18n="fl_c1_k">Entrada visível da tarefa</div>
+      <h4 data-i18n="fl_c1_h">O que o sistema <em>pode ver.</em></h4>
       <ul>
-        <li data-i18n="fl_c1_l1">Exam descriptor</li>
-        <li data-i18n="fl_c1_l2">Provided findings</li>
+        <li data-i18n="fl_c1_l1">Descritor do exame</li>
+        <li data-i18n="fl_c1_l2">Achados fornecidos</li>
         <li data-i18n="fl_c1_l3">Locale</li>
-        <li data-i18n="fl_c1_l4">Allowed public context</li>
+        <li data-i18n="fl_c1_l4">Contexto público permitido</li>
       </ul>
-      <div class="ft" data-i18n="fl_c1_ft">No gold labels. No hidden criteria.</div>
+      <div class="ft" data-i18n="fl_c1_ft">Sem gold labels. Sem critérios ocultos.</div>
     </div>
     <div class="arr" aria-hidden="true">⤳</div>
     <div class="col">
-      <div class="kk" data-i18n="fl_c2_k">LAIBench harness</div>
-      <h4 data-i18n="fl_c2_h">How the report <em>is read.</em></h4>
+      <div class="kk" data-i18n="fl_c2_k">Harness LAIBench</div>
+      <h4 data-i18n="fl_c2_h">Como o laudo <em>é lido.</em></h4>
       <ul>
-        <li data-i18n="fl_c2_l1">Output contract</li>
+        <li data-i18n="fl_c2_l1">Contrato de saída</li>
         <li data-i18n="fl_c2_l2">CRIT / QUAL / TERM / GUIDE / RAG</li>
-        <li data-i18n="fl_c2_l3">Negation checks</li>
-        <li data-i18n="fl_c2_l4">Structure checks</li>
-        <li data-i18n="fl_c2_l5">Disclosure metadata</li>
+        <li data-i18n="fl_c2_l3">Checks de negação</li>
+        <li data-i18n="fl_c2_l4">Checks de estrutura</li>
+        <li data-i18n="fl_c2_l5">Metadados de divulgação</li>
       </ul>
-      <div class="ft" data-i18n="fl_c2_ft">Public demo runs locally. Avaliação oficial is controlled.</div>
+      <div class="ft" data-i18n="fl_c2_ft">A demo pública roda localmente. A avaliação oficial é controlada.</div>
     </div>
     <div class="arr" aria-hidden="true">→</div>
     <div class="col">
-      <div class="kk" data-i18n="fl_c3_k">Verdict + audit</div>
-      <h4 data-i18n="fl_c3_h">What gets <em>published.</em></h4>
+      <div class="kk" data-i18n="fl_c3_k">Veredito + auditoria</div>
+      <h4 data-i18n="fl_c3_h">O que é <em>publicado.</em></h4>
       <ul>
         <li data-i18n="fl_c3_l1">Strict PASS / FAIL</li>
-        <li data-i18n="fl_c3_l2">Dimension diagnostics</li>
-        <li data-i18n="fl_c3_l3">Suite hash</li>
-        <li data-i18n="fl_c3_l4">Frozen outputs</li>
-        <li data-i18n="fl_c3_l5">Eligibility review</li>
+        <li data-i18n="fl_c3_l2">Diagnóstico por dimensão</li>
+        <li data-i18n="fl_c3_l3">Hash da suite</li>
+        <li data-i18n="fl_c3_l4">Saídas congeladas</li>
+        <li data-i18n="fl_c3_l5">Revisão de elegibilidade</li>
       </ul>
-      <div class="ft" data-i18n="fl_c3_ft">The method is public. The oficial test remains controlled.</div>
+      <div class="ft" data-i18n="fl_c3_ft">O método é público. O teste oficial permanece controlado.</div>
     </div>
   </div>
   <div class="cap">
@@ -612,28 +610,28 @@
       </div>
 
       <p class="lb-foot" data-i18n="lb_foot">
-        <b>Strict PASS</b><sup>†</sup> is binary per case — a case passes only when every clinically decisive gate holds: critical findings preserved, laterality correct, no unsafe negation, structural integrity, and terminology compliance.<br/><br/>The public synthetic demo suite is provided for reproducibility, onboarding, and harness inspection<sup>‡</sup>. It is not a clinical validation set, not the hidden test set, not an oficial leaderboard suite, and not the full benchmark corpus.
+        <b>Strict PASS</b><sup>†</sup> é binário por caso: um caso passa apenas quando todo portão clinicamente decisivo se sustenta, com achados críticos preservados, lateralidade correta, ausência de negação insegura, integridade estrutural e conformidade terminológica.<br/><br/>A suite pública de demo sintética serve para reprodutibilidade, onboarding e inspeção do harness<sup>‡</sup>. Não é validação clínica, não é o teste oculto oficial, não é uma suite oficial de leaderboard e não representa o corpus completo do benchmark.
       </p>
     </div>
 
     <!-- right: editorial column with drop cap, footnotes -->
     <aside class="col-edit">
-      <div class="kicker">Editor’s note · folio i</div>
-      <h2 class="abs" data-i18n="ed_h">On <em>publishing</em> only the things that survive every gate.</h2>
+      <div class="kicker">Nota do editor · fólio i</div>
+      <h2 class="abs" data-i18n="ed_h">Sobre <em>publicar</em> apenas o que sobrevive a cada portão.</h2>
       <div class="body">
         <p data-i18n="ed_p1">
-          <span class="dropcap">L</span>AIBench is built on a deliberately conservative premise: in radiology reporting, <b>average scores can hide clinically decisive failures</b>. A report that preserves most findings but misses a critical abnormality, swaps laterality, invents an unsupported diagnosis, or breaks the required structure is not a safe near-miss — it is a failed reporting artifact<sup>1</sup>.
+          <span class="dropcap">O</span> LAIBench é construído sobre uma premissa deliberadamente conservadora: em laudos de radiologia, <b>médias podem esconder falhas clinicamente decisivas</b>. Um laudo que preserva a maioria dos achados, mas perde uma anormalidade crítica, troca lateralidade, inventa diagnóstico sem suporte ou quebra a estrutura exigida, não é um quase-acerto seguro: é um artefato de laudo falho<sup>1</sup>.
         </p>
         <p data-i18n="ed_p2">
-          The benchmark therefore separates diagnostic dimensions from the public verdict. Per-dimension scores explain<sup>2</sup> why a case failed. <em>Strict PASS</em> determines whether the case survives.
+          O benchmark separa dimensões diagnósticas do veredito público. Pontuações por dimensão explicam<sup>2</sup> por que um caso falhou. O <em>Strict PASS</em> determina se o caso sobrevive.
         </p>
       </div>
 
       <div class="fn">
-        <span data-i18n="ed_f1"><sup>†</sup> Strict PASS is binary per case.</span>
-        <span data-i18n="ed_f2"><sup>‡</sup> Public technical-preview results are synthetic / demo only.</span>
-        <span data-i18n="ed_f3"><sup>1</sup> Avaliação oficial requires controlled or hosted assessment.</span>
-        <span data-i18n="ed_f4"><sup>2</sup> The method is public. The clinical corpus is controlled. Avaliação oficial is gated.</span>
+        <span data-i18n="ed_f1"><sup>†</sup> Strict PASS é binário por caso.</span>
+        <span data-i18n="ed_f2"><sup>‡</sup> Resultados do preview técnico público são apenas sintéticos / demo.</span>
+        <span data-i18n="ed_f3"><sup>1</sup> A avaliação oficial exige avaliação controlada ou hospedada.</span>
+        <span data-i18n="ed_f4"><sup>2</sup> O método é público. O corpus clínico é controlado. A avaliação oficial é restrita.</span>
       </div>
 
       <div class="stats-line">
@@ -671,24 +669,24 @@
       </div>
 
       <div class="col">
-        <div class="roman" data-i18n="m2_roman">second.</div>
-        <h3 data-i18n="m2_h">Five evaluators read it as <em>five different failure detectors.</em></h3>
-        <p data-i18n="m2_p">The harness checks critical-finding preservation, clinical quality, terminology, guideline applicability, and evidence fidelity. Optional adjudication layers may be used in controlled evaluation; public demo runs remain explicitly separated from oficial hosted assessment.</p>
+        <div class="roman" data-i18n="m2_roman">Segundo.</div>
+        <h3 data-i18n="m2_h">Cinco avaliadores leem o laudo como <em>cinco detectores de falha.</em></h3>
+        <p data-i18n="m2_p">O harness verifica preservação de achados críticos, qualidade clínica, terminologia, aplicabilidade de diretrizes e fidelidade de evidência. Camadas opcionais de adjudicação podem ser usadas na avaliação controlada; rodadas da demo pública permanecem separadas da avaliação oficial hospedada.</p>
         <div class="swatch">
-          <span data-i18n="m2_s1"><b>evaluators</b> · CRIT · QUAL · TERM · GUIDE · RAG</span>
-          <span data-i18n="m2_s2"><b>negation</b> · scope + uncertainty</span>
-          <span data-i18n="m2_s3"><b>judge</b> · controlled / hosted only</span>
+          <span data-i18n="m2_s1"><b>avaliadores</b> · CRIT · QUAL · TERM · GUIDE · RAG</span>
+          <span data-i18n="m2_s2"><b>negação</b> · escopo + incerteza</span>
+          <span data-i18n="m2_s3"><b>judge</b> · apenas controlado / hospedado</span>
         </div>
       </div>
 
       <div class="col">
-        <div class="roman" data-i18n="m3_roman">third.</div>
-        <h3 data-i18n="m3_h">A binary verdict — <em>every gate, or none.</em></h3>
-        <p data-i18n="m3_p">Strict PASS is binary per case. Any clinically decisive gate failure — missed critical finding, swapped laterality, unsafe negation, malformed structure, unsupported normalizing language, or forbidden term — drops the case to <b>FAIL</b>. Per-dimension scores survive as diagnostics; they do not override the verdict.</p>
+        <div class="roman" data-i18n="m3_roman">Terceiro.</div>
+        <h3 data-i18n="m3_h">Um veredito binário: <em>todos os portões, ou nenhum.</em></h3>
+        <p data-i18n="m3_p">Strict PASS é binário por caso. Qualquer falha em portão clinicamente decisivo, como achado crítico perdido, lateralidade trocada, negação insegura, estrutura malformada, linguagem normalizante sem suporte ou termo proibido, derruba o caso para <b>FAIL</b>. Pontuações por dimensão sobrevivem como diagnóstico; elas não substituem o veredito.</p>
         <div class="swatch">
-          <span data-i18n="m3_s1"><b>verdict</b> · pass / fail</span>
-          <span data-i18n="m3_s2"><b>publish</b> · row + suite hash + disclosure</span>
-          <span data-i18n="m3_s3"><b>oficial</b> · controlled evaluation only</span>
+          <span data-i18n="m3_s1"><b>veredito</b> · pass / fail</span>
+          <span data-i18n="m3_s2"><b>publicação</b> · linha + hash da suite + divulgação</span>
+          <span data-i18n="m3_s3"><b>oficial</b> · apenas avaliação controlada</span>
         </div>
       </div>
     </div>
@@ -699,7 +697,7 @@
 <section id="dimensions">
   <div class="wrap">
     <div class="sec-title">
-      <div class="id"><b>§ III</b> · Dimensões &nbsp;—&nbsp; five independent axes</div>
+      <div class="id"><b>§ III</b> · Dimensões &nbsp;—&nbsp; cinco eixos independentes</div>
       <h2 data-i18n="sec3_h">Pontuadas separadamente, <em>somadas apenas no papel.</em></h2>
       <div class="sub" data-i18n="sec3_sub">Cada eixo captura um modo de falha distinto. A mistura clínica é diagnóstico apenas; nunca substitui o veredito.</div>
     </div>
@@ -711,7 +709,7 @@
         <div class="note">
           <div class="row"><span>Strict PASS</span><b>binário · por caso</b></div>
           <div class="row"><span>Média por dimensão</span><b>diagnóstico apenas</b></div>
-          <div class="row"><span>Intervalo de confiança</span><b>oficial only · when applicable</b></div>
+          <div class="row"><span>Intervalo de confiança</span><b>oficial apenas · quando aplicável</b></div>
           <div class="row"><span>Agregação</span><b>nunca substitui o veredito</b></div>
         </div>
 
@@ -733,7 +731,7 @@
           <div class="b">
             <h4>Achados críticos — <em>o que não pode desaparecer.</em></h4>
             <p>Achados de imagem clinicamente decisivos são checados com tratamento de negação quando implementado. Em avaliação controlada, labels ocultos podem ser usados para verificar preservação de achados urgentes ou clinicamente decisivos. O espelho público não distribui o conjunto clínico completo de categorias.</p>
-            <div class="chips"><span>negation-aware</span><span>controlled labels</span><span>hard fail</span></div>
+            <div class="chips"><span>negação</span><span>labels controlados</span><span>falha dura</span></div>
           </div>
           <div class="pct">30<sup>%</sup></div>
         </div>
@@ -742,8 +740,8 @@
           <div class="code">QUAL</div>
           <div class="b">
             <h4>Qualidade clínica — <em>e as alucinações que parecem qualidade.</em></h4>
-            <p>Severity-aware matching checks whether clinically relevant findings are preserved without rewarding unsupported normality. In controlled evaluation, comparison may use hidden labels, adjudicated references, or controlled reference reports — nunca substitui o veredito plain string overlap alone.</p>
-            <div class="chips"><span>synonym matching</span><span>severity-aware</span><span>hallucination check</span></div>
+            <p>Matching sensível à gravidade verifica se achados clinicamente relevantes foram preservados sem recompensar normalidade não suportada. Em avaliação controlada, a comparação pode usar labels ocultos, referências adjudicadas ou laudos de referência controlados, nunca apenas sobreposição literal de string.</p>
+            <div class="chips"><span>sinônimos</span><span>gravidade</span><span>alucinação</span></div>
           </div>
           <div class="pct">25<sup>%</sup></div>
         </div>
@@ -762,8 +760,8 @@
           <div class="code">GUIDE</div>
           <div class="b">
             <h4>Guideline — <em>aplicabilidade antes de correção.</em></h4>
-            <p>Pluggable applicability modules. Applicability detection runs first so a system is nunca substitui o veredito marked down for omitting a rule that did not apply; once a rule fires, classification correctness, valid-value-range enforcement, and recommendation checks all run.</p>
-            <div class="chips"><span>applicability-first</span><span>valid ranges</span><span>recommendations</span></div>
+            <p>Módulos plugáveis de aplicabilidade. A detecção de aplicabilidade roda primeiro, para que um sistema não seja penalizado por omitir uma regra que não se aplica. Quando uma regra dispara, a avaliação verifica classificação, faixa válida, recomendação e consistência.</p>
+            <div class="chips"><span>aplicabilidade primeiro</span><span>faixas válidas</span><span>recomendações</span></div>
           </div>
           <div class="pct">15<sup>%</sup></div>
         </div>
@@ -773,7 +771,7 @@
           <div class="b">
             <h4>Fidelidade de evidência — <em>apenas quando há recuperação.</em></h4>
             <p>Para agentes com retrieval, métricas de recuperação como Precision@k, Recall@k, MRR e nDCG podem ser usadas. Detectores de troca de lateralidade e preservação de medidas ficam acima disso, porque erros de recuperação são mais perigosos quando parecem sintaticamente corretos.</p>
-            <div class="chips"><span>Precision@k</span><span>Recall@k</span><span>MRR</span><span>nDCG</span><span>laterality swap</span><span>measurements</span></div>
+            <div class="chips"><span>Precision@k</span><span>Recall@k</span><span>MRR</span><span>nDCG</span><span>lateralidade</span><span>medidas</span></div>
           </div>
           <div class="pct">10<sup>%</sup></div>
         </div>
@@ -786,48 +784,48 @@
 <section id="validation">
   <div class="wrap">
     <div class="sec-title">
-      <div class="id"><b>§ IV</b> · Integrity &nbsp;—&nbsp; the things behind the row</div>
-      <h2 data-i18n="sec4_h">Public rows are only worth <em>as much as their guarantees.</em></h2>
-      <div class="sub" data-i18n="sec4_sub">Locked tasks, recomputed scores, hash-pinned suites, and disclosure metadata govern what gets onto the leaderboard and what stays off.</div>
+      <div class="id"><b>§ IV</b> · Integridade &nbsp;—&nbsp; o que sustenta a linha</div>
+      <h2 data-i18n="sec4_h">Integridade do método e controle do teste oficial.</h2>
+      <div class="sub" data-i18n="sec4_sub">Tarefas travadas, pontuações recomputadas, suites com hash fixado e metadados de divulgação governam o que entra no leaderboard e o que fica de fora.</div>
     </div>
 
     <div class="val">
       <p class="lead-q">
-        “The <b>method</b> can be public while the <b>oficial test set</b> remains controlled. What is published must be reproducible; what protects privacy, anti-contamination, and benchmark integrity stays gated.”
+        “O <b>método</b> pode ser público enquanto o <b>teste oficial</b> permanece controlado. O que é publicado precisa ser reproduzível; o que protege privacidade, anti-contaminação e integridade do benchmark permanece restrito.”
       </p>
 
       <div class="items">
         <div class="item">
           <div class="n">01</div>
-          <div><h5>Deterministic checks.</h5><p>Same input, same score. Public demo artifacts expose enough method detail to inspect the harness without releasing the controlled corpus, hidden test set, or proprietary implementation.</p></div>
+          <div><h5>Checks determinísticos.</h5><p>Mesma entrada, mesma pontuação. Os artefatos da demo pública expõem método suficiente para inspecionar o harness sem liberar corpus controlado, teste oculto ou implementação proprietária.</p></div>
         </div>
         <div class="item">
           <div class="n">02</div>
-          <div><h5>Score recomputation.</h5><p>Case verdicts, suite summaries, dimension diagnostics, comparable keys, and suite hashes are recomputed before oficial leaderboard publication.</p></div>
+          <div><h5>Recomputação de pontuação.</h5><p>Vereditos por caso, resumos de suite, diagnósticos por dimensão, chaves comparáveis e hashes de suite são recomputados antes de qualquer publicação oficial.</p></div>
         </div>
         <div class="item">
           <div class="n">03</div>
-          <div><h5>Grouped leaderboards.</h5><p>Runs only compete if they share suite, locale, track, scaffold, and judge. Incompatible runs are filed but nunca substitui o veredito ranked against each other.</p></div>
+          <div><h5>Leaderboards agrupados.</h5><p>Runs só competem quando compartilham suite, locale, trilha, scaffold e judge. Runs incompatíveis são arquivados, mas não ranqueados entre si.</p></div>
         </div>
         <div class="item">
           <div class="n">04</div>
-          <div><h5>Submission validation.</h5><p>Missing IDs, duplicates, empty outputs, or malformed JSONL make a submission ineligible. Public artifacts show counts and sanitized reasons — nunca substitui o veredito raw case lists.</p></div>
+          <div><h5>Validação de submissão.</h5><p>IDs ausentes, duplicatas, saídas vazias ou JSONL malformado tornam a submissão inelegível. Artefatos públicos mostram contagens e razões sanitizadas, não listas brutas de casos.</p></div>
         </div>
         <div class="item">
           <div class="n">05</div>
-          <div><h5>Grouped comparisons.</h5><p>Product agents, custom agents, and open baselines nunca substitui o veredito mix in a single rank. Each row competes only against its own comparable cohort.</p></div>
+          <div><h5>Comparações agrupadas.</h5><p>Agentes de produto, agentes customizados e baselines abertos não se misturam em um único ranking. Cada linha compete apenas contra seu próprio coorte comparável.</p></div>
         </div>
         <div class="item">
           <div class="n">06</div>
-          <div><h5>Hash integrity.</h5><p>Each suite carries a cryptographic hash of its cases. Any alteration to the underlying data invalidates every prior run that depended on it.</p></div>
+          <div><h5>Integridade de hash.</h5><p>Cada suite carrega um hash criptográfico dos casos. Qualquer alteração nos dados subjacentes invalida runs anteriores que dependiam deles.</p></div>
         </div>
         <div class="item">
           <div class="n">07</div>
-          <div><h5>Contamination controls.</h5><p>Controlada suites may include leakage markers to detect benchmark contamination. A system that reproduces protected content is flagged for review.</p></div>
+          <div><h5>Controles de contaminação.</h5><p>Suites controladas podem incluir marcadores de vazamento para detectar contaminação do benchmark. Um sistema que reproduz conteúdo protegido é marcado para revisão.</p></div>
         </div>
         <div class="item">
           <div class="n">08</div>
-          <div><h5>Uncertainty intervals.</h5><p>Official rows may include bootstrap confidence intervals when task counts support them. If uncertainty is too high, rows are reported as exploratory or tied rather than over-ranked.</p></div>
+          <div><h5>Intervalos de incerteza.</h5><p>Linhas oficiais podem incluir intervalos de confiança por bootstrap quando a quantidade de tarefas comporta esse cálculo. Se a incerteza for alta demais, linhas são relatadas como exploratórias ou empatadas, não super-ranqueadas.</p></div>
         </div>
       </div>
     </div>
@@ -838,9 +836,9 @@
 <section id="submit">
   <div class="wrap">
     <div class="sec-title">
-      <div class="id"><b>§ V</b> · Submission &nbsp;—&nbsp; the four-step contract</div>
-      <h2 data-i18n="sec5_h">Use the public synthetic demo <em>to inspect the contract.</em></h2>
-      <div class="sub" data-i18n="sec5_sub">Or request controlled evaluation for oficial scoring. The public synthetic suite is for onboarding and harness inspection — not for ranking model performance.</div>
+      <div class="id"><b>§ V</b> · Submissão &nbsp;—&nbsp; o contrato em quatro passos</div>
+      <h2 data-i18n="sec5_h">Use a demo sintética pública <em>para inspecionar o contrato.</em></h2>
+      <div class="sub" data-i18n="sec5_sub">Ou solicite avaliação controlada para pontuação oficial. A suite sintética pública serve para onboarding e inspeção do harness, não para ranquear performance clínica de modelos.</div>
     </div>
 
     <div class="manual">
@@ -848,12 +846,12 @@
       <div class="step">
         <div class="n">i<span class="dot">.</span></div>
         <div>
-          <h4 data-i18n="s1_h">Pick the public synthetic suite.</h4>
-          <p data-i18n="s1_p">The public repository contains a small synthetic suite for onboarding, local testing, and harness verification. It does not include the clinical corpus or the oficial hidden test set.</p>
+          <h4 data-i18n="s1_h">Escolha a suite sintética pública.</h4>
+          <p data-i18n="s1_p">O repositório público contém uma suite sintética pequena para onboarding, testes locais e verificação do harness. Ela não inclui o corpus clínico nem o teste oculto oficial.</p>
           <div class="term">
             <div class="row"><span class="k">fonte</span><span class="v" data-i18n="s1_t1">Laudos-AI/laibench-public</span></div>
             <div class="row"><span class="k">suite</span><span class="v">lite-public.pt-BR</span></div>
-            <div class="row"><span class="k">contract</span><span class="v" data-i18n="s1_t3">case-id + laudo + rótulo público</span></div>
+            <div class="row"><span class="k">contrato</span><span class="v" data-i18n="s1_t3">case-id + laudo + rótulo público</span></div>
           </div>
         </div>
       </div>
@@ -861,12 +859,12 @@
       <div class="step">
         <div class="n">ii<span class="dot">.</span></div>
         <div>
-          <h4 data-i18n="s2_h">Generate reports.</h4>
-          <p data-i18n="s2_p">Run each public synthetic case through your product, agent, local wrapper, or baseline model. The output contract is the same one used for controlled evaluation.</p>
+          <h4 data-i18n="s2_h">Gere os laudos.</h4>
+          <p data-i18n="s2_p">Rode cada caso sintético público no seu produto, agente, wrapper local ou modelo de referência. O contrato de saída é o mesmo usado na avaliação controlada.</p>
           <div class="term">
-            <div class="row"><span class="k">input</span><span class="v" data-i18n="s2_t1">visible exam + findings</span></div>
-            <div class="row"><span class="k">system</span><span class="v" data-i18n="s2_t2">your report generator</span></div>
-            <div class="row"><span class="k">output</span><span class="v">reports.jsonl</span></div>
+            <div class="row"><span class="k">entrada</span><span class="v" data-i18n="s2_t1">exame visível + achados</span></div>
+            <div class="row"><span class="k">sistema</span><span class="v" data-i18n="s2_t2">seu gerador de laudo</span></div>
+            <div class="row"><span class="k">saída</span><span class="v">reports.jsonl</span></div>
           </div>
         </div>
       </div>
@@ -874,12 +872,12 @@
       <div class="step">
         <div class="n">iii<span class="dot">.</span></div>
         <div>
-          <h4 data-i18n="s3_h">Score the submission.</h4>
-          <p data-i18n="s3_p">Score generated reports with the public harness. Local demo results are useful for development, but they are not oficial leaderboard rows.</p>
+          <h4 data-i18n="s3_h">Pontue a submissão.</h4>
+          <p data-i18n="s3_p">Pontue os laudos gerados com o harness público. Resultados locais da demo são úteis para desenvolvimento, mas não são linhas oficiais de leaderboard.</p>
           <div class="term">
             <div class="row"><span class="k">suite</span><span class="v">lite-public.pt-BR</span></div>
-            <div class="row"><span class="k">label</span><span class="v" data-i18n="s3_t2">public system name</span></div>
-            <div class="row"><span class="k">output</span><span class="v">score-report.json</span></div>
+            <div class="row"><span class="k">rótulo</span><span class="v" data-i18n="s3_t2">nome público do sistema</span></div>
+            <div class="row"><span class="k">saída</span><span class="v">score-report.json</span></div>
           </div>
         </div>
       </div>
@@ -887,12 +885,12 @@
       <div class="step">
         <div class="n">iv<span class="dot">.</span></div>
         <div>
-          <h4 data-i18n="s4_h">Request oficial evaluation.</h4>
-          <p data-i18n="s4_p">Official leaderboard rows require controlled or hosted evaluation with frozen outputs, suite hashes, model disclosure, and review for eligibility.</p>
+          <h4 data-i18n="s4_h">Solicite avaliação oficial.</h4>
+          <p data-i18n="s4_p">Linhas oficiais de leaderboard exigem avaliação controlada ou hospedada, com saídas congeladas, hashes de suite, divulgação do modelo e revisão de elegibilidade.</p>
           <div class="term">
-            <div class="row"><span class="k">artifact</span><span class="v" data-i18n="s4_t1">frozen output</span></div>
+            <div class="row"><span class="k">artefato</span><span class="v" data-i18n="s4_t1">saída congelada</span></div>
             <div class="row"><span class="k">hash</span><span class="v" data-i18n="s4_t2">suite hash</span></div>
-            <div class="row"><span class="k">access</span><span class="v" data-i18n="s4_t3">controlled / hosted</span></div>
+            <div class="row"><span class="k">acesso</span><span class="v" data-i18n="s4_t3">controlado / hospedado</span></div>
           </div>
         </div>
       </div>
@@ -900,7 +898,7 @@
     </div>
 
     <div class="submit-cta">
-      <p class="ask" data-i18n="cta_ask">Got a reporting agent? <b>Bring it to controlled evaluation.</b><br/>If it survives every oficial gate, it earns an eligible row.</p>
+      <p class="ask" data-i18n="cta_ask">Tem um agente de laudo? <b>Traga para avaliação controlada.</b><br/>Se sobreviver a cada portão oficial, ganha uma linha elegível.</p>
       <div class="links">
         <a class="btn solid" href="https://github.com/Laudos-AI/laibench-public" rel="noopener noreferrer" target="_blank"><span data-i18n="cta_b1">Rodar demo sintética</span><span>↗</span></a>
         <a class="btn ghost" href="mailto:natan@laudos.ai?subject=LAIBench%20controlled%20evaluation"><span data-i18n="cta_b2">Solicitar avaliação controlada</span><span>→</span></a>
@@ -915,8 +913,8 @@
   <div class="wrap">
     <div class="sec-title">
       <div class="id"><b>§ VI</b> · Preprint &nbsp;—&nbsp; 2026</div>
-      <h2 data-i18n="sec6_h">The paper — <em>why templates are not the right unit of scale.</em></h2>
-      <div class="sub" data-i18n="sec6_sub">A formal and architectural contribution to radiology reporting. Not a claim of clinical readiness.</div>
+      <h2 data-i18n="sec6_h">O paper — <em>por que templates não são a unidade correta de escala.</em></h2>
+      <div class="sub" data-i18n="sec6_sub">Uma contribuição formal e arquitetural para laudos radiológicos. Não é alegação de prontidão clínica.</div>
     </div>
 
     <div class="paper-card">
@@ -925,45 +923,45 @@
         <div class="auth">
           <b>Natan Paraiso Ribeiro · Petrus Paraiso Ribeiro · Stephanie Alba Herrera</b><br/>
           Francisco Akira · Raquel Moreno<br/>
-          <span data-i18n="pp_aff">Laudos.AI &nbsp;·&nbsp; São Paulo, Brazil &nbsp;·&nbsp; draft preprint · May 2026</span>
+          <span data-i18n="pp_aff">Laudos.AI &nbsp;·&nbsp; São Paulo, Brasil &nbsp;·&nbsp; preprint preliminar · maio de 2026</span>
         </div>
         <div class="abstract">
-          <p data-i18n="pp_a1">This preprint argues that radiology reporting is better modeled as <em>constrained compositional generation</em> from report-relevant clinical state, rather than static template enumeration.</p>
-          <p data-i18n="pp_a2">It introduces the <b>Report Space Lower Bound</b> and the <b>Radiology Report Variability Index</b> to describe why broad reporting coverage grows combinatorially — and why scalable reporting systems should represent protocol, anatomy, findings, attributes, constraints, impression logic, and rendering as separate components.</p>
+          <p data-i18n="pp_a1">Este preprint argumenta que laudos de radiologia são melhor modelados como <em>geração composicional restrita</em> a partir do estado clínico relevante para o laudo, não como enumeração estática de templates.</p>
+          <p data-i18n="pp_a2">Ele introduz o <b>Report Space Lower Bound</b> e o <b>Radiology Report Variability Index</b> para descrever por que a cobertura ampla de laudos cresce combinatoriamente e por que sistemas escaláveis devem representar protocolo, anatomia, achados, atributos, restrições, lógica de impressão e renderização como componentes separados.</p>
           <p data-i18n="pp_a3">O preprint é uma contribuição formal e arquitetural. Não reivindica validação clínica, aprovação regulatória, diagnóstico autônomo ou substituição da supervisão do radiologista.</p>
         </div>
 
         <div class="paper-cta">
-          <a class="btn solid" href="https://laibench.laudos.ai/laibench-preprint.pdf"><span data-i18n="pp_b1">Download PDF</span><span>↓</span></a>
-          <a class="btn ghost" href="https://laibench.laudos.ai/arxiv-laibench-source.zip"><span data-i18n="pp_b2">Source package</span><span>↗</span></a>
-          <a class="btn ghost" href="https://laibench.laudos.ai/arxiv-laibench-metadata.json"><span data-i18n="pp_b3">Submission metadata</span><span>↗</span></a>
+          <a class="btn solid" href="https://laibench.laudos.ai/laibench-preprint.pdf"><span data-i18n="pp_b1">Baixar PDF</span><span>↓</span></a>
+          <a class="btn ghost" href="https://laibench.laudos.ai/arxiv-laibench-source.zip"><span data-i18n="pp_b2">Pacote-fonte</span><span>↗</span></a>
+          <a class="btn ghost" href="https://laibench.laudos.ai/arxiv-laibench-metadata.json"><span data-i18n="pp_b3">Metadados de submissão</span><span>↗</span></a>
         </div>
       </div>
 
       <div class="col-r">
         <div class="fact">
-          <span class="k" data-i18n="pf1_k">Formal model</span>
-          <span class="v" data-i18n="pf1_v">Report-state space<small>Compositional generation under rendering constraints.</small></span>
+          <span class="k" data-i18n="pf1_k">Modelo formal</span>
+          <span class="v" data-i18n="pf1_v">Espaço de estado do laudo<small>Geração composicional sob restrições de renderização.</small></span>
         </div>
         <div class="fact">
-          <span class="k" data-i18n="pf2_k">Lower bound</span>
-          <span class="v" data-i18n="pf2_v">RSLB · RRVI<small>Conservative quantification of report variability.</small></span>
+          <span class="k" data-i18n="pf2_k">Limite inferior</span>
+          <span class="v" data-i18n="pf2_v">RSLB · RRVI<small>Quantificação conservadora da variabilidade do laudo.</small></span>
         </div>
         <div class="fact">
-          <span class="k" data-i18n="pf3_k">Architecture</span>
-          <span class="v" data-i18n="pf3_v">Modular components<small>Protocol, anatomy, findings, attributes, constraints, impression, renderer.</small></span>
+          <span class="k" data-i18n="pf3_k">Arquitetura</span>
+          <span class="v" data-i18n="pf3_v">Componentes modulares<small>Protocolo, anatomia, achados, atributos, restrições, impressão, renderer.</small></span>
         </div>
         <div class="fact">
-          <span class="k" data-i18n="pf4_k">Clinical boundary</span>
-          <span class="v" data-i18n="pf4_v">No autonomous-use claim<small>No replacement of physician judgment.</small></span>
+          <span class="k" data-i18n="pf4_k">Fronteira clínica</span>
+          <span class="v" data-i18n="pf4_v">Sem reivindicação de uso autônomo<small>Sem substituição do julgamento médico.</small></span>
         </div>
         <div class="fact">
           <span class="k" data-i18n="pf5_k">Status</span>
-          <span class="v" data-i18n="pf5_v">Draft preprint<small>Not peer-reviewed at time of publication.</small></span>
+          <span class="v" data-i18n="pf5_v">Preprint preliminar<small>Não revisado por pares na publicação.</small></span>
         </div>
         <div class="fact">
-          <span class="k" data-i18n="pf6_k">License</span>
-          <span class="v" data-i18n="pf6_v">Proprietary source-available<small>© MMXXVI Laudos.AI — all rights reserved.</small></span>
+          <span class="k" data-i18n="pf6_k">Licença</span>
+          <span class="v" data-i18n="pf6_v">Proprietária source-available<small>© MMXXVI Laudos.AI — todos os direitos reservados.</small></span>
         </div>
       </div>
     </div>
@@ -980,22 +978,22 @@
       <div class="col">
         <h5>Benchmark</h5>
         <a href="#leaderboard">Standing</a>
-        <a href="#method">Method</a>
+        <a href="#method">Método</a>
         <a href="#dimensions">Dimensões</a>
-        <a href="#validation">Integrity</a>
+        <a href="#validation">Integridade</a>
       </div>
       <div class="col">
-        <h5>Research</h5>
+        <h5>Pesquisa</h5>
         <a href="https://laibench.laudos.ai/laibench-preprint.pdf">Preprint · PDF</a>
-        <a href="https://laibench.laudos.ai/source-package">Source package</a>
-        <a href="https://laibench.laudos.ai/arxiv-laibench-metadata.json">Submission metadata</a>
+        <a href="https://laibench.laudos.ai/source-package">Pacote-fonte</a>
+        <a href="https://laibench.laudos.ai/arxiv-laibench-metadata.json">Metadados de submissão</a>
         <a href="https://github.com/Laudos-AI/laibench-public/blob/main/CHANGELOG.md" rel="noopener noreferrer" target="_blank">Changelog</a>
       </div>
       <div class="col">
-        <h5 data-i18n="fc1">Connect</h5>
+        <h5 data-i18n="fc1">Contato</h5>
         <a href="https://github.com/Laudos-AI/laibench-public" rel="noopener noreferrer" target="_blank" data-i18n="fl_gh">Laudos-AI/laibench-public</a>
         <a href="mailto:natan@laudos.ai?subject=LAIBench%20controlled%20evaluation" data-i18n="fl_req">Solicitar avaliação controlada</a>
-        <a href="mailto:oi@laudos.ai?subject=LAIBench" data-i18n="fl_contact">Contact the team</a>
+        <a href="mailto:oi@laudos.ai?subject=LAIBench" data-i18n="fl_contact">Contate a equipe</a>
         <a href="https://laudos.ai" rel="noopener noreferrer" target="_blank">laudos.ai</a>
       </div>
     </div>
@@ -1134,8 +1132,8 @@
       "ed_p2":"O benchmark, portanto, separa dimensões diagnósticas do veredito público. Pontuações por dimensão explicam<sup>2</sup> por que um caso falhou. <em>Strict PASS</em> determina se o caso sobrevive.",
       "ed_f1":"<sup>†</sup> Strict PASS é binário por caso.",
       "ed_f2":"<sup>‡</sup> Resultados públicos do preview técnico são apenas sintéticos / demo.",
-      "ed_f3":"<sup>1</sup> Avaliação oficial requer assessment controlado ou hospedado.",
-      "ed_f4":"<sup>2</sup> O método é público. O corpus clínico é controlado. A avaliação oficial é gated.",
+      "ed_f3":"<sup>1</sup> A avaliação oficial exige avaliação controlada ou hospedada.",
+      "ed_f4":"<sup>2</sup> O método é público. O corpus clínico é controlado. A avaliação oficial é restrita.",
       "stat_synth":"Casos sintéticos públicos do demo","stat_demo":"Suite de smoke test","stat_oficial":"Avaliação oficial","stat_hidden":"Teste oficial não distribuído","stat_dims":"Dimensões","stat_tests":"Testes",
       "sec2_id":"<b>§ II</b> · Método — lendo o harness",
       "sec2_h":"De achados visíveis a um veredito auditável, em três movimentos.",
@@ -1144,7 +1142,7 @@
       "m1_p":"O sistema avaliado recebe apenas entrada visível: descritor do exame, achados fornecidos, locale e contexto público permitido. Deve emitir um laudo completo sob o contrato de saída.<br/><br/>Ele nunca recebe gold labels, critérios ocultos, respostas de referência, prompts do judge, regras privadas de pontuação, canary tokens ou metadados do teste oculto.",
       "m1_s1":"<b>entrada</b> · exame + achados visíveis","m1_s2":"<b>locale</b> · demo público pt-BR","m1_s3":"<b>oculto</b> · gold labels nunca enviados",
       "m2_roman":"segundo.","m2_h":"Cinco avaliadores leem como <em>cinco detectores de falha distintos.</em>",
-      "m2_p":"O harness verifica preservação de achados críticos, qualidade clínica, terminologia, aplicabilidade de guidelines e fidelidade de evidência. Camadas opcionais de adjudicação podem ser usadas em avaliação controlada; rodadas de demo público permanecem explicitamente separadas do assessment hospedado oficial.",
+      "m2_p":"O harness verifica preservação de achados críticos, qualidade clínica, terminologia, aplicabilidade de diretrizes e fidelidade de evidência. Camadas opcionais de adjudicação podem ser usadas em avaliação controlada; rodadas de demo público permanecem explicitamente separadas da avaliação oficial hospedada.",
       "m2_s1":"<b>avaliadores</b> · CRIT · QUAL · TERM · GUIDE · RAG","m2_s2":"<b>negação</b> · escopo + incerteza","m2_s3":"<b>judge</b> · apenas controlado / hospedado",
       "m3_roman":"terceiro.","m3_h":"Um veredito binário — <em>todo portão, ou nenhum.</em>",
       "m3_p":"Strict PASS é binário por caso. Qualquer falha em portão clinicamente decisivo — achado crítico perdido, lateralidade trocada, negação insegura, estrutura malformada, linguagem de normalização sem suporte ou termo proibido — derruba o caso para <b>FAIL</b>. Pontuações por dimensão sobrevivem como diagnóstico; não sobrescrevem o veredito.",

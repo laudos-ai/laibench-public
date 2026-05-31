@@ -1,1 +1,27 @@
 .beads/
+
+# Defense-in-depth: never ship private/gated clinical data to a deploy, even if
+# .gitignore semantics differ from .vercelignore. Mirrors the private-data globs
+# in .gitignore so the public site build cannot accidentally include them.
+data/raw/
+data/private/
+data/gated/
+data/hidden/
+data/official/
+cases/private/
+cases/hidden/
+cases/gated/
+cases/official/
+cases/public/corpus*.json
+suites/*private*.json
+suites/*daily*.json
+suites/corpus-public*.json
+runs/
+runs/daily/
+runs/internal/
+predictions/
+*.csv
+*.env
+*.env.local
+*.local.env
+node_modules/

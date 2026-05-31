@@ -121,6 +121,27 @@ describe("scanContamination", () => {
     assert.equal(r.canaryHits, 1);
   });
 
+  it("detects a canary disguised with zero-width / soft-hyphen / NFKC tricks", () => {
+    const cases = [{ id: "1", det: 80, judge: 4 }];
+    const run = fakeRun("r", "j", cases, "CANARY-XYZ-123");
+    const zwsp = String.fromCharCode(0x200b);
+    const shy = String.fromCharCode(0x00ad);
+    // canary interleaved with a zero-width space and a soft hyphen
+    run.results[0].rawHtml = `leaked CAN${zwsp}ARY-${shy}XYZ-123 here`;
+    const r = scanContamination(run);
+    assert.equal(r.verdict, "contaminated");
+    assert.equal(r.canaryHits, 1);
+  });
+
+  it("does not false-positive on a clean run after unicode normalization", () => {
+    const cases = [{ id: "1", det: 80, judge: 4 }];
+    const run = fakeRun("r", "j", cases, "CANARY-XYZ-123");
+    run.results[0].rawHtml = "a perfectly ordinary report with no leak";
+    const r = scanContamination(run);
+    assert.equal(r.canaryHits, 0);
+    assert.equal(r.verdict, "clean");
+  });
+
   it("flags 'suspicious' when judge raises contamination but no canary leak", () => {
     const cases = [{ id: "1", det: 80, judge: 4 }];
     const run = fakeRun("r", "j", cases, "TOKEN");

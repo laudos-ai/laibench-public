@@ -123,8 +123,14 @@ export function krippendorffAlphaInterval(ratings: number[][]): { alpha: number;
   const N = allVals.length;
   if (N < 2) return { alpha: 0, n, pairs: 0 };
 
-  // Observed disagreement (Hayes & Krippendorff 2007):
-  //   D_o = Σ_i [ Σ_{c<k} (c-k)^2 / (m_i - 1) ] / Σ_i m_i
+  // Observed disagreement (Hayes & Krippendorff 2007), interval metric.
+  // Within each unit, every value pair is counted in BOTH orders (i≠j) so the
+  // normalization is consistent with D_e below, which averages over ordered
+  // pairs of the value pool (the 2/(N(N-1)) factor). Counting only unordered
+  // pairs here would halve D_o and inflate alpha by the relation
+  // alpha_wrong = (alpha_true + 1) / 2 (verified against R `irr`/`krippendorff`).
+  //   D_o = Σ_u [ Σ_{i≠j in u} (x_i-x_j)^2 / (m_u - 1) ] / Σ_u m_u
+  //       = Σ_u [ 2·Σ_{i<j in u} (x_i-x_j)^2 / (m_u - 1) ] / Σ_u m_u
   let Do_num = 0;
   let Do_den = 0;
   let pairs = 0;
@@ -139,7 +145,7 @@ export function krippendorffAlphaInterval(ratings: number[][]): { alpha: number;
         pairs++;
       }
     }
-    Do_num += s / (m - 1);
+    Do_num += (2 * s) / (m - 1);
     Do_den += m;
   }
   const Do = Do_den === 0 ? 0 : Do_num / Do_den;

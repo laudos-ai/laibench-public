@@ -5,8 +5,7 @@ LAIBench is a governance-oriented benchmark framework for AI-assisted radiology 
 **LAIBench is a technical benchmark framework, not a medical device, not regulatory approval, and not clinical validation. It must not be used as the sole basis for clinical deployment decisions. All clinical use requires qualified human oversight, local validation, institutional governance, and applicable legal/regulatory review.**
 
 Website: [laibench.laudos.ai](https://laibench.laudos.ai)  
-Preprint PDF: [site/laibench-preprint.pdf](site/laibench-preprint.pdf)  
-arXiv draft source: [submissions/arxiv-laibench/main.tex](submissions/arxiv-laibench/main.tex)  
+Companion paper (conceptual): *Beyond Templates: A Compositional Model and Lower Bound for Radiology Report Variability* — [PDF](site/laibench-preprint.pdf), [arXiv source](submissions/arxiv-laibench/main.tex). This is a **separate** theory paper on radiology report-space variability (RSLB / RRVI); it does **not** describe the LAIBench benchmark. The dedicated LAIBench methods paper (task, evaluators, gate semantics, validation) is forthcoming — until then, the methodology of record is [docs/laibench-leaderboard-methods.md](docs/laibench-leaderboard-methods.md).  
 By: [Laudos.AI](https://laudos.ai)
 
 ## Current Status
@@ -79,6 +78,8 @@ npm run bench -- suite \
   --out runs/mock-agent.json
 ```
 
+A parallel English demo suite is available at `suites/lite-public.en-US.json` (cases in `cases/public/synthetic-demo.en-US.json`) — both are synthetic-only.
+
 Build a local leaderboard from run artifacts:
 
 ```bash
@@ -86,6 +87,17 @@ npm run bench -- leaderboard \
   --inputs runs/mock-agent.json \
   --out runs/leaderboard.json \
   --markdown runs/leaderboard.md
+```
+
+### Reliability (pass^k)
+
+A single-shot critical-finding pass-rate saturates and is gameable by verbose "restate everything" reports. The `reliability` command measures **consistency** instead: run the same system on the same suite *k* times, then compute `pass^k` — the fraction of cases that preserved every critical finding on **all** *k* attempts (the headline), alongside `pass@1` and a verdict-level pass^k.
+
+```bash
+npm run bench -- reliability \
+  --inputs runs/run-1.json runs/run-2.json runs/run-3.json \
+  --out runs/reliability.json \
+  --markdown runs/reliability.md
 ```
 
 ## Frozen Predictions

@@ -194,12 +194,22 @@ export type ContaminationReport = {
 };
 
 /**
- * Whitespace-insensitive substring search.
- * Defeats trivial evasion (canary token split by spaces or newlines).
+ * Whitespace- and unicode-insensitive substring search.
+ * Defeats trivial evasion: the canary token split by spaces/newlines, by
+ * zero-width / format characters (U+200B–200D, U+FEFF, soft hyphen, etc.), or
+ * disguised with compatibility-equivalent codepoints (NFKC folds fullwidth /
+ * ligature / styled variants back to their base forms before matching).
  */
 function containsCanary(haystack: string, token: string): boolean {
   if (!token) return false;
-  const normalize = (s: string): string => s.replace(/\s+/g, "").toLowerCase();
+  const normalize = (s: string): string =>
+    s
+      .normalize("NFKC")
+      // strip zero-width / bidi / format chars that can be interleaved into a token:
+      // soft hyphen, ZWSP/ZWNJ/ZWJ + directional marks, bidi embeds, word joiner, BOM.
+      .replace(/[\u00AD\u200B-\u200F\u202A-\u202E\u2060-\u2064\uFEFF]/g, "")
+      .replace(/\s+/g, "")
+      .toLowerCase();
   return normalize(haystack).includes(normalize(token));
 }
 

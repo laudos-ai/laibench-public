@@ -6,6 +6,7 @@
  */
 
 import type { Dim } from "./types.js";
+import { WEIGHTS } from "./scoring.js";
 
 // ---- Policy types ----
 
@@ -15,18 +16,23 @@ export type PolicyProfile = {
   id: PolicyProfileId;
   name: string;
   description: string;
+  /** Dimension weights consumed by `combineScores`; sum to 1 after normalization. */
   weights: Record<Dim, number>;
   /** Minimum overall score (0-100) to qualify as PASS */
   passThreshold: number;
   /** Minimum overall score (0-100) to qualify as PARTIAL */
   partialThreshold: number;
-  /** Minimum per-dimension score (0-100) below which a dimension is considered FAIL */
-  dimFailThreshold: number;
-  /** Multiplier applied to overall score when a critical failure is present (0-1) */
-  criticalFailPenalty: number;
   /** Whether a single critical failure forces overall FAIL regardless of score */
   criticalFailForces: boolean;
 };
+
+/**
+ * Canonical default weights — the single source of truth is `WEIGHTS` in
+ * scoring.ts (CRIT .30 / QUAL .25 / TERM .20 / GUIDE .15 / RAG .10), which is
+ * also what the README documents. The "research"/"leaderboard" profiles reuse
+ * these exactly, so the default path is unchanged; only "strict" re-weights.
+ */
+const DEFAULT_WEIGHTS = normalizeWeights({ ...WEIGHTS });
 
 // ---- Weight normalization ----
 
@@ -49,39 +55,34 @@ const REGISTRY: Record<PolicyProfileId, PolicyProfile> = {
     id: "strict",
     name: "Strict",
     description:
-      "Higher thresholds with aggressive critical-failure penalties. " +
-      "Designed for clinical validation where any critical miss must tank the score.",
+      "Up-weights CRIT and raises the PASS/PARTIAL thresholds. Designed for " +
+      "clinical validation where critical findings dominate the score and any " +
+      "critical miss forces FAIL via the hard veto.",
     weights: normalizeWeights({ CRIT: 0.35, QUAL: 0.25, TERM: 0.15, GUIDE: 0.15, RAG: 0.10 }),
     passThreshold: 90,
     partialThreshold: 70,
-    dimFailThreshold: 45,
-    criticalFailPenalty: 0.3,
     criticalFailForces: true,
   },
   research: {
     id: "research",
     name: "Research",
     description:
-      "Standard weights and thresholds suitable for research evaluation. " +
-      "Balanced across all dimensions with moderate penalty for critical failures.",
-    weights: normalizeWeights({ CRIT: 0.25, QUAL: 0.30, TERM: 0.15, GUIDE: 0.20, RAG: 0.10 }),
+      "Canonical default weights and thresholds for research evaluation " +
+      "(CRIT .30 / QUAL .25 / TERM .20 / GUIDE .15 / RAG .10), matching the README.",
+    weights: DEFAULT_WEIGHTS,
     passThreshold: 84,
     partialThreshold: 60,
-    dimFailThreshold: 35,
-    criticalFailPenalty: 0.5,
     criticalFailForces: true,
   },
   leaderboard: {
     id: "leaderboard",
     name: "Leaderboard",
     description:
-      "Same scoring weights as research but with stricter submission validation. " +
-      "Use for public benchmarks where submission integrity matters.",
-    weights: normalizeWeights({ CRIT: 0.25, QUAL: 0.30, TERM: 0.15, GUIDE: 0.20, RAG: 0.10 }),
+      "Same canonical weights as research but paired with stricter submission " +
+      "validation. Use for public benchmarks where submission integrity matters.",
+    weights: DEFAULT_WEIGHTS,
     passThreshold: 84,
     partialThreshold: 60,
-    dimFailThreshold: 35,
-    criticalFailPenalty: 0.5,
     criticalFailForces: true,
   },
 };

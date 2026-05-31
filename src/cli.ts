@@ -18,6 +18,7 @@ import { buildPerturbationDataset, summarizePerturbationRun } from "./perturb-ev
 import { buildProvenanceManifest } from "./provenance.js";
 import { bootstrapCI } from "./stats.js";
 import { buildConsolidatedReport, reportToMarkdown } from "./report.js";
+import { reliabilityAtK, reliabilityToMarkdown } from "./reliability.js";
 import type { EntityType, GeneratorAdapter, JudgeAdapter, LocaleKey, ScoreCombinationMode, SystemType, TrackId } from "./types.js";
 
 type Flags = Record<string, string | boolean | string[]>;
@@ -40,19 +41,36 @@ type PublicSystemMeta = {
 function parseArgs(argv: string[]): { command: string; flags: Flags } {
   const [command = "help", ...rest] = argv;
   const flags: Flags = {};
-  for (let i = 0; i < rest.length; i += 1) {
+  let i = 0;
+  while (i < rest.length) {
     const token = rest[i];
-    if (!token || !token.startsWith("--")) continue;
-    const key = token.slice(2);
-    const next = rest[i + 1];
-    if (!next || next.startsWith("--")) {
-      flags[key] = true;
+    if (!token || !token.startsWith("--")) {
+      i += 1;
       continue;
     }
-    if (flags[key] === undefined) flags[key] = next;
-    else if (Array.isArray(flags[key])) (flags[key] as string[]).push(next);
-    else flags[key] = [String(flags[key]), next];
-    i += 1;
+    const key = token.slice(2);
+    // Consume every consecutive non-flag token as a value for this flag, so
+    // `--inputs A B C` captures all three (matching the repeated `--inputs A
+    // --inputs B` form). A flag with no following value is a boolean true.
+    const values: string[] = [];
+    let j = i + 1;
+    while (j < rest.length && !rest[j].startsWith("--")) {
+      values.push(rest[j]);
+      j += 1;
+    }
+    if (values.length === 0) {
+      flags[key] = true;
+    } else {
+      const existing = flags[key];
+      const merged =
+        existing === undefined || existing === true
+          ? values
+          : Array.isArray(existing)
+            ? [...existing, ...values]
+            : [String(existing), ...values];
+      flags[key] = merged.length === 1 ? merged[0] : merged;
+    }
+    i = j;
   }
   return { command, flags };
 }
@@ -593,6 +611,31 @@ async function runDiscriminate(flags: Flags): Promise<void> {
   for (const note of report.notes) console.log(`  • ${note}`);
 }
 
+async function runReliability(flags: Flags): Promise<void> {
+  const inputs = getMany(flags, "inputs");
+  if (inputs.length === 0) throw new Error("Use --inputs with the SAME system's run files (same suite, k repeated attempts).");
+  const runs = await Promise.all(inputs.map((p) => readSuiteRun(p)));
+  const report = reliabilityAtK(runs);
+  const out = getString(flags, "out");
+  if (out) {
+    await writeJsonFile(out, report);
+    console.log(`Wrote ${out}`);
+  }
+  const markdownPath = getString(flags, "markdown");
+  if (markdownPath) {
+    await writeTextFile(markdownPath, reliabilityToMarkdown(report));
+    console.log(`Wrote ${markdownPath}`);
+  }
+  const pct = (v: number): string => `${(v * 100).toFixed(1)}%`;
+  console.log(`\nReliability (pass^${report.k}) over ${report.caseCount} cases:`);
+  console.log(`  Critical-safe pass^${report.k}: ${pct(report.passPowerKCriticalSafe)}  (headline)`);
+  console.log(`  Critical-safe pass@1:  ${pct(report.passAt1CriticalSafe)}`);
+  console.log(`  Verdict pass^${report.k}:      ${pct(report.passPowerKVerdict)}`);
+  if (report.flakyCriticalCases.length > 0) {
+    console.log(`  Flaky critical cases:  ${report.flakyCriticalCases.join(", ")}`);
+  }
+}
+
 async function runCalibrate(flags: Flags): Promise<void> {
   const inputs = getMany(flags, "inputs");
   if (inputs.length === 0) throw new Error("Use --inputs with one or more suite result files (same suite, different judge runs).");
@@ -842,6 +885,9 @@ async function run(): Promise<void> {
       return;
     case "report":
       await runReport(flags);
+      return;
+    case "reliability":
+      await runReliability(flags);
       return;
     default:
       printHelp();

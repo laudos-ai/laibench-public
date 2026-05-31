@@ -1,0 +1,691 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{microtype}
+\geometry{margin=1in}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+\newcommand{\dimname}[1]{\textsc{#1}}
+\newcommand{\passk}{$\mathrm{pass}^{k}$}
+
+\title{LAIBench: A Governance-Oriented Benchmark for\\
+Critical-Finding Safety and Reliability in\\
+AI Radiology Report Generation}
+
+\author{LAIBench Authors\thanks{Author list, affiliations, and corresponding
+contact are pending confirmation before any formal submission. This draft is
+released for technical review.}}
+\date{Draft version --- May 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Mainstream metrics for AI radiology report generation optimize for average
+linguistic or entity-overlap quality and report a single aggregate number. That
+framing is poorly matched to the governance question an institution actually
+faces before deployment: \emph{does this system reliably preserve the
+information it was handed, every time, without dropping or inverting a critical
+finding?} We present LAIBench, a benchmark framework that treats radiology
+report generation as a faithfulness-and-reliability problem rather than a
+quality-maximization problem. We are explicit about scope: LAIBench evaluates
+the \emph{finding-text-to-report} task --- given an exam descriptor and concise
+findings, produce a faithful report --- and does \emph{not} evaluate primary
+image interpretation from DICOM. It therefore measures report faithfulness,
+transcription safety, and run-to-run reliability, not whether a model can read a
+scan. LAIBench combines (i) a five-dimensional weighted score with a
+\emph{deterministic critical-finding hard veto} that forces a failing verdict
+regardless of average quality; (ii) a planned \passk{} reliability headline that
+asks whether a system gets every critical finding right on all $k$ independent
+samples, addressing the saturation and copy-everything gaming that a single-pass
+veto rate invites; (iii) eight declared adversarial perturbation classes that
+act as metric-validation-by-construction (each perturbation ships with the
+dimension and severity the scorer must flag); (iv) a reproducibility hash chain
+linking case, suite, scoring code, run, and leaderboard; and (v) inter-rater
+agreement, paired-bootstrap discrimination, and judge-calibration tooling. We
+are equally explicit about what is \emph{not} yet validated: the critical-finding
+detector is currently keyword/substring-based, the public suite is a small
+synthetic demo, and LLM-judge reliability against radiologists has not been
+measured. We position LAIBench against GREEN, RadGraph/RadGraph-F1, CheXbert,
+RadCliQ, ReXVal, RaTEScore, RadFact, and ReXrank, stating for each dimension what
+LAIBench borrows and what it adds, and we lay out a validation roadmap centered
+on a validated finding extractor and a radiologist-correlation study.
+\end{abstract}
+
+\paragraph{Keywords.} radiology report generation; benchmark; clinical safety;
+governance; critical findings; reliability; LLM-as-a-judge; reproducibility;
+adversarial evaluation.
+
+\section{Introduction}
+
+Automated radiology report generation is moving from research demonstrations to
+products that draft or transcribe reports inside clinical workflows. The
+dominant evaluation paradigm, inherited from machine translation and
+summarization, scores a generated report against a reference and reports an
+aggregate number: lexical overlap (BLEU, ROUGE \cite{Papineni2002BLEU,
+Lin2004ROUGE}), label agreement (CheXbert \cite{Smit2020CheXbert,
+Irvin2019CheXpert}), entity-and-relation overlap (RadGraph/RadGraph-F1
+\cite{Jain2021RadGraph}), a learned composite (RadCliQ \cite{Yu2023RadCliQ}), or
+a model-graded clinical error count (GREEN \cite{Ostmeier2024GREEN}, RaTEScore
+\cite{Zhao2024RaTEScore}). These metrics have advanced the field and correlate,
+to varying degrees, with radiologist error judgments \cite{Yu2023ReXVal}.
+
+They leave a governance gap. The question a hospital safety committee or a
+regulator asks before turning a system on is not ``what is the mean quality
+score across the test set?'' It is closer to: ``If I hand this system the
+findings my radiologist dictated, will it ever drop the line that says
+\emph{acute intracranial hemorrhage}? Will it ever silently delete a negation
+and turn \emph{no fracture} into \emph{fracture}? And will it do the right thing
+\emph{every} time, not just on average?'' A high mean score is compatible with a
+small but non-zero rate of exactly these catastrophic, individually
+unacceptable failures, because averaging dilutes rare critical errors into a
+sea of correctly transcribed routine sentences.
+
+LAIBench is built around that governance question. Its design commitments are:
+
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Faithfulness over fluency.} The unit of evaluation is whether the
+report faithfully preserves the handed-in evidence, not whether it reads well.
+\item \textbf{A hard veto, not a soft penalty.} A dropped or inverted critical
+finding forces an overall \dimname{FAIL}, independent of how high the weighted
+average is. This is a categorical gate, not a deduction.
+\item \textbf{Reliability as the headline.} We move from ``did it pass once?'' to
+``did it pass $k$ out of $k$ times?'' via a \passk{} metric, because a
+single-pass veto rate saturates and is gameable.
+\item \textbf{Metric validation by construction.} Eight adversarial perturbation
+classes inject known failures with declared expected dimension and severity; the
+scorer must catch them, which tests the metric rather than the model.
+\item \textbf{Reproducibility and integrity.} A cryptographic hash chain pins
+cases, scoring code, runs, and leaderboard, and anti-gaming logic recomputes
+every published statistic from raw artifacts.
+\end{enumerate}
+
+We stress at the outset that LAIBench is a \emph{benchmark framework}, not a
+medical device, regulatory clearance, or clinical validation, and that the
+current public artifacts run only on a small synthetic demo suite. The
+contribution is a measurement methodology and a set of governance-oriented
+instruments, presented so that a skeptical reviewer can audit exactly what is
+and is not substantiated.
+
+\section{Scope and Task Definition}
+\label{sec:scope}
+
+\paragraph{Task.} LAIBench evaluates the \emph{finding-text-to-report} task.
+Each case provides a structured input
+\[
+x = (\textit{exam descriptor},\ \textit{concise findings},\ \textit{locale})
+\]
+and the system must emit a complete radiology-style report $\hat{y}$ that
+faithfully renders the supplied evidence. The reference target $y$ is a gold
+report (or gold structured-finding labels) for the same input. Formally the
+benchmark scores a function of $(x, \hat{y}, y)$; it does not consume pixels.
+
+\paragraph{Explicit exclusion.} \textbf{LAIBench does not evaluate primary image
+interpretation.} It is given the findings as text and asks whether the generated
+report preserves them. It therefore cannot, and does not, measure whether a model
+correctly \emph{detected} a finding on a DICOM study. A finding that a human
+never dictated cannot be ``missed'' by LAIBench, because LAIBench never sees the
+image. This is a deliberate scope boundary, stated up front rather than buried:
+LAIBench measures \emph{report faithfulness} and \emph{transcription safety},
+not diagnostic image accuracy.
+
+\paragraph{Why this framing, and what it is \emph{not}.} Because the failure mode
+LAIBench can detect is a dropped, inverted, or fabricated \emph{handed-in}
+finding --- not a finding missed on the image --- we deliberately avoid
+``malpractice'' or ``patient-harm'' language. The gate catches a report that
+fails to carry forward evidence it was given; whether that constitutes harm
+depends on the surrounding clinical workflow, which LAIBench does not model. The
+honest claim is narrower and more defensible: the benchmark quantifies how
+faithfully and how reliably a generator transcribes and structures provided
+clinical evidence.
+
+\paragraph{Output contract.} The public harness expects a constrained
+HTML-structured report (titles, sections, line breaks) so that structural
+compliance and section ordering are machine-checkable. The contract is a
+property of the harness, not a clinical requirement; the scoring dimensions that
+matter for safety (critical-finding preservation, negation integrity) are
+defined on the report text after tag stripping and normalization.
+
+\paragraph{Language coverage.} The framework leads in English for positioning and
+comparability with prior art, while treating Portuguese (pt-BR) as a
+\emph{coverage axis} rather than the headline identity. To our knowledge no
+public pt-BR report-generation benchmark exists, so the locale dimension extends
+coverage into an under-served language; it is not the paper's central claim. The
+only public cases shipped today are a small synthetic pt-BR demo suite.
+
+\section{Related Work and Positioning}
+\label{sec:related}
+
+Radiology report evaluation has progressed from generic text-overlap metrics
+toward clinically grounded ones. \textbf{CheXbert} \cite{Smit2020CheXbert}
+labels reports against the CheXpert observation schema \cite{Irvin2019CheXpert}
+and compares predicted vs. reference labels, capturing presence/absence of a
+fixed set of observations. \textbf{RadGraph} \cite{Jain2021RadGraph} extracts
+clinical entities and relations; \textbf{RadGraph-F1} scores entity/relation
+overlap against the reference graph. \textbf{RadCliQ} \cite{Yu2023RadCliQ}
+combines RadGraph-F1 and BLEU into a single composite calibrated against
+radiologist error counts, with the \textbf{ReXVal} \cite{Yu2023ReXVal}
+error-annotation dataset as its human ground truth. \textbf{RaTEScore}
+\cite{Zhao2024RaTEScore} is an entity-aware similarity metric robust to synonymy
+and negation. \textbf{GREEN} \cite{Ostmeier2024GREEN} uses a language model to
+enumerate and categorize clinically significant errors, producing an
+interpretable error notation and a soft severity-weighted score.
+\textbf{RadFact} \cite{Bannur2024RadFact} verifies grounded, sentence-level
+factual entailment between generated and reference findings.
+\textbf{ReXrank} \cite{Zhang2024ReXrank} is a public leaderboard standardizing
+chest X-ray report-generation comparison.
+
+LAIBench is not a replacement for these metrics; it borrows heavily from them
+and recombines them under a governance objective. Table~\ref{tab:related} maps
+each LAIBench dimension/feature to its closest prior art and states what is
+borrowed versus what is added. The central additions are: (1) a \emph{hard veto}
+on critical findings rather than a soft penalty; (2) a \passk{} \emph{reliability}
+axis layered over per-pass scoring; (3) \emph{adversarial perturbation
+validation} of the scorer itself; and (4) a \emph{reproducibility/anti-gaming
+governance layer}. The central honest caveat is that several LAIBench dimensions
+currently approximate, with keyword and substring heuristics, what the prior-art
+metrics implement with trained extractors --- validation of those approximations
+is pending (Section~\ref{sec:limitations}).
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}p{2.2cm}p{4.3cm}p{6.0cm}@{}}
+\toprule
+\textbf{LAIBench feature} & \textbf{Closest prior art} & \textbf{Borrows vs.\ adds} \\
+\midrule
+\dimname{CRIT} (critical-finding hard veto) &
+GREEN soft severity scoring \cite{Ostmeier2024GREEN}; CheXbert label match
+\cite{Smit2020CheXbert} &
+\emph{Borrows} the idea of severity-graded clinical errors. \emph{Adds} a
+categorical hard veto: any dropped/inverted critical finding forces overall
+\dimname{FAIL}, which is absent from GREEN's continuous severity score. \\
+\dimname{QUAL} (finding preservation, hallucination) &
+RadGraph-F1 entity overlap \cite{Jain2021RadGraph}; RadFact entailment
+\cite{Bannur2024RadFact}; RaTEScore \cite{Zhao2024RaTEScore} &
+\emph{Borrows} entity-recall and hallucination framing. \emph{Approximates}
+entity recall via synonym-expanded keyword overlap rather than a trained
+extractor --- validation pending. \\
+\dimname{TERM} (terminology/locale) &
+RadLex-style lexicons; RaTEScore synonym handling \cite{Zhao2024RaTEScore} &
+\emph{Adds} locale- and modality-specific terminology checks (incl.\ pt-BR);
+rule-based, not a learned model. \\
+\dimname{GUIDE} (guideline coverage) &
+Structured-reporting / CDE standards \cite{ESR2023Structured} &
+\emph{Adds} guideline-system modules (BI-RADS, TI-RADS, LI-RADS, PI-RADS,
+Bosniak, Lung-RADS, Fleischner) checking applicability/presence/correctness; not
+present in overlap metrics. \\
+\dimname{RAG} (evidence fidelity / retrieval) &
+IR metrics: P@k, R@k, MRR, nDCG \cite{JarvelinKekalainen2002} &
+\emph{Borrows} standard IR metrics for the optional retrieval pipeline.
+\emph{Adds} evidence-fidelity structural checks (laterality, levels,
+measurements, order) when no retrieval gold exists. \\
+Aggregate composite &
+RadCliQ learned composite \cite{Yu2023RadCliQ} &
+\emph{Differs}: fixed, documented weights plus a hard gate, rather than a
+regression fit, for auditability. \\
+\passk{} reliability &
+$\mathrm{pass@}k$ in code generation \cite{Chen2021Codex} &
+\emph{Borrows} the multi-sample reliability idea from program synthesis.
+\emph{Adapts} it to ``every critical finding correct on all $k$ samples.'' \\
+Adversarial validation &
+--- (no direct analogue in report metrics) &
+\emph{Adds} eight declared perturbation classes as metric-validation-by-
+construction. \\
+Leaderboard / provenance &
+ReXrank leaderboard \cite{Zhang2024ReXrank} &
+\emph{Adds} a cryptographic hash chain and recompute-from-raw anti-gaming
+checks. \\
+\bottomrule
+\end{tabular}
+\caption{Positioning of each LAIBench dimension/feature against the closest
+prior radiology report-evaluation work. ``Borrows'' marks reused ideas;
+``adds''/``approximates'' marks LAIBench-specific design, including approximations
+whose validation is pending.}
+\label{tab:related}
+\end{table}
+
+\section{Scoring Model}
+\label{sec:scoring}
+
+\subsection{Five dimensions and weights}
+
+A run scores each case along five dimensions on a $0$--$100$ scale. The default
+(research/leaderboard) weights are fixed and documented:
+\[
+w_{\dimname{CRIT}}=0.30,\quad
+w_{\dimname{QUAL}}=0.25,\quad
+w_{\dimname{TERM}}=0.20,\quad
+w_{\dimname{GUIDE}}=0.15,\quad
+w_{\dimname{RAG}}=0.10 .
+\]
+The dimensions measure:
+
+\begin{description}[leftmargin=1.2cm,style=nextline]
+\item[\dimname{CRIT} (0.30)] Critical-finding preservation and unsafe-negation
+integrity. With gold critical-finding labels the evaluator computes
+recall/precision/F1 against the report, scoring recall-weighted
+($\text{score}=70\cdot\text{recall}+30\cdot\text{precision}$) because a missed
+critical finding is worse than a false positive; each missed label is emitted as
+a separate \texttt{critical}-severity check. A substring/token match inside a
+\emph{negated} sentence is counted as a miss, not a hit. Without gold labels the
+dimension falls back to structural banned-phrase checks.
+\item[\dimname{QUAL} (0.25)] Clinical-finding preservation and hallucination
+resistance. Gold findings are matched as exact/partial/missed with a
+30-group radiology synonym table (pt-BR + English), and extracted report findings
+unmatched to any gold finding are flagged as potential hallucinations (with
+pertinent negatives explicitly excluded from the hallucination set). A clinical-
+utility floor penalizes missed critical findings.
+\item[\dimname{TERM} (0.20)] Locale- and modality-specific terminology and
+section/report conventions (e.g.\ correct ultrasound/MRI vocabulary, no
+contrast language in a non-contrast exam). Implemented as deterministic
+structural rules.
+\item[\dimname{GUIDE} (0.15)] Guideline and anatomical coverage via a registry of
+modules (Fleischner, BI-RADS, TI-RADS, LI-RADS, PI-RADS, Bosniak, Lung-RADS),
+each testing applicability $\rightarrow$ presence $\rightarrow$ correctness, with
+valid-value-set validation per system; falls back to anatomy coverage when no
+guideline applies.
+\item[\dimname{RAG} (0.10)] Evidence fidelity. With retrieval gold it computes
+Precision@$k$, Recall@$k$, MRR, and nDCG \cite{JarvelinKekalainen2002} over the
+retrieved set (recall-weighted composite); otherwise it scores structural
+evidence checks (title tokens, laterality, levels, measurements, section order),
+and is marked \dimname{UNSCORED} when neither applies.
+\end{description}
+
+When a dimension has no applicable checks it is \dimname{UNSCORED} and excluded;
+the remaining weights are renormalized to sum to one, so the composite is always
+a proper weighted mean over scored dimensions.
+
+\subsection{Per-dimension severity and the deterministic gate}
+
+Within a dimension, the deterministic score starts as the pass fraction of its
+checks. Severity then caps the score: a single critical-severity failure caps the
+dimension near the failing range (and additional critical failures lower the cap
+further), while three or more major failures cap it at $70$. The dimension
+\emph{verdict} is \dimname{FAIL} whenever a critical check fails, regardless of
+how many other checks pass --- this is the per-dimension expression of the hard
+veto.
+
+\subsection{Combining deterministic and judge scores}
+
+When the optional adversarial LLM judge is enabled, each dimension has a
+deterministic score and a judge score (the judge emits $0$--$100$, or $1$--$5$
+rescaled to $0$--$100$). The combination is governed by the scoring mode:
+
+\begin{itemize}[leftmargin=*]
+\item \textbf{conservative-min} (default for regression calibration): the
+combined per-dimension score is $\min(\text{det},\text{judge})$. This is
+deliberately pessimistic --- a dimension is only as good as the lower of the two
+independent assessments, so the judge cannot rescue a deterministic failure and
+vice versa.
+\item \textbf{judge-primary}: the judge's $0$--$100$ score is the primary
+report-quality value while deterministic critical checks remain gates.
+\end{itemize}
+
+The composite overall is the weight-renormalized mean of the combined
+per-dimension scores. The overall \emph{verdict} is computed as:
+\[
+\text{verdict}=
+\begin{cases}
+\dimname{FAIL} & \text{if any deterministic \emph{or} judge critical failure (when } \texttt{criticalFailForces}),\\
+\dimname{PASS} & \text{else if } \text{overall}\ge \tau_{\text{pass}},\\
+\dimname{PARTIAL} & \text{else if } \text{overall}\ge \tau_{\text{partial}},\\
+\dimname{FAIL} & \text{otherwise.}
+\end{cases}
+\]
+The hard veto is the first clause: a critical failure forces \dimname{FAIL}
+\emph{before} the composite is even consulted. This is the property that
+distinguishes LAIBench from a soft severity-weighted score --- no quantity of
+correctly transcribed routine sentences can lift a report that dropped a
+critical finding out of \dimname{FAIL}. The combiner also returns explicit
+\texttt{gateReasons} (e.g.\ ``deterministic critical failure'', ``adversarial
+critical failure'', ``adversarial phase unavailable'') and a confidence label
+that degrades to \texttt{low} when the judge phase is unavailable.
+
+\subsection{Policy profiles}
+
+Three policy profiles parameterize weights and thresholds
+(Table~\ref{tab:policies}). \textbf{research} encodes the canonical default
+weights with $\tau_{\text{pass}}=84$, $\tau_{\text{partial}}=60$.
+\textbf{leaderboard} uses the same canonical weights paired with stricter
+submission validation. \textbf{strict} up-weights \dimname{CRIT} to $0.35$ and
+raises $\tau_{\text{pass}}=90$, $\tau_{\text{partial}}=70$ for clinical-validation
+contexts where critical findings should dominate. In all three,
+\texttt{criticalFailForces} is \texttt{true}, so the hard veto is never disabled;
+profiles change only how the \emph{non-vetoed} composite is computed and where
+the PASS/PARTIAL cutoffs sit. The default (no policy) path and the
+\textbf{research} profile produce identical numbers by construction.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+Profile & \dimname{CRIT} & \dimname{QUAL} & \dimname{TERM} & \dimname{GUIDE} &
+\dimname{RAG} & $\tau_{\text{pass}}$ & $\tau_{\text{partial}}$ \\
+\midrule
+research / leaderboard & 0.30 & 0.25 & 0.20 & 0.15 & 0.10 & 84 & 60 \\
+strict & 0.35 & 0.25 & 0.15 & 0.15 & 0.10 & 90 & 70 \\
+\bottomrule
+\end{tabular}
+\caption{Policy profiles. Weights are normalized to sum to one. All profiles keep
+the critical-finding hard veto enabled.}
+\label{tab:policies}
+\end{table}
+
+\section{\texorpdfstring{$\mathrm{pass}^{k}$}{pass-k} Reliability}
+\label{sec:passk}
+
+\paragraph{Why the veto rate alone is insufficient.} The deterministic critical
+gate yields, per system, a \emph{veto pass-rate}: the fraction of cases with no
+critical-finding failure. As a single number this metric \emph{saturates}: a
+cautious system that copies essentially all handed-in text verbatim will rarely
+drop a critical finding and can score a near-perfect veto pass-rate while being
+clinically useless (verbose, unstructured, hallucination-prone elsewhere). The
+veto rate is therefore necessary but gameable, and it does not capture the
+\emph{run-to-run} stochasticity of sampling-based generators: a system that
+preserves a critical finding $90\%$ of the time will pass a single-pass
+evaluation $90\%$ of the time but is unacceptable for deployment.
+
+\paragraph{The metric.} Borrowing from $\mathrm{pass@}k$ in program synthesis
+\cite{Chen2021Codex}, we define a \emph{reliability} headline. Sample $k$
+independent reports per case from a system at its production temperature. Let a
+case be \emph{$k$-reliable} if all $k$ samples clear the critical-finding gate
+(no dropped, inverted, or fabricated critical finding). Then
+\[
+\passk \;=\; \frac{1}{|C|}\sum_{c\in C}\mathbf{1}\!\left[\textstyle\bigwedge_{i=1}^{k}\,\text{gate}(\hat{y}_{c,i})=\text{pass}\right],
+\]
+the fraction of cases for which the system ``gets every critical finding right
+$k$ out of $k$ times.'' Unlike the mean veto rate, \passk{} is monotonically
+non-increasing in $k$ and exposes systems whose single-pass success hides
+unreliable sampling: a per-case gate probability of $0.9$ yields a
+$k{=}5$ reliability of $\approx0.59$ under independence, a sharp and honest
+reliability signal. Reporting \passk{} alongside the composite score keeps the
+deterministic veto as the underlying \emph{gate} while making reliability, not
+average quality, the headline.
+
+\paragraph{The critical-safe unit is intentionally narrow.} The per-(case, run)
+unit that \passk{} aggregates is \emph{critical-finding safety}, defined more
+narrowly than the overall verdict: a run is critical-safe for a case iff it has
+\emph{no} deterministic \dimname{CRIT} critical-finding failure \emph{and} no
+judge-flagged critical failure. A case can therefore \dimname{FAIL} its overall
+verdict on weak \dimname{RAG} or structure while still being critical-safe; that
+distinction is the entire point of a critical-finding safety metric, so \passk{}
+isolates the safety-relevant gate from general quality. The harness also reports a
+companion \passk{} over the overall verdict (verdict $\neq$ \dimname{FAIL} on all
+$k$ runs) for completeness.
+
+\paragraph{Implementation status.} The \passk{} meta-metric is now implemented in
+the harness (\texttt{src/reliability.ts}): it reuses the existing per-sample
+critical gate, defines the critical-safe unit above, and aggregates over $k$
+independent runs of the same system on the same suite without altering scoring.
+It is not yet wired as the default leaderboard \emph{headline}, and --- as with
+every result in this paper --- we report \emph{no} measured \passk{} values,
+because there are no real-data runs (Section~\ref{sec:limitations}). We describe
+\passk{} as the intended reliability headline, computed by available code but not
+yet validated on clinical data.
+
+\section{Adversarial Perturbation Validation}
+\label{sec:perturb}
+
+A benchmark's credibility rests on whether its scorer actually catches the
+failures it claims to penalize. LAIBench tests this \emph{by construction}: it
+ships eight perturbation generators, each of which takes a (case, gold report)
+pair and produces a deliberately defective output that the scorer
+\emph{must} flag. Crucially, every perturbation declares, in code, the
+dimension(s) and severity it is supposed to trigger (Table~\ref{tab:perturb}).
+This turns metric validation into a falsifiable test: if a perturbation that
+declares a \texttt{critical} \dimname{CRIT} failure is not caught, the metric ---
+not the model --- has a bug.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Perturbation} & \textbf{Expected dim(s)} & \textbf{Severity} & \textbf{What it injects} \\
+\midrule
+\texttt{laterality\_flip}      & \dimname{RAG}, \dimname{CRIT} & critical & swaps left/right (esquerdo/direito) \\
+\texttt{negation\_drop}        & \dimname{CRIT}                & critical & removes a negation (``no fracture''$\rightarrow$``fracture'') \\
+\texttt{negation\_insert}      & \dimname{CRIT}                & critical & inserts a false negation before a present finding \\
+\texttt{measurement\_scramble} & \dimname{RAG}, \dimname{QUAL} & major    & replaces measurements with implausible values \\
+\texttt{critical\_drop}        & \dimname{CRIT}                & critical & deletes every declared critical finding \\
+\texttt{critical\_invent}      & \dimname{CRIT}                & critical & adds a fabricated critical finding \\
+\texttt{terminology\_corrupt}  & \dimname{TERM}, \dimname{QUAL}& major    & swaps canonical terms for colloquialisms ($\ge$30 rules/locale) \\
+\texttt{structure\_break}      & \dimname{QUAL}, \dimname{RAG} & major    & strips required HTML structure and section labels \\
+\bottomrule
+\end{tabular}
+\caption{The eight adversarial perturbation classes with their \emph{declared}
+expected dimension and severity. Each is deterministic given (caseId, kind) via a
+seeded PRNG, so the validation suite is reproducible.}
+\label{tab:perturb}
+\end{table}
+
+\paragraph{Catch rule.} A perturbation is \emph{caught} if, for any of its
+expected dimensions $D$ at expected severity $S$, the scored result shows
+\emph{either} (a) a deterministic check on $D$ failing at severity $\ge S$,
+\emph{or} (b) a judge critical failure on $D$, \emph{or} (c) a combined
+$D$-dimension score below a per-severity floor (critical $<60$, major $<80$,
+minor $<90$). The harness aggregates per-kind and overall \emph{catch rates} and
+labels the scorer \emph{robust} ($\ge90\%$), \emph{leaky} ($\ge70\%$), or
+\emph{broken} otherwise. Because the perturbations are deterministic and the
+expected dimensions are declared, the catch-rate report is a unit test of the
+metric: a regression that weakens the negation handler will show up as a drop in
+the \texttt{negation\_drop}/\texttt{negation\_insert} catch rate, not as a silent
+loss of clinical safety.
+
+\paragraph{Scope of this validation.} This is validation of the \emph{scorer's
+sensitivity to known defects}, not validation against radiologist judgment. It
+demonstrates that the metric reacts as designed to constructed failures; it does
+not demonstrate that the metric's notion of a ``critical finding'' matches a
+radiologist's. The latter is the subject of Section~\ref{sec:limitations}'s
+roadmap.
+
+\section{Statistical Methodology}
+\label{sec:stats}
+
+LAIBench ships the statistical instruments needed to treat benchmark outputs as
+measurements with uncertainty rather than point estimates.
+
+\paragraph{Inter-rater agreement.} For gold-label construction and judge
+consistency we implement Cohen's $\kappa$ \cite{Cohen1960Kappa} (two raters,
+nominal), Fleiss' $\kappa$ \cite{Fleiss1971Kappa} ($N$ raters, nominal), and
+Krippendorff's $\alpha$ \cite{HayesKrippendorff2007,Krippendorff2018} for
+interval data ($0$--$100$ scores, with missing-value support). We report
+Landis--Koch \cite{LandisKoch1977} interpretive bands for $\kappa$. The interval
+$\alpha$ implementation was recently corrected to the canonical ordered-pair
+formula: observed disagreement counts each within-unit value pair in both orders
+($i\neq j$), consistent with the expected-disagreement normalization
+$2/(N(N-1))$ over the value pool. The earlier unordered-pair counting halved
+$D_o$ and inflated $\alpha$ via $\alpha_{\text{wrong}}=(\alpha_{\text{true}}+1)/2$;
+the corrected routine is checked against the R \texttt{irr}/\texttt{krippendorff}
+implementations.
+
+\paragraph{Discrimination via paired bootstrap.} To test whether the benchmark
+separates two systems on the same locked suite, we compute per-case score
+differences and a seeded paired bootstrap \cite{EfronTibshirani1993} (default
+$10{,}000$ resamples) yielding the mean difference, a percentile confidence
+interval, and a two-sided $p$-value. A separation is declared significant only
+under a \emph{double gate}: $p<\alpha$ \emph{and} the CI excludes zero (lower
+bound $>0$). The harness further requires an effect-size floor (default
+$\ge5$ percentage points) to call a separation ``meaningful'' versus merely
+``statistically significant,'' and it stratifies by modality and difficulty
+(strata with $n\ge5$) to flag any stratum that reverses the global ranking. A
+reference probe additionally scores each gold report \emph{as if it were a model
+output}; gold should score near-perfect, so low gold scores expose
+dataset/scoring bugs rather than model weakness.
+
+\paragraph{Judge calibration.} Because the LLM judge is optional but
+consequential, we provide a calibration suite computing: (i) \emph{test-retest}
+reliability (same judge, repeated runs on the same suite) as Krippendorff
+$\alpha$ over continuous overall scores; (ii) \emph{cross-judge} agreement
+(different judge models) as Cohen's $\kappa$ on verdicts and $\alpha$ on overall
+scores; and (iii) a \emph{det-vs-judge} Spearman correlation
+\cite{Spearman1904} testing whether judge scores track deterministic scores in
+the expected direction. A judge is labeled \emph{calibrated}/\emph{weak}/
+\emph{uncalibrated} from these signals. This is standard LLM-as-a-judge hygiene
+\cite{Zheng2023JudgeMTBench}.
+
+\paragraph{Honest gap.} These instruments measure judge \emph{self-consistency}
+and \emph{internal} det-vs-judge coherence. They do \emph{not} measure judge
+reliability against radiologists, which we have not yet done. A judge that is
+perfectly self-consistent and perfectly correlated with the deterministic scorer
+could still disagree systematically with expert reviewers; closing that gap
+requires the radiologist study in Section~\ref{sec:limitations}.
+
+\section{Reproducibility and Provenance}
+\label{sec:provenance}
+
+Every comparable result is backed by a cryptographic hash chain so that anyone
+can verify a leaderboard row was produced from the exact cases, scoring code, and
+judge configuration claimed:
+\[
+\text{caseHash}\ \rightarrow\ \text{suiteHash}\ \rightarrow\ \text{scoringHash}\ \rightarrow\ \text{runHash}\ \rightarrow\ \text{leaderboardHash}.
+\]
+A \textbf{caseHash} is the SHA-256 of the canonicalized case (id, exam, findings,
+locale, gold findings, critical findings, guideline expectations, context,
+difficulty). A \textbf{suiteHash} is the SHA-256 of the sorted case hashes. A
+\textbf{scoringHash} is the SHA-256 over a pinned, enumerated list of scoring and
+evaluator source files; building the provenance manifest \emph{fails loudly} if
+any listed file is missing, so a stale file list cannot silently invalidate the
+chain. A \textbf{runHash} binds the suite hash, the canonicalized run manifest
+(benchmark version, suite, locale, track, provider, model label, scaffold, judge
+provider/model, submission mode, canary token), and the scoring hash. A
+\textbf{leaderboardHash} is the SHA-256 of the sorted run hashes. Canonical JSON
+serialization (sorted keys, deterministic array encoding) makes every hash
+order-insensitive and reproducible. Perturbations and the bootstrap use seeded
+PRNGs, so the validation and discrimination outputs are bit-reproducible across
+machines.
+
+\section{Leaderboard Integrity and Anti-Gaming}
+\label{sec:integrity}
+
+A public leaderboard is only as trustworthy as its resistance to inflated
+self-reports. LAIBench enforces several integrity properties:
+
+\begin{itemize}[leftmargin=*]
+\item \textbf{Recompute, never trust.} Leaderboard and compare operations
+recompute case overalls, suite summaries, verdict counts, per-dimension means,
+comparable keys, and suite hashes from raw artifacts. If a run JSON was hand-
+edited to inflate \texttt{averageOverall}, strict-pass rate, non-fail rate,
+per-dimension means, or comparable metadata, leaderboard generation aborts before
+producing public output.
+\item \textbf{Comparable keys.} Paired comparisons are only permitted between
+runs sharing a comparable key (same suite hash, locale, track); the framework
+refuses to rank incomparable runs as equivalent and refuses superiority claims
+without paired testing on the same suite hash.
+\item \textbf{Track separation.} Product agents, custom agents, mini-agent
+scaffolds, and raw models occupy separate ranks rather than being merged.
+\item \textbf{Contamination scanning.} A per-suite canary token is searched
+whitespace-insensitively across raw, normalized, and sanitized report text
+(defeating split-token evasion); the judge can also flag memorized boilerplate.
+Runs are labeled \emph{clean}/\emph{suspicious}/\emph{contaminated}.
+\item \textbf{Copy-everything is not a win.} Because \dimname{TERM},
+\dimname{GUIDE}, structural compliance, and the hallucination component of
+\dimname{QUAL} all penalize verbose, unstructured, or unsupported content, a
+report that copies all handed-in text to maximize the critical-finding veto rate
+is penalized elsewhere --- and \passk{} (Section~\ref{sec:passk}) further removes
+the incentive to game a single-pass veto.
+\end{itemize}
+
+\section{Threats to Validity and Limitations}
+\label{sec:limitations}
+
+We list the threats that a reviewer should weigh; several are foundational and
+bound the claims this paper can make.
+
+\begin{description}[leftmargin=0.6cm,style=nextline]
+\item[Text, not image.] LAIBench evaluates report faithfulness from provided
+text evidence and does \emph{not} evaluate primary image interpretation
+(Section~\ref{sec:scope}). It cannot detect findings missed on the scan and
+makes no diagnostic-accuracy claim.
+\item[Keyword/substring critical detector.] The critical-finding detector is
+currently keyword/substring- and token-overlap-based with negation handling. It
+can miss phrasing variants and is not a validated clinical extractor. The
+intended remedy is a validated extractor (e.g.\ a GREEN-based
+\cite{Ostmeier2024GREEN} or RadGraph-based \cite{Jain2021RadGraph} entity model)
+in place of the heuristic. Until then, \dimname{CRIT}/\dimname{QUAL} should be
+read as \emph{approximations} of recall, not validated clinical recall.
+\item[Heuristic gold and approximate entity recall.] \dimname{QUAL} approximates
+entity recall via synonym-expanded keyword overlap rather than a trained
+extractor, and gold findings in the daily suites are heuristically derived from
+reports rather than fully radiologist-adjudicated. Both approximations are
+documented and both are pending validation.
+\item[Synthetic-only public data; no real-data results yet.] The only public
+cases are a small synthetic pt-BR demo suite for smoke tests and framework
+review. \textbf{This paper reports no results on real clinical data.} All current
+numbers (catch rates, discrimination, calibration) are illustrative of the
+machinery on the synthetic demo suite; they are not evidence about any deployed
+system's clinical performance.
+\item[Unmeasured judge-vs-radiologist reliability.] We measure judge self-
+consistency and det-vs-judge coherence, not agreement with radiologists
+(Section~\ref{sec:stats}). The LLM-as-a-judge component is optional and its
+clinical validity is unestablished.
+\item[Vendor-built.] LAIBench is developed by a commercial radiology-reporting
+vendor. We mitigate the conflict by publishing the scoring code, fixing weights
+rather than fitting them, providing recompute-from-raw anti-gaming checks, and
+documenting claim discipline; but the benchmark has not been independently
+governed, and a system built by the same vendor should not be ranked on it
+without third-party oversight.
+\item[Constrained output contract.] The HTML structural contract aids machine
+checking but is not a clinical standard; structural-compliance dimensions
+(\dimname{TERM}, parts of \dimname{RAG}) reflect that contract, not necessarily
+local reporting requirements.
+\end{description}
+
+\paragraph{Validation roadmap.} The path from ``engineering benchmark readiness''
+to defensible clinical claims is: (1) replace the keyword critical detector with
+a validated extractor and re-run perturbation validation against it; (2) lock a
+radiologist-adjudicated subset (the framework already specifies a two-reviewer,
+$\ge80\%$ acceptability / $\ge70\%$ per-dimension agreement adjudication gate);
+(3) measure judge-vs-radiologist agreement and calibrate the judge to that ground
+truth; (4) run paired discrimination on real, held-out clinical suites that are
+never used for system iteration; and (5) only then upgrade public wording beyond
+engineering readiness. Until these are done, LAIBench claims report faithfulness,
+transcription safety, and reliability measurement --- not prospective clinical
+safety.
+
+\section{Conclusion}
+
+LAIBench reframes radiology report-generation evaluation around the question a
+deployer actually asks: not ``how good is the average report?'' but ``does the
+system faithfully preserve every critical finding it was handed, every time?''
+The instruments that follow from this reframing --- a critical-finding hard veto
+instead of a soft penalty, a \passk{} reliability headline over a saturating veto
+rate, eight declared adversarial perturbations that validate the scorer by
+construction, a paired-bootstrap discrimination test with a double significance
+gate, a judge-calibration suite, and a cryptographic provenance and anti-gaming
+layer --- are, taken together, a governance-oriented measurement methodology
+rather than another quality metric. We have been deliberate about scope (text,
+not image) and about what remains unvalidated (keyword heuristics, synthetic-only
+public data, no real-data results, unmeasured judge-vs-radiologist reliability,
+vendor authorship). The contribution we claim is the methodology and its honest
+boundary conditions; the validation roadmap above is the work that would let the
+benchmark support stronger claims.
+
+\section*{Reproducibility}
+The scoring code, evaluators, perturbation generators, statistics, provenance
+hash chain, schemas, and the synthetic demo suite are available in the public
+LAIBench repository. The full clinical corpus, hidden test set, answer keys, and
+private scoring criteria are gated and are not part of the public release.
+
+\section*{Conflicts of Interest}
+LAIBench is developed by a commercial radiology-reporting vendor. See
+Section~\ref{sec:limitations}.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

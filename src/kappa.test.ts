@@ -91,6 +91,26 @@ describe("krippendorffAlphaInterval", () => {
     assert.ok(Number.isFinite(r.alpha));
   });
 
+  // Regression guards: pin alpha to hand-computed canonical interval values
+  // (cross-checked against R `irr::kripp.alpha` / Python `krippendorff`). The
+  // pre-fix implementation summed only unordered within-unit pairs, halving D_o
+  // and returning alpha_wrong = (alpha_true + 1) / 2 — so these would have
+  // reported 0.85, 0.25 and 0.50 respectively. See kappa.ts D_o derivation.
+  it("matches canonical alpha = 0.70 for [[10,20],[30,40]]", () => {
+    const r = krippendorffAlphaInterval([[10, 20], [30, 40]]);
+    assert.ok(Math.abs(r.alpha - 0.7) < 1e-6, `expected 0.70, got ${r.alpha}`);
+  });
+
+  it("matches canonical alpha = -0.50 for maximal within-unit disagreement [[0,100],[0,100]]", () => {
+    const r = krippendorffAlphaInterval([[0, 100], [0, 100]]);
+    assert.ok(Math.abs(r.alpha - -0.5) < 1e-6, `expected -0.50, got ${r.alpha}`);
+  });
+
+  it("matches canonical alpha = 0 when within-unit spread equals pool spread [[20,30,40]]", () => {
+    const r = krippendorffAlphaInterval([[20, 30, 40]]);
+    assert.ok(Math.abs(r.alpha - 0) < 1e-6, `expected 0, got ${r.alpha}`);
+  });
+
   it("interpretAlpha produces convention labels", () => {
     assert.equal(interpretAlpha(-0.1), "no agreement");
     assert.equal(interpretAlpha(0.5), "tentative");

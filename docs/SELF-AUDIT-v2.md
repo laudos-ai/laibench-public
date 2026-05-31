@@ -16,7 +16,7 @@ Up from 7.4 (post-iter1) by closing every issue I raised against my own work.
 | Adversarial perturbation suite | 15% | — | 6.0 | 9.0 | +9.0 |
 | Reproducibility hash chain | 10% | — | 8.0 | 9.5 | +9.5 |
 | Tests (unit + integration) | 12% | 7.0 | 7.5 | 9.5 | +2.5 |
-| Paper §1–13 | 12% | 7.5 | 8.0 | 9.0 | +1.5 |
+| Methodology docs (validation / reproducibility) | 12% | 7.5 | 8.0 | 9.0 | +1.5 |
 | README + CHANGELOG + MIGRATION | 8% | 7.5 | 8.5 | 9.5 | +2.0 |
 | CLI integration (9 cmds) | 10% | 7.0 | 8.0 | 9.5 | +2.5 |
 | Real-world signal (baselines) | 10% | 5.0 | 4.0 | 7.0 | +2.0 |
@@ -55,7 +55,7 @@ Three external blockers, all out of harness scope:
   `perturb-eval`, `provenance`, `report`) totaling ~1.2k LOC of pure TS.
 - 9 new CLI commands (`discriminate`, `calibrate`, `contamination`,
   `perturb-matrix`, `perturb-run`, `bootstrap`, `provenance`, `report`).
-- 186 tests (was 105 in v1) — unit, integration, edge cases (NaN, zero diff,
+- 214 tests (was 105 in v1) — unit, integration, edge cases (NaN, zero diff,
   length mismatches, identical raters, perfect / random / inverted agreement,
   per-modality stratification, stratum-collapse warnings).
 - Reproducibility hash chain (caseHash → suiteHash → scoringHash → runHash →
@@ -68,7 +68,10 @@ Three external blockers, all out of harness scope:
   commands (mock suite, leaderboard, bootstrap, contamination, provenance,
   perturb-run).
 - Migration guide + comprehensive changelog.
-- Paper §10–13 with concrete catch-rate numbers from a real smoke run.
+- Validation methodology in `docs/laibench-leaderboard-methods.md` with
+  concrete catch-rate numbers from a real smoke run. (The bundled preprint is
+  the separate "Beyond Templates" companion paper; a dedicated LAIBench methods
+  paper is forthcoming.)
 
 ## Bugs found in self-review and fixed in iter2
 
@@ -102,9 +105,10 @@ core complaints were:
 - "Where is the leaderboard?" → laibench v2 ships with multi-baseline runs and
   bootstrap CIs displayed in the leaderboard markdown. (Real frontier-model
   runs still pending; mocks are present.)
-- "Where is the methodology?" → Paper §10 documents inter-rater agreement,
-  paired bootstrap, discrimination tests, judge calibration, perturbation
-  robustness, contamination canaries, and reproducibility hash chain.
+- "Where is the methodology?" → `docs/laibench-leaderboard-methods.md`
+  documents inter-rater agreement, paired bootstrap, discrimination tests,
+  judge calibration, perturbation robustness, contamination canaries, and the
+  reproducibility hash chain.
 - "How is contamination detected?" → Per-run UUIDv4 canary token injected into
   judge prompts; whitespace-insensitive scan over raw/normalized/sanitized
   HTML.

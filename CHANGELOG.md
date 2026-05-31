@@ -55,15 +55,18 @@ Iter2 hardens iter1 against the bugs surfaced in self-review. Score moved from
   contamination, provenance, perturb-run). Uploads `runs/` as artifact.
 - **`docs/MIGRATION.md`**: v1 → v2 migration guide with one-liner upgrade
   diff and opt-in feature snippets.
-- **Paper update**: §10.5 now reports concrete per-kind catch rates from a
-  smoke run on `lite-public.pt-BR` (40 perturbations across 5 cases) showing
-  100% catch on laterality_flip, measurement_scramble, terminology_corrupt,
-  structure_break under deterministic-only scoring; 0% on negation/critical
-  kinds (judge required). Honest, reproducible reference number.
+- **Per-kind catch-rate reference**: a smoke run on `lite-public.pt-BR`
+  (40 perturbations across 5 cases) shows 100% catch on laterality_flip,
+  measurement_scramble, terminology_corrupt, and structure_break under
+  deterministic-only scoring, and 0% on negation/critical kinds (judge
+  required). Methodology in `docs/laibench-leaderboard-methods.md`. (The
+  bundled preprint is the separate "Beyond Templates" conceptual companion
+  paper, which does not describe the benchmark; a dedicated LAIBench methods
+  paper is forthcoming.)
 
-### Test count: 186 (was 169 in iter1, 105 in v1).
+### Test count: 214 (was 169 in iter1, 105 in v1).
 
-## v2.0.0 — 2026-05-09 — Reference-grade validation
+## v2.0.0-iter1 — 2026-05-09 — Reference-grade validation (validation layers)
 
 Promoted from "good benchmark" to "reference area benchmark" by adding the four
 validation layers a reviewer needs to trust a leaderboard.
@@ -99,10 +102,13 @@ validation layers a reviewer needs to trust a leaderboard.
 - **64 new tests** across `src/kappa.test.ts`, `src/discriminate.test.ts`,
   `src/calibrate.test.ts`, `src/perturb.test.ts`, `src/perturb-eval.test.ts`,
   `src/provenance.test.ts`. 169 total, all passing.
-- **Paper sections** §10 (Reference-Grade Validation Infrastructure), §11
-  (Reproducibility Statement), §12 (Threats to Validity, updated), §13
-  (Versioning and Continuity). 8 new references (Cohen, Fleiss, Krippendorff,
-  Hayes & Krippendorff, Landis & Koch, Efron & Tibshirani, McNemar, Bachour).
+- **Validation methodology** documented in
+  `docs/laibench-leaderboard-methods.md` (reference-grade validation
+  infrastructure, reproducibility, threats to validity, versioning), relying on
+  the agreement/CI statistics Cohen, Fleiss, Krippendorff, Hayes & Krippendorff,
+  Landis & Koch, Efron & Tibshirani, McNemar, and Bachour. (The bundled
+  "Beyond Templates" preprint is a separate conceptual companion and does not
+  describe the benchmark; a dedicated LAIBench methods paper is forthcoming.)
 
 ### Changed
 

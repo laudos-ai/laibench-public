@@ -1,6 +1,6 @@
 {
   "name": "laibench",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "license": "UNLICENSED",
   "type": "module",
@@ -16,8 +16,10 @@
     "compare": "tsx src/cli.ts compare",
     "smoke:mock": "tsx src/cli.ts suite --suite suites/lite-public.pt-BR.json --provider command --cmd \"node examples/mock-agent.mjs\" --run-name mock-agent --out runs/mock-agent.json",
     "smoke:leaderboard": "tsx src/cli.ts leaderboard --inputs runs/mock-agent.json --out runs/leaderboard.json --markdown runs/leaderboard.md",
+    "smoke:en": "tsx src/cli.ts suite --suite suites/lite-public.en-US.json --provider command --cmd \"node examples/mock-agent.mjs\" --run-name mock-en --out runs/mock-en.json",
+    "smoke:reliability": "tsx src/cli.ts suite --suite suites/lite-public.pt-BR.json --provider command --cmd \"node examples/mock-agent.mjs\" --run-name mock-agent-2 --out runs/mock-agent-2.json && tsx src/cli.ts reliability --inputs runs/mock-agent.json runs/mock-agent-2.json --out runs/reliability.json --markdown runs/reliability.md",
     "smoke:openai-compatible": "node examples/smoke-openai-compatible.mjs",
-    "test": "node --import tsx --test src/**/*.test.ts"
+    "test": "node scripts/run-tests.mjs"
   },
   "engines": {
     "node": ">=20",

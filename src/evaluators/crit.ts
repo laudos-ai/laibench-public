@@ -5,147 +5,19 @@
  * Score is recall-weighted (missing a critical finding is worse than a false positive).
  */
 
-import { extractCriticalMentions, isNegated, type ExtractedCriticalMention } from "../extract.js";
-import { normalizeLoose, stripTags } from "../normalize.js";
+import { getDefaultCriticalExtractor } from "../extractors/critical-extractor.js";
+import { normalizeLoose } from "../normalize.js";
 import type { BenchCase, Check, EvaluatorResult, ExamMeta, LocaleKey } from "../types.js";
 
 /**
- * Match critical finding labels from gold against mentions in the report.
- * Uses both exact substring matching and semantic matching via keyword overlap.
+ * Match critical finding labels from gold against mentions in the report,
+ * delegating to the active (pluggable) critical-finding extractor. The default
+ * is the keyword/substring + token-overlap matcher with negation awareness;
+ * swapping in a validated model-based extractor is a one-call change via
+ * setDefaultCriticalExtractor (see src/extractors/critical-extractor.ts).
  */
-/**
- * Find the sentence in the report text that contains the matched gold label.
- * Splits on sentence boundaries and returns the first sentence containing the match.
- */
-function findMatchingSentence(reportHtml: string, goldNorm: string): string | null {
-  const text = stripTags(reportHtml.replace(/<br\s*\/?>/gi, "\n"));
-  const sentences = text.split(/[.\n]/).map((s) => s.trim()).filter((s) => s.length > 3);
-  for (const sentence of sentences) {
-    if (normalizeLoose(sentence).includes(goldNorm)) {
-      return sentence;
-    }
-  }
-  return null;
-}
-
-/**
- * Find the sentence that best matches a set of gold tokens (for token-level matching).
- */
-function findBestTokenMatchSentence(reportHtml: string, goldTokens: string[]): string | null {
-  const text = stripTags(reportHtml.replace(/<br\s*\/?>/gi, "\n"));
-  const sentences = text.split(/[.\n]/).map((s) => s.trim()).filter((s) => s.length > 3);
-  let bestSentence: string | null = null;
-  let bestRatio = 0;
-  for (const sentence of sentences) {
-    const norm = normalizeLoose(sentence);
-    const matched = goldTokens.filter((t) => norm.includes(t));
-    const ratio = goldTokens.length > 0 ? matched.length / goldTokens.length : 0;
-    if (ratio > bestRatio) {
-      bestRatio = ratio;
-      bestSentence = sentence;
-    }
-  }
-  return bestRatio >= 0.5 ? bestSentence : null;
-}
-
-function matchCriticalFindings(
-  goldLabels: string[],
-  reportHtml: string,
-  locale: LocaleKey,
-): {
-  truePositives: string[];
-  falseNegatives: string[];
-  falsePositives: ExtractedCriticalMention[];
-  recall: number;
-  precision: number;
-  f1: number;
-} {
-  const reportText = normalizeLoose(stripTags(reportHtml));
-  const extractedMentions = extractCriticalMentions(reportHtml, locale);
-  const usedMentions = new Set<number>();
-
-  const truePositives: string[] = [];
-  const falseNegatives: string[] = [];
-
-  for (const goldLabel of goldLabels) {
-    const goldNorm = normalizeLoose(goldLabel);
-
-    // Try direct substring match first
-    if (reportText.includes(goldNorm)) {
-      // BUG A FIX: Check if the matched region is negated before counting as TP
-      const matchingSentence = findMatchingSentence(reportHtml, goldNorm);
-      if (matchingSentence && isNegated(matchingSentence, locale)) {
-        // Negated context — this is a miss, not a hit
-        falseNegatives.push(goldLabel);
-        continue;
-      }
-
-      truePositives.push(goldLabel);
-      // Find the matching extracted mention to mark as used
-      for (let i = 0; i < extractedMentions.length; i++) {
-        if (usedMentions.has(i)) continue;
-        if (normalizeLoose(extractedMentions[i].text).includes(goldNorm)) {
-          usedMentions.add(i);
-          break;
-        }
-      }
-      continue;
-    }
-
-    // Try token-level matching
-    const goldTokens = goldNorm.split(/\s+/).filter((t) => t.length > 2);
-    const matchedTokens = goldTokens.filter((t) => reportText.includes(t));
-    const tokenRatio = goldTokens.length > 0 ? matchedTokens.length / goldTokens.length : 0;
-
-    if (tokenRatio >= 0.5) {
-      // BUG A FIX: Check if the best matching sentence is negated
-      const bestSentence = findBestTokenMatchSentence(reportHtml, goldTokens);
-      if (bestSentence && isNegated(bestSentence, locale)) {
-        falseNegatives.push(goldLabel);
-        continue;
-      }
-
-      truePositives.push(goldLabel);
-      // Find best matching extracted mention
-      let bestIdx = -1;
-      let bestSim = 0;
-      for (let i = 0; i < extractedMentions.length; i++) {
-        if (usedMentions.has(i)) continue;
-        const mentionNorm = normalizeLoose(extractedMentions[i].text);
-        const sim = goldTokens.filter((t) => mentionNorm.includes(t)).length / goldTokens.length;
-        if (sim > bestSim) { bestSim = sim; bestIdx = i; }
-      }
-      if (bestIdx >= 0) usedMentions.add(bestIdx);
-    } else {
-      falseNegatives.push(goldLabel);
-    }
-  }
-
-  // False positives: extracted critical mentions not matched to any gold label
-  const falsePositives: ExtractedCriticalMention[] = [];
-  for (let i = 0; i < extractedMentions.length; i++) {
-    if (!usedMentions.has(i)) {
-      // Only count as FP if it's a genuinely critical mention, not just incidental
-      const mentionText = normalizeLoose(extractedMentions[i].text);
-      // Check if this mention has any overlap with gold labels
-      const hasAnyOverlap = goldLabels.some((gl) => {
-        const tokens = normalizeLoose(gl).split(/\s+/).filter((t) => t.length > 2);
-        return tokens.some((t) => mentionText.includes(t));
-      });
-      if (!hasAnyOverlap) {
-        falsePositives.push(extractedMentions[i]);
-      }
-    }
-  }
-
-  const tp = truePositives.length;
-  const fn = falseNegatives.length;
-  const fp = falsePositives.length;
-  const recall = tp + fn > 0 ? tp / (tp + fn) : 1;
-  const precision = tp + fp > 0 ? tp / (tp + fp) : 1;
-  const f1 = recall + precision > 0 ? (2 * recall * precision) / (recall + precision) : 0;
-
-  return { truePositives, falseNegatives, falsePositives, recall, precision, f1 };
+function matchCriticalFindings(goldLabels: string[], reportHtml: string, locale: LocaleKey) {
+  return getDefaultCriticalExtractor().detect(goldLabels, reportHtml, locale);
 }
 
 /**

@@ -97,8 +97,8 @@ One artifact suitable for attaching to a paper or a PR.
 - `src/provenance.ts`: caseHash → suiteHash → scoringHash → runHash → leaderboardHash chain. Fails loud on missing scoring files.
 - `src/report.ts`: consolidated reporter (CI + contamination + calibration + discrimination + perturbation + provenance).
 - `src/leaderboard.ts`: bootstrap CI shown in markdown output and JSON.
-- `package.json`: bumped to 2.0.0; new scripts `discriminate`, `calibrate`, `contamination`, `perturb-matrix`, `perturb-run`, `bootstrap`, `provenance`, `report`, plus seeded multi-baseline smokes (`smoke:good`, `smoke:medium`, `smoke:bad`, `smoke:baselines`, `smoke:discriminate`, `smoke:perturb`, `smoke:full-leaderboard`).
+- `package.json`: bumped to 2.0.0. The v2 commands (`discriminate`, `calibrate`, `contamination`, `perturb-matrix`, `perturb-run`, `bootstrap`, `provenance`, `report`) are invokable via `npm run bench -- <command>` (e.g. `npm run bench -- discriminate ...`). The seeded multi-baseline mocks ship in `examples/mock-good.mjs`, `mock-medium.mjs`, and `mock-bad.mjs`.
 
 ## Tests
 
-v1: 105 tests. v2: 188 tests (60+ for new modules and integration). All passing on Node 20 + 22 (CI in `.github/workflows/ci.yml`).
+v1: 105 tests. v2: 214 tests (new modules + integration + interval-alpha regression guards). All passing on Node 20 + 22 (CI in `.github/workflows/ci.yml`).

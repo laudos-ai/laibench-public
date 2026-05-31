@@ -122,6 +122,13 @@ export function combineScores(
   const partialThreshold = policy?.partialThreshold ?? 60;
   const criticalFailForces = policy?.criticalFailForces ?? true;
 
+  // Single source of truth for weights: a policy may re-weight the dimensions
+  // (e.g. the "strict" clinical profile up-weights CRIT). When no policy is
+  // supplied, fall back to the canonical default WEIGHTS. The default policy's
+  // weights are defined as exactly these canonical weights, so the no-policy and
+  // default-policy paths produce identical numbers.
+  const weights = policy?.weights ?? WEIGHTS;
+
   const combined = Object.fromEntries(DIMS.map((dim) => [dim, null])) as Record<Dim, number | null>;
   const scoredDims = DIMS.filter((dim) => detDims[dim].score !== null);
 
@@ -134,13 +141,13 @@ export function combineScores(
     if (det === null) combined[dim] = null;
     else if (judge === null) combined[dim] = det;
     else combined[dim] = scoreMode === "judge-primary" ? judge : Math.min(det, judge);
-    totalWeight += WEIGHTS[dim];
+    totalWeight += weights[dim];
   }
 
   for (const dim of scoredDims) {
     const score = combined[dim];
     if (score === null) continue;
-    overall += score * (WEIGHTS[dim] / totalWeight);
+    overall += score * (weights[dim] / totalWeight);
   }
 
   overall = round1(overall);

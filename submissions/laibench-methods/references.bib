@@ -1,0 +1,303 @@
+% ---------------------------------------------------------------------------
+% LAIBench methods paper -- references
+%
+% Bib keys marked with a "% TODO verify" comment carry details (page ranges,
+% venue, DOI) that the authors should confirm against the published record
+% before final submission. Author/year are believed correct where unmarked.
+% ---------------------------------------------------------------------------
+
+% ---- Faithfulness / clinical-efficacy metrics for radiology report generation ----
+
+@inproceedings{Ostmeier2024GREEN,
+  author    = {Ostmeier, Sophie and Xu, Justin and Chen, Zhihong and Varma, Maya and
+               Blankemeier, Louis and Bluethgen, Christian and Md, Arne Edward Michalson and
+               Moseley, Michael and Langlotz, Curtis and Chaudhari, Akshay S. and Delbrouck, Jean-Benoit},
+  title     = {{GREEN: Generative Radiology Report Evaluation and Error Notation}},
+  booktitle = {Findings of the Association for Computational Linguistics: EMNLP 2024},
+  year      = {2024},
+  note      = {arXiv:2405.03595},
+  doi       = {10.48550/arXiv.2405.03595},
+  url       = {https://arxiv.org/abs/2405.03595}
+}
+
+@inproceedings{Jain2021RadGraph,
+  author    = {Jain, Saahil and Agrawal, Ashwin and Saporta, Adriel and Truong, Steven Q. H. and
+               Duong, Du Nguyen and Bui, Tan and Chambon, Pierre and Zhang, Yuhao and
+               Lungren, Matthew P. and Ng, Andrew Y. and Langlotz, Curtis P. and Rajpurkar, Pranav},
+  title     = {{RadGraph: Extracting Clinical Entities and Relations from Radiology Reports}},
+  booktitle = {Proceedings of the Neural Information Processing Systems Track on
+               Datasets and Benchmarks (NeurIPS Datasets and Benchmarks)},
+  year      = {2021},
+  note      = {arXiv:2106.14463},
+  doi       = {10.48550/arXiv.2106.14463},
+  url       = {https://arxiv.org/abs/2106.14463}
+}
+
+@article{Yu2023RadCliQ,
+  author    = {Yu, Feiyang and Endo, Mark and Krishnan, Rayan and Pan, Ian and Tsai, Andy and
+               Reis, Eduardo Pontes and Fonseca, Eduardo Kaiser Ururahy Nunes and
+               Lee, Henrique Min Ho and Abad, Zahra Shakeri Hossein and Ng, Andrew Y. and
+               Langlotz, Curtis P. and Venugopal, Vasantha Kumar and Rajpurkar, Pranav},
+  title     = {{Evaluating Progress in Automatic Chest X-Ray Radiology Report Generation}},
+  journal   = {Patterns},
+  volume    = {4},
+  number    = {9},
+  pages     = {100802},
+  year      = {2023},
+  doi       = {10.1016/j.patter.2023.100802},
+  url       = {https://doi.org/10.1016/j.patter.2023.100802}
+}
+
+@inproceedings{Smit2020CheXbert,
+  author    = {Smit, Akshay and Jain, Saahil and Rajpurkar, Pranav and Pareek, Anuj and
+               Ng, Andrew Y. and Lungren, Matthew P.},
+  title     = {{CheXbert: Combining Automatic Labelers and Expert Annotations for
+               Accurate Radiology Report Labeling Using BERT}},
+  booktitle = {Proceedings of the 2020 Conference on Empirical Methods in
+               Natural Language Processing (EMNLP)},
+  pages     = {1500--1519},
+  year      = {2020},
+  doi       = {10.18653/v1/2020.emnlp-main.117},
+  url       = {https://aclanthology.org/2020.emnlp-main.117/}
+}
+
+@article{Irvin2019CheXpert,
+  author    = {Irvin, Jeremy and Rajpurkar, Pranav and Ko, Michael and Yu, Yifan and
+               Ciurea-Ilcus, Silviana and Chute, Chris and Marklund, Henrik and
+               Haghgoo, Behzad and Ball, Robyn and Shpanskaya, Katie and others},
+  title     = {{CheXpert: A Large Chest Radiograph Dataset with Uncertainty Labels
+               and Expert Comparison}},
+  journal   = {Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume    = {33},
+  number    = {01},
+  pages     = {590--597},
+  year      = {2019},
+  doi       = {10.1609/aaai.v33i01.3301590},
+  url       = {https://doi.org/10.1609/aaai.v33i01.3301590}
+}
+
+@inproceedings{Boag2020RadGraphF1,
+  % TODO verify: the RadGraph-F1 metric is most commonly attributed to the
+  % RadGraph paper (Jain et al. 2021) and operationalized in the RadCliQ work
+  % (Yu et al. 2023); cite Jain2021RadGraph / Yu2023RadCliQ as primary and
+  % confirm whether a distinct standalone RadGraph-F1 reference is desired.
+  author    = {Yu, Feiyang and Endo, Mark and Krishnan, Rayan and Pan, Ian and Rajpurkar, Pranav},
+  title     = {{RadGraph-F1: An entity-and-relation overlap metric for radiology reports}},
+  booktitle = {(see RadCliQ / RadGraph; metric component)},
+  year      = {2023},
+  note      = {RadGraph-F1 is defined within the RadGraph and RadCliQ works.}
+}
+
+@article{Yu2023ReXVal,
+  % TODO verify: ReXVal is the radiologist-error-annotation dataset released
+  % alongside the RadCliQ study (Yu et al., Patterns 2023). Confirm whether a
+  % separate dataset citation/DOI is preferred over the parent paper.
+  author    = {Yu, Feiyang and Endo, Mark and Krishnan, Rayan and Pan, Ian and Rajpurkar, Pranav},
+  title     = {{ReXVal: A Radiologist Error-Labeled Validation Dataset for
+               Radiology Report Generation Metrics}},
+  journal   = {(released with RadCliQ, Patterns 2023)},
+  year      = {2023},
+  url       = {https://physionet.org/content/rexval-dataset/}
+}
+
+@inproceedings{Zhao2024RaTEScore,
+  author    = {Zhao, Weike and Wu, Chaoyi and Zhang, Xiaoman and Zhang, Ya and Wang, Yanfeng and Xie, Weidi},
+  title     = {{RaTEScore: A Metric for Radiology Report Generation}},
+  booktitle = {Proceedings of the 2024 Conference on Empirical Methods in
+               Natural Language Processing (EMNLP)},
+  year      = {2024},
+  note      = {arXiv:2406.16845},
+  doi       = {10.48550/arXiv.2406.16845},
+  url       = {https://arxiv.org/abs/2406.16845}
+}
+
+@inproceedings{Bannur2024RadFact,
+  % RadFact was introduced with the MAIRA-2 grounded reporting work.
+  author    = {Bannur, Shruthi and Bouzid, Kenza and Castro, Daniel C. and Schwaighofer, Anton and
+               Thieme, Anja and Bond-Taylor, Sam and Ilse, Maximilian and P{\'e}rez-Garc{\'i}a, Fernando and
+               Salvatelli, Valentina and Sharma, Harshita and others},
+  title     = {{MAIRA-2: Grounded Radiology Report Generation}},
+  booktitle = {arXiv preprint},
+  year      = {2024},
+  note      = {arXiv:2406.04449; introduces the RadFact evaluation framework},
+  doi       = {10.48550/arXiv.2406.04449},
+  url       = {https://arxiv.org/abs/2406.04449}
+}
+
+@misc{Zhang2024ReXrank,
+  % TODO verify: ReXrank public leaderboard for chest X-ray report generation.
+  % Confirm the exact author list and citation form (leaderboard vs. paper).
+  author    = {Zhang, Xiaoman and others},
+  title     = {{ReXrank: A Public Leaderboard for AI-Powered Radiology Report Generation}},
+  year      = {2024},
+  note      = {arXiv:2411.15122},
+  doi       = {10.48550/arXiv.2411.15122},
+  url       = {https://arxiv.org/abs/2411.15122}
+}
+
+% ---- Code/program-generation reliability (pass@k lineage) ----
+
+@article{Chen2021Codex,
+  author    = {Chen, Mark and Tworek, Jerry and Jun, Heewoo and Yuan, Qiming and
+               Pinto, Henrique Ponde de Oliveira and Kaplan, Jared and Edwards, Harri and
+               Burda, Yuri and Joseph, Nicholas and Brockman, Greg and others},
+  title     = {{Evaluating Large Language Models Trained on Code}},
+  journal   = {arXiv preprint arXiv:2107.03374},
+  year      = {2021},
+  doi       = {10.48550/arXiv.2107.03374},
+  url       = {https://arxiv.org/abs/2107.03374}
+}
+
+% ---- Inter-rater agreement and resampling statistics ----
+
+@article{Cohen1960Kappa,
+  author    = {Cohen, Jacob},
+  title     = {{A Coefficient of Agreement for Nominal Scales}},
+  journal   = {Educational and Psychological Measurement},
+  volume    = {20},
+  number    = {1},
+  pages     = {37--46},
+  year      = {1960},
+  doi       = {10.1177/001316446002000104}
+}
+
+@article{Fleiss1971Kappa,
+  author    = {Fleiss, Joseph L.},
+  title     = {{Measuring Nominal Scale Agreement Among Many Raters}},
+  journal   = {Psychological Bulletin},
+  volume    = {76},
+  number    = {5},
+  pages     = {378--382},
+  year      = {1971},
+  doi       = {10.1037/h0031619}
+}
+
+@article{LandisKoch1977,
+  author    = {Landis, J. Richard and Koch, Gary G.},
+  title     = {{The Measurement of Observer Agreement for Categorical Data}},
+  journal   = {Biometrics},
+  volume    = {33},
+  number    = {1},
+  pages     = {159--174},
+  year      = {1977},
+  doi       = {10.2307/2529310}
+}
+
+@article{HayesKrippendorff2007,
+  author    = {Hayes, Andrew F. and Krippendorff, Klaus},
+  title     = {{Answering the Call for a Standard Reliability Measure for Coding Data}},
+  journal   = {Communication Methods and Measures},
+  volume    = {1},
+  number    = {1},
+  pages     = {77--89},
+  year      = {2007},
+  doi       = {10.1080/19312450709336664}
+}
+
+@book{Krippendorff2018,
+  author    = {Krippendorff, Klaus},
+  title     = {{Content Analysis: An Introduction to Its Methodology}},
+  edition   = {4},
+  publisher = {SAGE Publications},
+  year      = {2018}
+}
+
+@book{EfronTibshirani1993,
+  author    = {Efron, Bradley and Tibshirani, Robert J.},
+  title     = {{An Introduction to the Bootstrap}},
+  publisher = {Chapman and Hall/CRC},
+  year      = {1993}
+}
+
+@article{Spearman1904,
+  author    = {Spearman, Charles},
+  title     = {{The Proof and Measurement of Association between Two Things}},
+  journal   = {The American Journal of Psychology},
+  volume    = {15},
+  number    = {1},
+  pages     = {72--101},
+  year      = {1904},
+  doi       = {10.2307/1412159}
+}
+
+% ---- LLM-as-a-judge ----
+
+@article{Zheng2023JudgeMTBench,
+  author    = {Zheng, Lianmin and Chiang, Wei-Lin and Sheng, Ying and Zhuang, Siyuan and
+               Wu, Zhanghao and Zhuang, Yonghao and Lin, Zi and Li, Zhuohan and Li, Dacheng and
+               Xing, Eric P. and Zhang, Hao and Gonzalez, Joseph E. and Stoica, Ion},
+  title     = {{Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena}},
+  journal   = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2023},
+  note      = {arXiv:2306.05685},
+  doi       = {10.48550/arXiv.2306.05685},
+  url       = {https://arxiv.org/abs/2306.05685}
+}
+
+% ---- IR metrics used in the RAG dimension ----
+
+@article{JarvelinKekalainen2002,
+  author    = {J{\"a}rvelin, Kalervo and Kek{\"a}l{\"a}inen, Jaana},
+  title     = {{Cumulated Gain-Based Evaluation of IR Techniques}},
+  journal   = {ACM Transactions on Information Systems},
+  volume    = {20},
+  number    = {4},
+  pages     = {422--446},
+  year      = {2002},
+  doi       = {10.1145/582415.582418}
+}
+
+% ---- Generic NLG overlap metrics (background) ----
+
+@inproceedings{Lin2004ROUGE,
+  author    = {Lin, Chin-Yew},
+  title     = {{ROUGE: A Package for Automatic Evaluation of Summaries}},
+  booktitle = {Text Summarization Branches Out (ACL Workshop)},
+  pages     = {74--81},
+  year      = {2004},
+  url       = {https://aclanthology.org/W04-1013/}
+}
+
+@inproceedings{Papineni2002BLEU,
+  author    = {Papineni, Kishore and Roukos, Salim and Ward, Todd and Zhu, Wei-Jing},
+  title     = {{BLEU: A Method for Automatic Evaluation of Machine Translation}},
+  booktitle = {Proceedings of the 40th Annual Meeting of the Association for
+               Computational Linguistics (ACL)},
+  pages     = {311--318},
+  year      = {2002},
+  doi       = {10.3115/1073083.1073135}
+}
+
+% ---- Datasets / domain context ----
+
+@inproceedings{JohnsonMIMICCXR2019,
+  author    = {Johnson, Alistair E. W. and Pollard, Tom J. and Greenbaum, Nathaniel R. and
+               Lungren, Matthew P. and Deng, Chih-ying and Peng, Yifan and Lu, Zhiyong and
+               Mark, Roger G. and Berkowitz, Seth J. and Horng, Steven},
+  title     = {{MIMIC-CXR-JPG, a Large Publicly Available Database of Labeled Chest Radiographs}},
+  booktitle = {arXiv preprint},
+  year      = {2019},
+  note      = {arXiv:1901.07042},
+  doi       = {10.48550/arXiv.1901.07042},
+  url       = {https://arxiv.org/abs/1901.07042}
+}
+
+@article{ESR2023Structured,
+  author    = {{European Society of Radiology (ESR)}},
+  title     = {{ESR paper on structured reporting in radiology -- update 2023}},
+  journal   = {Insights into Imaging},
+  volume    = {14},
+  number    = {1},
+  year      = {2023},
+  doi       = {10.1186/s13244-023-01560-0},
+  url       = {https://doi.org/10.1186/s13244-023-01560-0}
+}
+
+@misc{LAIBenchBeyondTemplates2026,
+  author    = {Ribeiro, Natan Paraiso and Ribeiro, Petrus Paraiso and
+               Herrera, Stephanie Alba and Akira, Francisco and Moreno, Raquel},
+  title     = {{Beyond Templates: A Compositional Model and Lower Bound for
+               Radiology Report Variability}},
+  year      = {2026},
+  note      = {Companion preprint; separate from this benchmark methods paper}
+}

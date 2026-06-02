@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://laibench.laudos.ai/schemas/score.schema.json",
+  "title": "LAIBench per-case score",
+  "description": "The scored result for one case, as emitted in a run file's results[] array. Mirrors the scoring-relevant subset of the CaseRunResult type in src/types.ts. Scores are on a 0-100 scale; dimension keys are uppercase.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["case", "verdict", "detOverall", "combined", "combinedOverall", "confidence"],
+  "properties": {
+    "case": { "type": "object", "description": "The evaluated case (see case.schema.json)." },
+    "locale": { "type": "string", "enum": ["pt-BR", "en-US"] },
+    "verdict": { "type": "string", "enum": ["PASS", "PARTIAL", "FAIL"] },
+    "detOverall": { "type": "number", "minimum": 0, "maximum": 100, "description": "Deterministic overall score." },
+    "combinedOverall": { "type": "number", "minimum": 0, "maximum": 100, "description": "Combined (deterministic + optional judge) overall score." },
+    "combined": {
+      "type": "object",
+      "description": "Per-dimension combined score (0-100) or null when not applicable.",
+      "additionalProperties": false,
+      "properties": {
+        "CRIT": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+        "QUAL": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+        "TERM": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+        "GUIDE": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+        "RAG": { "type": ["number", "null"], "minimum": 0, "maximum": 100 }
+      }
+    },
+    "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+    "phaseStatus": { "type": "string", "enum": ["complete", "degraded"] },
+    "gateReasons": { "type": "array", "items": { "type": "string" } },
+    "costUsd": { "type": "number", "minimum": 0 },
+    "latencyMs": { "type": "number", "minimum": 0 }
+  }
+}

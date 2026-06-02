@@ -1,6 +1,12 @@
 # LAIBench
 
-LAIBench is a governance-oriented benchmark framework for AI-assisted radiology reporting.
+[![CI](https://github.com/laudos-ai/laibench-public/actions/workflows/ci.yml/badge.svg)](https://github.com/laudos-ai/laibench-public/actions/workflows/ci.yml)
+[![License: Source-Available](https://img.shields.io/badge/license-Source--Available-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-2.0.0-green.svg)](CHANGELOG.md)
+[![Tests](https://img.shields.io/badge/tests-231%20passing-brightgreen.svg)](#)
+[![Safety](https://img.shields.io/badge/scope-not%20a%20medical%20device-important.svg)](#)
+
+LAIBench is a governance-oriented benchmark framework for AI-assisted radiology reporting. It measures whether a reporting system **preserves clinically decisive findings** — the patient-safety failure modes that text-similarity metrics (BLEU/ROUGE) miss — and reports a strict, auditable pass/fail gate rather than a single averaged score.
 
 **LAIBench is a technical benchmark framework, not a medical device, not regulatory approval, and not clinical validation. It must not be used as the sole basis for clinical deployment decisions. All clinical use requires qualified human oversight, local validation, institutional governance, and applicable legal/regulatory review.**
 
@@ -21,6 +27,37 @@ It does not include:
 - answer keys;
 - private scoring criteria;
 - gated evaluation artifacts.
+
+## Documentation
+
+Start here, then go deep:
+
+| Topic | Document |
+| --- | --- |
+| What the benchmark is, scope, metrics, versioning | [BENCHMARK_CARD.md](BENCHMARK_CARD.md) |
+| How a system is evaluated (input/output contracts, gates) | [EVALUATION_PROTOCOL.md](EVALUATION_PROTOCOL.md) |
+| Per-dimension PASS/PARTIAL/FAIL criteria | [RUBRIC.md](RUBRIC.md) |
+| How to submit / evaluate your system | [MODEL_SUBMISSION.md](MODEL_SUBMISSION.md) · [docs/public-submissions.md](docs/public-submissions.md) |
+| Methodology of record (leaderboard) | [docs/laibench-leaderboard-methods.md](docs/laibench-leaderboard-methods.md) |
+| What data ships vs. what is gated | [DATASET_CARD.md](DATASET_CARD.md) · [DATA_ACCESS_POLICY.md](DATA_ACCESS_POLICY.md) |
+| Conflict-of-interest, anti-gaming, privacy posture | [GOVERNANCE_AND_PRIVACY.md](GOVERNANCE_AND_PRIVACY.md) |
+| Known limitations | [LIMITATIONS.md](LIMITATIONS.md) |
+| Data contracts (JSON Schema) | [schemas/](schemas/) |
+| Contributing, security, conduct | [CONTRIBUTING.md](CONTRIBUTING.md) · [SECURITY.md](SECURITY.md) · [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) |
+| Licensing & trademark | [LICENSE](LICENSE) · [LICENSE_POLICY.md](LICENSE_POLICY.md) · [TRADEMARK.md](TRADEMARK.md) |
+
+## Repository map
+
+```
+src/            TypeScript harness: CLI, scoring, evaluators/, providers/, locales/, stats
+schemas/        JSON Schema data contracts (case, submission, prediction-record, score, leaderboard)
+suites/         Public suite manifests (lite-public.*) — synthetic demo only
+cases/public/   Synthetic demo cases (the only clinical-style data in this repo)
+examples/       Reference adapters (e.g. mock-agent.mjs)
+docs/           Methods, protocols, migration, agent track
+submissions/    Paper sources (separate "Beyond Templates" theory paper + methods draft)
+site/           Public website assets
+```
 
 ## What It Evaluates
 
@@ -127,6 +164,20 @@ Public artifacts must not include private prompts, product routes, credentials, 
 ## arXiv Status
 
 The paper material is draft-ready for human review, not automatic submission. arXiv submission remains blocked until authors, affiliations, corresponding contact, conflicts, ethics/IRB/CEP language, repository URL, release tag, DOI, and license language are confirmed.
+
+## Citation
+
+If you use LAIBench, please cite it. Machine-readable metadata is in [CITATION.cff](CITATION.cff); until a DOI/preprint is published, cite the repository at the most recent tagged release:
+
+```bibtex
+@software{laibench_2026,
+  title  = {LAIBench: a governance-oriented benchmark for AI-assisted radiology reporting},
+  author = {{Laudos.AI}},
+  year   = {2026},
+  version = {2.0.0},
+  url    = {https://github.com/laudos-ai/laibench-public}
+}
+```
 
 ## License
 

@@ -1,0 +1,48 @@
+name: 🐛 Bug report
+description: A reproducible problem in the LAIBench harness, CLI, evaluators, or schemas.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve LAIBench. **Do not paste real clinical reports or any patient-identifying text.** Use the synthetic demo cases or redacted snippets only.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+      placeholder: "`npm run suite ...` produced X, but EVALUATION_PROTOCOL.md specifies Y."
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Exact commands, suite, and provider. Prefer the public synthetic-demo suite.
+      render: shell
+      placeholder: |
+        npm install
+        npm run smoke:mock
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      description: Output of `node -p "require('./package.json').version"` and the git SHA.
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: OS + Node version (`node -v`).
+    validations:
+      required: true
+  - type: checkboxes
+    id: no-phi
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: This report contains no patient-identifying information (PHI/PII) or real clinical reports.
+          required: true

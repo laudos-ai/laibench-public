@@ -15,6 +15,11 @@ export type ScoreCombinationMode = "conservative-min" | "judge-primary";
 
 function judgeScoreTo100(value: number | null | undefined): number | null {
   if (typeof value !== "number" || Number.isNaN(value)) return null;
+  // KNOWN ISSUE (see docs/REVIEW-FINDINGS.md #1): this rescales any value <= 5 by 20,
+  // assuming a 1-5 judge scale, but the judge prompt (judge.ts) asks for 0-100. It
+  // inflates legitimately-low scores. The fix requires an explicit per-adapter scale;
+  // it is deferred because the canonical scale is currently ambiguous in the codebase
+  // (the verdict-threshold tests assume 1-5 input here).
   if (value <= 5) return round1(value * 20);
   return round1(Math.max(0, Math.min(100, value)));
 }

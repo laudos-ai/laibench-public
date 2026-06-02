@@ -1,0 +1,64 @@
+cff-version: 1.2.0
+message: >-
+  If you use LAIBench in academic, technical, or commercial work, please cite
+  this repository at the tagged release you used. No DOI has been minted yet;
+  until one is available, cite the repository and the version tag.
+title: "LAIBench: a source-available reference benchmark for radiology finding-to-report generation"
+type: software
+version: "2.0.0"
+date-released: "2026-05-09"
+url: "https://laibench.laudos.ai"
+repository-code: "https://github.com/laudos-ai/laibench-public"
+repository-artifact: "https://laibench.laudos.ai"
+license-url: "https://github.com/laudos-ai/laibench-public/blob/main/LICENSE"
+authors:
+  - name: "Laudos.AI"
+    website: "https://laudos.ai"
+contact:
+  - name: "Laudos.AI"
+    email: "oi@laudos.ai"
+keywords:
+  - radiology
+  - report generation
+  - benchmark
+  - evaluation
+  - large language models
+  - clinical NLP
+  - hallucination detection
+  - guideline adherence
+  - retrieval fidelity
+  - Brazilian Portuguese
+  - American English
+  - adversarial robustness
+abstract: >-
+  LAIBench is a source-available reference benchmark for evaluating systems that
+  convert a locked clinical input (an exam descriptor plus concise findings) into
+  a faithful radiology report. The benchmark is system-level, supports Brazilian
+  Portuguese (pt-BR) and American English (en-US), and ranks systems by a strict
+  per-case PASS rate with bootstrap 95% confidence intervals: a case passes only
+  if every clinically decisive gate holds. The harness combines deterministic
+  checks for critical-finding preservation (CRIT), report quality (QUAL),
+  terminology (TERM), guideline adherence (GUIDE), and retrieval fidelity (RAG)
+  with an optional adversarial judge, and reports these five weighted dimensions
+  as diagnostic signals rather than as the primary ranking metric. This
+  repository ships the harness, JSON schemas, the public lite suites, and a small
+  set of synthetic demonstration cases; the full clinical corpus, difficulty
+  splits, robustness suites, hidden test set, and answer keys are not included
+  here and are made available only under controlled access. LAIBench is intended
+  for pre-deployment evaluation and does not certify clinical use. It is
+  maintained by Laudos.AI, a commercial radiology-reporting vendor; this conflict
+  of interest is disclosed in the repository governance documentation.
+preferred-citation:
+  type: software
+  title: "LAIBench: a source-available reference benchmark for radiology finding-to-report generation"
+  authors:
+    - name: "Laudos.AI"
+      website: "https://laudos.ai"
+  version: "2.0.0"
+  date-released: "2026-05-09"
+  url: "https://laibench.laudos.ai"
+  repository-code: "https://github.com/laudos-ai/laibench-public"
+    notes: >-
+    Cite the repository at the tagged release (v2.0.0). The methodology of record
+    is docs/laibench-leaderboard-methods.md. No DOI has been minted yet; this
+    file will be updated with a DOI identifier once one is available.

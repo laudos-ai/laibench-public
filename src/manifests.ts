@@ -18,8 +18,28 @@ export async function loadCasesForSuite(suitePath: string, suite: SuiteManifest)
   return cases;
 }
 
+/**
+ * Deterministic stringify with recursively sorted object keys. Array order is
+ * preserved (and is therefore significant). Two cases with the same content in a
+ * different key order hash identically; any content difference changes the hash.
+ */
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+  if (value && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    const keys = Object.keys(obj).sort();
+    return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(obj[k])}`).join(",")}}`;
+  }
+  return JSON.stringify(value ?? null);
+}
+
 export async function computeSuiteHash(cases: BenchCase[]): Promise<string> {
-  const canonical = JSON.stringify(cases.map((item) => ({ id: item.id, exam: item.exam, findings: item.findings, locale: item.locale ?? null })), null, 0);
+  // Hash the FULL case content — including the gold answer key (goldFindings,
+  // referenceReport, criticalFindings, guidelineExpectations, retrievalGold,
+  // patientContext, difficulty) — not just the prompt. Hashing only
+  // {id, exam, findings, locale} let a silently re-keyed answer set produce a
+  // byte-identical suiteHash and pass verification, defeating integrity.
+  const canonical = `[${cases.map(stableStringify).join(",")}]`;
   return sha256(canonical);
 }
 

@@ -1,4 +1,4 @@
-import { estimateCost, type Pricing } from "../normalize.js";
+import { estimateCost, parseRetryAfterMs, type Pricing } from "../normalize.js";
 import type { GenerationInput, GenerationOutput, JudgeAdapter, JudgeOutput, TraceEvent } from "../types.js";
 
 type ExtraPayload = Record<string, unknown>;
@@ -94,8 +94,7 @@ async function fetchWithRetry(url: string, init: RequestInit): Promise<Response>
         return response;
       }
       const delay = RETRY_DELAYS[attempt] ?? 8000;
-      const retryAfter = response.headers.get("retry-after");
-      const waitMs = retryAfter ? Math.min(Number(retryAfter) * 1000, 30_000) : delay;
+      const waitMs = parseRetryAfterMs(response.headers.get("retry-after"), delay);
       await new Promise((resolve) => setTimeout(resolve, waitMs));
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));

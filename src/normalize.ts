@@ -15,6 +15,28 @@ export function roundCost(value: number): number {
   return Number(value.toFixed(6));
 }
 
+/**
+ * Parse an HTTP `Retry-After` header into milliseconds. Supports both forms in
+ * RFC 7231: delta-seconds ("120") and an HTTP-date ("Wed, 21 Oct 2025 07:28:00 GMT").
+ * Returns `fallbackMs` when the header is absent or unparseable, and clamps the
+ * result to [0, maxMs]. (The previous code did `Number(header)`, which yields NaN
+ * for the HTTP-date form and produced `setTimeout(NaN)` = no backoff.)
+ */
+export function parseRetryAfterMs(headerValue: string | null | undefined, fallbackMs: number, nowMs: number = Date.now(), maxMs = 30_000): number {
+  if (!headerValue) return fallbackMs;
+  const seconds = Number(headerValue);
+  let ms: number;
+  if (Number.isFinite(seconds)) {
+    ms = seconds * 1000;
+  } else {
+    const dateMs = Date.parse(headerValue);
+    if (Number.isNaN(dateMs)) return fallbackMs;
+    ms = dateMs - nowMs;
+  }
+  if (!Number.isFinite(ms) || ms < 0) return fallbackMs;
+  return Math.min(ms, maxMs);
+}
+
 export type Pricing = {
   inputPer1M?: number;
   outputPer1M?: number;

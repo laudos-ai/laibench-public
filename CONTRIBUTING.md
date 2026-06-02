@@ -19,6 +19,14 @@ A locale must define:
 ## Adding cases
 
 Public cases live under `cases/public/` and are referenced by a suite manifest in `suites/`.
+They must conform to [`schemas/case.schema.json`](schemas/case.schema.json) — run
+`npm run validate:schemas` before opening a PR.
+
+> **Privacy is non-negotiable.** Public cases must be **synthetic or fully de-identified**.
+> Never add real clinical reports or any patient-identifying information (PHI/PII): names,
+> document numbers (CPF/RG/MRN), dates of birth, episode timestamps, or named
+> clinicians/institutions. If you find such data in the repo, report it privately per
+> [SECURITY.md](SECURITY.md) — do not open a public issue.
 
 Each case must include:
 
@@ -26,11 +34,16 @@ Each case must include:
 - `exam`
 - `findings`
 - `locale`
+- `synthetic: true` — a required attestation that the case contains no real patient data.
 
 Recommended optional fields:
 
 - `label`
 - `tags`
+- `criticalFindings`, `goldFindings`, `guidelineExpectations` (gold data for richer scoring)
+
+When you open a PR that adds cases, the pull-request checklist requires you to affirm that
+no PHI/PII was added.
 
 ## Adding a public suite
 

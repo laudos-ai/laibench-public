@@ -8,6 +8,7 @@
   "scripts": {
     "bench": "tsx src/cli.ts",
     "typecheck": "tsc --noEmit",
+    "validate:schemas": "node scripts/validate-schemas.mjs",
     "suite": "tsx src/cli.ts suite",
     "single": "tsx src/cli.ts single",
     "validate": "tsx src/cli.ts validate-submission",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.19.19",
+    "ajv": "^8.20.0",
     "tsx": "^4.19.2",
     "typescript": "^5.9.3"
   }

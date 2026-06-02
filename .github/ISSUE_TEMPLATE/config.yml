@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Private security / PHI / data-leak report
+    url: mailto:oi@laudos.ai
+    about: >-
+      Do NOT open a public issue. If you believe a case contains patient-identifying
+      information (PHI/PII), or you found a security vulnerability, email oi@laudos.ai
+      privately. See SECURITY.md.
+  - name: 📊 Official / gated evaluation & dataset access
+    url: https://github.com/laudos-ai/laibench-public/blob/main/DATA_ACCESS_POLICY.md
+    about: Requesting controlled access to the full corpus or hosted evaluation is handled under the Data Access Policy, not via issues.
+  - name: 💬 Questions & general discussion
+    url: https://laibench.laudos.ai
+    about: For usage questions and general context, start at the project website.

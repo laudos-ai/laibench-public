@@ -21,6 +21,8 @@ jobs:
       - run: npm ci
       - name: Typecheck
         run: npm run typecheck
+      - name: Validate schemas against shipped data
+        run: npm run validate:schemas
       - name: Test (unit + integration)
         run: npm test
       - name: Smoke — mock-agent suite run

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://laibench.laudos.ai/schemas/leaderboard.schema.json",
+  "title": "LAIBench leaderboard",
+  "description": "A leaderboard document as emitted by the `leaderboard` command. Runs are grouped by comparability key; rows within a group are directly comparable. Mirrors the Leaderboard type in src/types.ts. Rates are on a 0-100 scale.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["createdAt", "benchmarkVersion", "groups"],
+  "properties": {
+    "createdAt": { "type": "string" },
+    "benchmarkVersion": { "type": "string" },
+    "groups": { "type": "array", "items": { "$ref": "#/$defs/group" } }
+  },
+  "$defs": {
+    "group": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["comparableKey", "suiteId", "locale", "track", "entries"],
+      "properties": {
+        "comparableKey": { "type": "string" },
+        "suiteId": { "type": "string" },
+        "locale": { "type": "string", "enum": ["pt-BR", "en-US"] },
+        "track": { "type": "string", "enum": ["mini-agent", "model", "agent"] },
+        "scaffoldId": { "type": ["string", "null"] },
+        "judgeProvider": { "type": ["string", "null"] },
+        "judgeModel": { "type": ["string", "null"] },
+        "scoreMode": { "type": "string", "enum": ["conservative-min", "judge-primary"] },
+        "entries": { "type": "array", "items": { "$ref": "#/$defs/entry" } }
+      }
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["rank", "eligible", "runName", "provider", "modelLabel", "strictPassRate", "averageOverall", "validation"],
+      "properties": {
+        "rank": { "type": ["integer", "null"], "minimum": 1 },
+        "eligible": { "type": "boolean" },
+        "runName": { "type": "string" },
+        "provider": { "type": "string" },
+        "modelLabel": { "type": "string" },
+        "strictPassRate": { "type": "number", "minimum": 0, "maximum": 100 },
+        "passRate": { "type": "number", "minimum": 0, "maximum": 100 },
+        "accuracyRate": { "type": "number", "minimum": 0, "maximum": 100 },
+        "averageOverall": { "type": "number", "minimum": 0, "maximum": 100 },
+        "totalCostUsd": { "type": "number", "minimum": 0 },
+        "averageLatencyMs": { "type": "number", "minimum": 0 },
+        "suiteId": { "type": "string" },
+        "comparableKey": { "type": "string" },
+        "validation": { "type": "object", "description": "PublicSubmissionValidation summary." }
+      }
+    }
+  }
+}

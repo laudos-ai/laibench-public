@@ -1,0 +1,43 @@
+name: 🔬 Methodology / case-quality / scoring concern
+description: Challenge a scoring rule, gate semantic, rubric criterion, or a public demo case.
+labels: [methodology]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        LAIBench is a reference benchmark — methodological scrutiny is welcome. Cite the
+        relevant file (RUBRIC.md, EVALUATION_PROTOCOL.md, src/evaluators/*, etc.).
+        **Do not paste real clinical reports or patient-identifying text.**
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Scoring / gate semantics (CRIT/QUAL/TERM/GUIDE/RAG)
+        - Strict PASS definition
+        - Rubric criterion (PASS/PARTIAL/FAIL)
+        - Public demo case correctness
+        - Statistics (kappa / CI / reliability)
+        - Leaderboard integrity / comparability
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: concern
+    attributes:
+      label: Concern
+      description: What is wrong or under-specified, and why. Reference file paths/lines.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change (optional)
+      description: A concrete fix, with the clinical-safety rationale if relevant.
+  - type: checkboxes
+    id: no-phi
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: This report contains no patient-identifying information (PHI/PII) or real clinical reports.
+          required: true

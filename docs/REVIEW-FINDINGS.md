@@ -43,8 +43,8 @@ otherwise warrant maintainer judgment before landing. Each has an exact location
 
 ## Site governance (separate from the harness)
 
-### 7. Disclaimer i18n drift in `site/index.html`
-- The "not a medical device" disclaimer is inconsistent across locales (an EN string contains Portuguese text; the ES string asserts a different exclusion set and omits the regulatory clause). Unify the disclaimer text across all locales from a single source string.
+### 7. ✅ FIXED — Disclaimer i18n drift in `site/index.html`
+- The `en` locale's `imp` (imprint/disclaimer) string contained **Portuguese** text, and the `es` string omitted the regulatory/deployment exclusions. Unified all three locales (`en`/`pt`/`es`) to the same four exclusions: **not a medical device, not clinical validation, not regulatory approval, not authorization to deploy.** Verified the three `imp` entries remain valid JSON strings.
 
 ### 8. ✅ FIXED — `DATA_ACCESS_POLICY.md` regulatory framing
 - Added a "Regulatory framing" section (LGPD/GDPR/HIPAA — consistent-with, not certified) and a "Contact" section (`oi@laudos.ai` for access requests; private leak reporting via SECURITY.md).

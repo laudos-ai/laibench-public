@@ -1,18 +1,19 @@
 # Reference-grade review — open findings backlog
 
-A multi-agent review of this repository produced the items below. The schema, license,
-documentation, integrity-hash, and CI findings have been **fixed** in this change (see the
-PR description). The items here are **deferred** because they change scoring semantics,
-touch clinical heuristics, or otherwise warrant maintainer judgment before landing. Each
-has an exact location and a proposed fix.
+A multi-agent review of this repository produced the items below. Items marked **✅ FIXED**
+were resolved in this PR (alongside the schema, license, documentation, integrity-hash, and
+CI fixes described in the PR). The remaining items are **deferred** because they change
+scoring semantics in ways that warrant a versioned decision, touch clinical heuristics, or
+otherwise warrant maintainer judgment before landing. Each has an exact location and fix.
 
 ## High — scoring semantics (needs maintainer decision)
 
-### 1. `judgeScoreTo100` silently inflates the unsafe low end
-- **Where:** `src/scoring.ts:16-20` (also the hardcoded `j * 20` at `src/calibrate.ts:147`, and the judge prompt scale at `src/judge.ts`).
-- **Problem:** any judge score `<= 5` is multiplied by 20, on the assumption that the judge uses a 1–5 scale. But the judge prompt asks for **0–100**. A 0–100 judge that correctly returns `CRIT = 3` for a catastrophic report is rescaled to `60`, and `5` becomes `100` — inflating exactly the dangerous low end the benchmark exists to catch.
-- **Proposed fix:** make the scale explicit per judge adapter (`scoreScale: "0-100" | "1-5"`), default `"0-100"`, and rescale **only** declared-`1-5` adapters. Update `scoring.test.ts` (the cases that currently assert `3*20=60`) to the explicit-scale contract and add a regression test that a 0–100 `CRIT=3` is **not** inflated.
-- **Why deferred:** this changes published scores, so it should be a deliberate, versioned decision.
+### 1. `judgeScoreTo100` inflates the unsafe low end (DEFERRED — needs a scale decision)
+- **Where:** `src/scoring.ts:16` (judge prompt scale is **0–100** at `src/judge.ts:106`).
+- **Problem:** any judge score `<= 5` is multiplied by 20, assuming a 1–5 scale. But the judge prompt asks for **0–100**, so a 0–100 judge returning `CRIT = 3` for a catastrophic report is rescaled to `60` — inflating exactly the dangerous low end.
+- **Why this is genuinely ambiguous (not a clean bug):** the codebase contradicts itself on the canonical scale. The judge **prompt** says 0–100 and `scoring.test.ts` (combine) passes 0–100 through unchanged, but the **verdict-threshold test suite** (`scoring.test.ts` "Boundary: combineScores verdict thresholds") feeds **1–5** judge scores and relies on the `×20` rescale (e.g. `5 → 100 → PASS`), and `calibrate.ts:147` also assumes 1–5. Removing the rescale breaks those threshold tests.
+- **Proposed fix (maintainer decision):** make the scale **explicit per judge adapter** (`scoreScale: "0-100" | "1-5"`), default `"0-100"`, rescale only declared-`1-5` adapters; then rewrite the boundary-threshold tests to construct 0–100 overalls directly, and add a regression test that a 0–100 `CRIT=3` is **not** inflated.
+- **Why deferred:** it changes published scores AND requires resolving the contradictory scale assumption — a deliberate, versioned decision, not a mechanical edit.
 
 ## Medium — clinical-gate correctness
 
@@ -28,10 +29,10 @@ has an exact location and a proposed fix.
 
 ## Low — robustness & coverage
 
-### 4. `Retry-After` parsing
-- **Where:** `src/providers/openrouter.ts:22`, `src/providers/openai-compatible.ts:98`.
-- **Problem:** `Number(retryAfter)` yields `NaN` for the HTTP-date form → `setTimeout(NaN)` = no backoff.
-- **Proposed fix:** parse delta-seconds **or** `Date.parse`; fall back to a table delay.
+### 4. ✅ FIXED — `Retry-After` parsing
+- **Where:** `src/providers/openrouter.ts`, `src/providers/openai-compatible.ts`.
+- **Was:** `Number(retryAfter)` yielded `NaN` for the HTTP-date form → `setTimeout(NaN)` = no backoff.
+- **Fix applied:** new `parseRetryAfterMs` in `src/normalize.ts` handles both delta-seconds and the HTTP-date form, falls back to the table delay on garbage/past dates, and clamps to 30s. Both providers use it. Covered by `src/normalize.test.ts`.
 
 ### 5. Unknown modality defaults silently to CT
 - **Where:** `src/classify.ts`.
@@ -45,5 +46,5 @@ has an exact location and a proposed fix.
 ### 7. Disclaimer i18n drift in `site/index.html`
 - The "not a medical device" disclaimer is inconsistent across locales (an EN string contains Portuguese text; the ES string asserts a different exclusion set and omits the regulatory clause). Unify the disclaimer text across all locales from a single source string.
 
-### 8. `DATA_ACCESS_POLICY.md` regulatory framing
-- The policy requires privacy review and bans re-identification but never names LGPD/GDPR/HIPAA and gives no contact for controlled-access/incident requests. Add a short "Regulatory framing" section and the `oi@laudos.ai` contact.
+### 8. ✅ FIXED — `DATA_ACCESS_POLICY.md` regulatory framing
+- Added a "Regulatory framing" section (LGPD/GDPR/HIPAA — consistent-with, not certified) and a "Contact" section (`oi@laudos.ai` for access requests; private leak reporting via SECURITY.md).

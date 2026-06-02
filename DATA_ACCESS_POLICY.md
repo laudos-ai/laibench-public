@@ -27,3 +27,12 @@ Raw clinical reports are never public. The official hidden test set remains priv
 Automated PHI/PII scanning is not sufficient to approve public release of real-derived text. Manual privacy review, legal review, and ethics or institutional review when applicable are required before any real-derived clinical text can be released.
 
 The public repository license does not apply to clinical data, gated datasets, private hidden tests, answer keys, or private scoring criteria.
+
+## Regulatory framing
+
+LAIBench is a benchmark framework, not a clinical system, and makes no regulatory claims. Controlled-access data handling is designed to be consistent with applicable data-protection law — including Brazil's **LGPD** (Lei 13.709/2018), the EU **GDPR**, and, where applicable, **HIPAA** — but the project is **not certified** under any of them. Any party granted controlled access remains independently responsible for its own legal basis, data-protection obligations, and institutional/ethics approvals (e.g. CEP/CONEP in Brazil) for its use of the data.
+
+## Contact
+
+- **Controlled-access / data-use requests:** oi@laudos.ai
+- **Suspected data leak or privacy exposure:** report privately per [SECURITY.md](SECURITY.md) — do not open a public issue.

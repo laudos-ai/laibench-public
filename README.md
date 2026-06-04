@@ -4,7 +4,7 @@ LAIBench is a governance-oriented benchmark framework for AI-assisted radiology 
 
 **LAIBench is a technical benchmark framework, not a medical device, not regulatory approval, and not clinical validation. It must not be used as the sole basis for clinical deployment decisions. All clinical use requires qualified human oversight, local validation, institutional governance, and applicable legal/regulatory review.**
 
-Website: [laibench.laudos.ai](https://laibench.laudos.ai)  
+Website: [laibench.laudos.ai](https://laibench.vercel.app)  
 Companion paper (conceptual): *Beyond Templates: A Compositional Model and Lower Bound for Radiology Report Variability* — [PDF](site/laibench-preprint.pdf), [arXiv source](submissions/arxiv-laibench/main.tex). This is a **separate** theory paper on radiology report-space variability (RSLB / RRVI); it does **not** describe the LAIBench benchmark. The dedicated LAIBench methods paper (task, evaluators, gate semantics, validation) is forthcoming — until then, the methodology of record is [docs/laibench-leaderboard-methods.md](docs/laibench-leaderboard-methods.md).  
 By: [Laudos.AI](https://laudos.ai)
 

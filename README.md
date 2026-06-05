@@ -130,4 +130,6 @@ The paper material is draft-ready for human review, not automatic submission. ar
 
 ## License
 
-This public framework repository is licensed under the terms in [LICENSE](LICENSE). The clinical corpus, gated datasets, hidden tests, answer keys, private scoring criteria, and protected materials are proprietary to Laudos.AI.
+This public LAIBench framework repository is released under the MIT License.
+
+The MIT License applies to the public code, schemas, documentation, examples, synthetic demo cases, and tooling included in this repository. It does not apply to the private clinical corpus, gated datasets, hidden test sets, answer keys, private scoring criteria, or protected evaluation artifacts that are not included in this repository.

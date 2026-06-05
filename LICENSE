@@ -1,26 +1,21 @@
-Proprietary Source-Available License
+MIT License
 
-Copyright (c) 2026 Laudos.AI. All rights reserved.
+Copyright (c) 2026 Laudos.AI
 
-This repository, benchmark implementation, public website, scoring harness,
-paper materials, prompts, schemas, examples, and generated artifacts are made
-available only for authorized review, evaluation, and submission workflows.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-No permission is granted to copy, modify, publish, distribute, sublicense,
-sell, host, expose as a service, reverse engineer, or create derivative works
-from this software without prior written authorization from Laudos.AI.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-Public benchmark result submissions may reference LAIBench by name and may
-share their own submitted run artifacts according to the public submission
-rules documented in this repository. That limited submission permission does
-not grant any license to redistribute or commercialize the LAIBench source,
-private suites, scoring implementation, internal data, or Laudos.AI product
-workflow.
-
-Access to this repository, source package, website, or running instance does
-not grant any assignment, transfer, ownership interest, patent license, or
-trademark license.
-
-THE MATERIALS ARE PROVIDED FOR AUTHORIZED REVIEW AND EVALUATION ONLY, WITHOUT
-WARRANTY OF ANY KIND. ANY UNAUTHORIZED USE, DISCLOSURE, OR DISTRIBUTION IS
-PROHIBITED.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

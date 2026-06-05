@@ -2,10 +2,10 @@
 
 LAIBench is a governance-oriented benchmark framework for AI-assisted radiology reporting.
 
-**LAIBench is a technical benchmark framework, not a medical device, not regulatory approval, and not clinical validation. It must not be used as the sole basis for clinical deployment decisions. All clinical use requires qualified human oversight, local validation, institutional governance, and applicable legal/regulatory review.**
+**LAIBench is a technical benchmark framework, not a medical device, not regulatory approval, and not clinical validation. It must not be used as the sole basis for clinical deployment decisions. All references below are to that technical scope.**
 
 Website: [laibench.laudos.ai](https://laibench.vercel.app)  
-Companion paper (conceptual): *Beyond Templates: A Compositional Model and Lower Bound for Radiology Report Variability* — [PDF](site/laibench-preprint.pdf), [arXiv source](submissions/arxiv-laibench/main.tex). This is a **separate** theory paper on radiology report-space variability (RSLB / RRVI); it does **not** describe the LAIBench benchmark. The dedicated LAIBench methods paper (task, evaluators, gate semantics, validation) is forthcoming — until then, the methodology of record is [docs/laibench-leaderboard-methods.md](docs/laibench-leaderboard-methods.md).  
+Companion paper (conceptual): *Beyond Templates: A Compositional Model and Lower Bound for Radiology Report Variability* — [PDF](site/laibench-preprint.pdf), [arXiv source](submissions/arxiv-laibench/)  
 By: [Laudos.AI](https://laudos.ai)
 
 ## Current Status
@@ -24,7 +24,7 @@ It does not include:
 
 ## What It Evaluates
 
-LAIBench evaluates reporting behavior from provided text evidence. The current public harness focuses on whether a system can convert an exam descriptor and concise findings into a faithful radiology-style report while preserving clinically relevant information.
+LAIBench evaluates reporting behavior from provided text evidence. The current public harness focuses on whether a system can convert an exam descriptor and concise findings into a faithful radiology report under the public contract. It is **not** primary image interpretation.
 
 The framework is intended to make failure modes visible:
 
@@ -40,13 +40,13 @@ The current public demo does not evaluate primary image interpretation from DICO
 
 ## Public Data Boundary
 
-The only public cases in this repository are synthetic demo cases under [cases/public/synthetic-demo.pt-BR.json](cases/public/synthetic-demo.pt-BR.json). They are for installation checks, smoke tests, and framework review.
+The only public cases in this repository are synthetic demo cases under [cases/public/synthetic-demo.pt-BR.json](cases/public/synthetic-demo.pt-BR.json). They are for installation checks, smoke tests, and harness verification.
 
 The full clinical corpus is private/gated. The hidden test set is private. Official evaluation requires hosted evaluation or controlled access under written terms. See [DATA_ACCESS_POLICY.md](DATA_ACCESS_POLICY.md).
 
 ## Scoring
 
-LAIBench reports weighted finding-to-report scores and strict gate outcomes. A high average score should not hide critical failures. Critical finding omissions, unsafe negations, contradictions, unsupported normalizing language, and guideline/structure failures remain visible as separate error gates.
+LAIBench reports weighted finding-to-report scores and strict gate outcomes. A high average score should not hide critical failures. Critical finding omissions, unsafe negations, contradictions, unsupported normalcy, and structural errors trigger failure gates.
 
 | Dimension | Weight | Purpose |
 | --- | ---: | --- |
@@ -91,7 +91,7 @@ npm run bench -- leaderboard \
 
 ### Reliability (pass^k)
 
-A single-shot critical-finding pass-rate saturates and is gameable by verbose "restate everything" reports. The `reliability` command measures **consistency** instead: run the same system on the same suite *k* times, then compute `pass^k` — the fraction of cases that preserved every critical finding on **all** *k* attempts (the headline), alongside `pass@1` and a verdict-level pass^k.
+A single-shot critical-finding pass-rate saturates and is gameable by verbose "restate everything" reports. The `reliability` command measures **consistency** instead: run the same system on the same suite three times and report how often it produces identical verdicts per case.
 
 ```bash
 npm run bench -- reliability \
@@ -102,7 +102,7 @@ npm run bench -- reliability \
 
 ## Frozen Predictions
 
-Use predictions mode when reports were generated outside the harness. The public submission contract is documented in [docs/public-submissions.md](docs/public-submissions.md); each JSONL line follows [schemas/prediction-record.schema.json](schemas/prediction-record.schema.json).
+Use predictions mode when reports were generated outside the harness. The public submission contract is documented in [docs/public-submissions.md](docs/public-submissions.md); each JSONL line follows the `PredictionInput` schema.
 
 ```bash
 npm run bench -- validate-submission \
@@ -120,14 +120,14 @@ npm run bench -- eval-submission \
 
 ## Leaderboard Governance
 
-Leaderboard rows should disclose benchmark version, suite hash, track, scaffold class, judged/frozen status, evaluated entity, validation status, cost, latency, and the scoring mode used. Incompatible runs must not be mixed as equivalent comparisons.
+Leaderboard rows should disclose benchmark version, suite hash, track, scaffold class, judged/frozen status, evaluated entity, validation status, cost, latency, and the scoring mode used. Incompatible runs are separated by track, scaffold, locale, and suite hash.
 
-Public artifacts must not include private prompts, product routes, credentials, private file paths, raw validation ID lists, private case content, hidden judge configuration, answer keys, or private scoring criteria.
+Public artifacts must not include private prompts, product routes, credentials, private file paths, raw validation ID lists, private case content, hidden judge configuration, answer keys, or proprietary schemas beyond the public contract.
 
 ## arXiv Status
 
-The paper material is draft-ready for human review, not automatic submission. arXiv submission remains blocked until authors, affiliations, corresponding contact, conflicts, ethics/IRB/CEP language, repository URL, release tag, DOI, and license language are confirmed.
+The paper material is draft-ready for human review, not automatic submission. arXiv submission remains blocked until authors, affiliations, corresponding contact, conflicts, ethics/IRB/CEP language, and license choice are finalized.
 
 ## License
 
-This public framework repository is source-available under the terms in [LICENSE](LICENSE). The clinical corpus, gated datasets, hidden tests, answer keys, private scoring criteria, and protected evaluation artifacts are not licensed for public reuse and are not part of this repository.
+This public framework repository is licensed under the terms in [LICENSE](LICENSE). The clinical corpus, gated datasets, hidden tests, answer keys, private scoring criteria, and protected materials are proprietary to Laudos.AI.

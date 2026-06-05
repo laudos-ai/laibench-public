@@ -2,7 +2,7 @@
   "name": "laibench",
   "version": "2.0.0",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "description": "CLI-first reference benchmark and leaderboard harness for radiology finding-to-report generation.",
   "scripts": {

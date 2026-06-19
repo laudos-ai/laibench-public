@@ -144,9 +144,13 @@ export function evaluateRetrieval(
     const ragChecks = structuralRagFallbackChecks(structuralChecks);
     const unsupported = unsupportedTechniqueDetails(reportHtml, benchCase);
     if (unsupported.length > 0) {
+      // Unique id: structuralRagFallbackChecks retains the structural R04
+      // ("Measurements preserved in body") since it only filters R05, so this
+      // fabricated-acquisition check must NOT reuse 'R04' or a single
+      // EvaluatorResult ends up with two checks sharing id 'R04'.
       ragChecks.push({
         dim: "RAG",
-        id: "R04",
+        id: "R-ACQ",
         name: "No unsupported acquisition details",
         severity: "major",
         passed: false,

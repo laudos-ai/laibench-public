@@ -233,9 +233,21 @@ export function combineScores(
   // clinical dimension (CRIT or QUAL) is itself below PASS. This is the core
   // anti-HealthBench invariant: form and coverage never lift weak substance.
   const clinicalDims: Dim[] = ["CRIT", "QUAL"];
+  const scoredClinical = clinicalDims.filter((dim) => combined[dim] !== null);
   const weakClinical = clinicalDims.filter(
     (dim) => combined[dim] !== null && (combined[dim] as number) < passThreshold,
   );
+  // scoring-core-4: an UNSCORED clinical dimension is NOT evidence of clinical
+  // adequacy — it is the ABSENCE of clinical evidence. The earlier guard
+  // (combined[dim] !== null) silently treated a null CRIT/QUAL as "not weak", so
+  // a report could reach PASS at 100 purely on form/coverage (TERM/GUIDE/RAG)
+  // with NO scored clinical signal at all. Form and coverage must never reach
+  // PASS on their own: require at least one SCORED clinical dimension. If BOTH
+  // CRIT and QUAL are null/UNSCORED, cap below passThreshold and gate.
+  if (scoredClinical.length === 0 && overall >= passThreshold) {
+    overall = round1(passThreshold - 0.1);
+    gateReasons.push("no scored clinical dimension: form/coverage alone cannot reach PASS");
+  }
   if (weakClinical.length > 0 && overall >= passThreshold) {
     overall = round1(passThreshold - 0.1);
     gateReasons.push(`anti-compensation: ${weakClinical.join("/")} below PASS`);

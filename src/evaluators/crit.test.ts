@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { evaluateCritical } from "./crit.js";
+import { CRITICAL_KEYWORDS_EN, CRITICAL_KEYWORDS_PT } from "../extract.js";
 import type { BenchCase, Check, ExamMeta, GoldFinding, LocaleKey } from "../types.js";
 
 const META: ExamMeta = {
@@ -112,11 +113,100 @@ describe("evaluateCritical: pure pertinent negatives are NOT gated (no over-gati
     assert.equal(cg01(critChecks([{ finding: "Sem hemorragia", severity: "critical" }], "<b>Achados</b><br>Estudo normal.", "pt-BR")), undefined);
   });
 
-  it("anchor-less negated critical is excluded (no opposite-direction regression)", () => {
-    // "torsion"/"appendicitis" are not in CRITICAL_KEYWORDS, so the clause-anchor
-    // path does not apply; the whole-label fallback must still drop these.
+  it("negated critical (with or without a recognized anchor) is excluded (no opposite-direction regression)", () => {
+    // After crit-extract-3 these emergencies ARE recognized critical anchors, so
+    // the clause-anchor path applies: the lone anchor is negated, so the label is
+    // still correctly dropped. (Before the fix they had no anchor and fell to the
+    // whole-label fallback; either way a pure pertinent negative must not gate.)
     assert.equal(cg01(critChecks([{ finding: "No testicular torsion", severity: "critical" }], "<b>Findings</b><br>Normal.", "en-US")), undefined);
     assert.equal(cg01(critChecks([{ finding: "No acute appendicitis", severity: "critical" }], "<b>Findings</b><br>Normal.", "en-US")), undefined);
     assert.equal(cg01(critChecks([{ finding: "Sem torcao ovariana", severity: "critical" }], "<b>Achados</b><br>Normal.", "pt-BR")), undefined);
+  });
+});
+
+// crit-extract-3: classic emergencies that ARE in CRITICAL_CATEGORIES were
+// omitted from CRITICAL_KEYWORDS_PT/EN, so the critical-anchor logic could not
+// recognize them as scored critical anchors. Each must now anchor in BOTH
+// locales (additive, safe-direction: more criticals recognized).
+describe("crit-extract-3: omitted emergencies are recognized critical anchors (both locales)", () => {
+  // Representative new emergencies from the audit, one PT and one EN phrasing each.
+  const EN_SAMPLES = [
+    "cauda equina",
+    "pneumoperitoneum",
+    "testicular torsion",
+    "ovarian torsion",
+    "mesenteric ischemia",
+    "necrotizing fasciitis",
+    "acute appendicitis",
+    "bowel obstruction",
+    "spinal cord compression",
+    "intussusception",
+    "ectopic pregnancy",
+    "contrast extravasation",
+    "subarachnoid hemorrhage",
+  ];
+  const PT_SAMPLES = [
+    "cauda equina",
+    "pneumoperitônio",
+    "torção testicular",
+    "torção ovariana",
+    "isquemia mesentérica",
+    "fasciíte necrotizante",
+    "apendicite aguda",
+    "obstrução intestinal",
+    "compressão medular",
+    "intussuscepção",
+    "gravidez ectópica",
+    "extravasamento de contraste",
+    "hemorragia subaracnóidea",
+  ];
+
+  for (const sample of EN_SAMPLES) {
+    it(`EN anchor recognizes "${sample}"`, () => {
+      assert.ok(CRITICAL_KEYWORDS_EN.test(sample), `CRITICAL_KEYWORDS_EN must match "${sample}"`);
+    });
+  }
+  for (const sample of PT_SAMPLES) {
+    it(`PT anchor recognizes "${sample}"`, () => {
+      assert.ok(CRITICAL_KEYWORDS_PT.test(sample), `CRITICAL_KEYWORDS_PT must match "${sample}"`);
+    });
+  }
+
+  // End-to-end proof the anchor is actually USED: a compound AFFIRMED critical
+  // that appends an unrelated pertinent negative ("Cauda equina syndrome, no
+  // fracture") only gates when the emergency itself is a recognized anchor.
+  // Before the fix the only anchor in the label was "fracture" (negated), so the
+  // label was dropped and omitting the affirmed emergency did NOT gate — the
+  // exact unsafe failure. After the fix the emergency anchors and omitting it
+  // fails CG01.
+  it("EN: omitting an affirmed cauda equina (compound with a pertinent negative) fails CG01", () => {
+    const checks = critChecks(
+      [{ finding: "Cauda equina syndrome, no fracture", severity: "critical" }],
+      "<b>Findings</b><br>No acute abnormality.",
+      "en-US",
+    );
+    const c = cg01(checks);
+    assert.ok(c, "CG01 must be emitted (emergency anchor recognized)");
+    assert.equal(c!.passed, false, c!.evidence);
+  });
+
+  it("PT: omitting an affirmed pneumoperitônio (compound with a pertinent negative) fails CG01", () => {
+    const checks = critChecks(
+      [{ finding: "Pneumoperitônio, sem fratura", severity: "critical" }],
+      "<b>Achados</b><br>Sem alteracoes agudas.",
+      "pt-BR",
+    );
+    const c = cg01(checks);
+    assert.ok(c, "CG01 must be emitted (emergency anchor recognized)");
+    assert.equal(c!.passed, false, c!.evidence);
+  });
+
+  it("EN: omitting an affirmed testicular torsion (compound with a pertinent negative) fails CG01", () => {
+    const checks = critChecks(
+      [{ finding: "Testicular torsion, no fracture", severity: "critical" }],
+      "<b>Findings</b><br>No acute abnormality.",
+      "en-US",
+    );
+    assert.equal(cg01(checks)?.passed, false);
   });
 });

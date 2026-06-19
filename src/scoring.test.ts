@@ -557,6 +557,77 @@ describe("anti-compensation (form never rescues substance)", () => {
     assert.equal(r.verdict, "PASS", `clinical strength should carry PASS; overall=${r.overall} reasons=${r.gateReasons.join("; ")}`);
     assert.equal(r.gateReasons.some((x) => /anti-compensation/.test(x)), false);
   });
+
+  // scoring-core-4: an UNSCORED clinical dimension (score === null) is the
+  // ABSENCE of clinical evidence, NOT proof of clinical adequacy. The old guard
+  // (combined[dim] !== null) treated a null CRIT/QUAL as "not weak", so a report
+  // with NO scored clinical signal reached PASS at 100 purely on form/coverage.
+  function unscored(): DimSummary {
+    return { score: null, pass: 0, total: 0, critFails: 0, verdict: "UNSCORED", appliedWeight: 0 };
+  }
+
+  it("does NOT grant PASS when BOTH clinical dims (CRIT and QUAL) are UNSCORED (form/coverage alone)", () => {
+    // Form/coverage dims are perfect; both clinical dims are UNSCORED. Old
+    // behavior: overall=100, PASS, no gate reason. New: capped below PASS.
+    const dims = dimsAll(100);
+    dims.CRIT = unscored();
+    dims.QUAL = unscored();
+    const r = combineScores(dims, null, []);
+    assert.ok(r.overall < 84, `form/coverage alone must not reach PASS, got ${r.overall}`);
+    assert.notEqual(r.verdict, "PASS");
+    assert.ok(
+      r.gateReasons.some((x) => /no scored clinical dimension/.test(x)),
+      `expected the no-scored-clinical gate reason, got: ${r.gateReasons.join("; ")}`,
+    );
+  });
+
+  it("does NOT grant PASS when both clinical dims are UNSCORED but other dims are 100 (the proven repro)", () => {
+    // Mirror the audit repro: CRIT UNSCORED + TERM/GUIDE/RAG=100. With QUAL also
+    // UNSCORED there is zero scored clinical evidence, so PASS is impossible.
+    const dims = {} as Record<Dim, DimSummary>;
+    dims.CRIT = unscored();
+    dims.QUAL = unscored();
+    dims.TERM = { score: 100, pass: 10, total: 10, critFails: 0, verdict: "PASS", appliedWeight: WEIGHTS.TERM };
+    dims.GUIDE = { score: 100, pass: 10, total: 10, critFails: 0, verdict: "PASS", appliedWeight: WEIGHTS.GUIDE };
+    dims.RAG = { score: 100, pass: 10, total: 10, critFails: 0, verdict: "PASS", appliedWeight: WEIGHTS.RAG };
+    const r = combineScores(dims, null, []);
+    assert.ok(r.overall < 84, `got ${r.overall}`);
+    assert.notEqual(r.verdict, "PASS");
+    assert.ok(r.gateReasons.some((x) => /no scored clinical dimension/.test(x)), r.gateReasons.join("; "));
+  });
+
+  it("STILL grants PASS when at least ONE clinical dim is scored and strong (CRIT scored, QUAL UNSCORED)", () => {
+    // A single scored clinical dimension that is strong is sufficient clinical
+    // evidence: the no-scored-clinical gate must NOT fire, and the case PASSES.
+    const dims = dimsAll(95);
+    dims.CRIT = { score: 95, pass: 10, total: 10, critFails: 0, verdict: "PASS", appliedWeight: WEIGHTS.CRIT };
+    dims.QUAL = unscored();
+    const r = combineScores(dims, null, []);
+    assert.equal(r.verdict, "PASS", `one scored strong clinical dim should carry PASS; overall=${r.overall} reasons=${r.gateReasons.join("; ")}`);
+    assert.equal(r.gateReasons.some((x) => /no scored clinical dimension/.test(x)), false);
+  });
+
+  it("STILL grants PASS when QUAL is scored and strong while CRIT is UNSCORED", () => {
+    const dims = dimsAll(95);
+    dims.CRIT = unscored();
+    dims.QUAL = { score: 95, pass: 10, total: 10, critFails: 0, verdict: "PASS", appliedWeight: WEIGHTS.QUAL };
+    const r = combineScores(dims, null, []);
+    assert.equal(r.verdict, "PASS", `overall=${r.overall} reasons=${r.gateReasons.join("; ")}`);
+    assert.equal(r.gateReasons.some((x) => /no scored clinical dimension/.test(x)), false);
+  });
+
+  it("a single scored clinical dim that is WEAK still caps via anti-compensation (not the new gate)", () => {
+    // CRIT scored but weak (below PASS), QUAL UNSCORED. There IS a scored clinical
+    // dim, so the no-scored-clinical gate does not apply; the existing
+    // anti-compensation cap handles the weak clinical dim instead.
+    const dims = dimsAll(100);
+    dims.CRIT = { score: 70, pass: 7, total: 10, critFails: 0, verdict: "PARTIAL", appliedWeight: WEIGHTS.CRIT };
+    dims.QUAL = unscored();
+    const r = combineScores(dims, null, []);
+    assert.ok(r.overall < 84, `got ${r.overall}`);
+    assert.ok(r.gateReasons.some((x) => /anti-compensation: CRIT/.test(x)), r.gateReasons.join("; "));
+    assert.equal(r.gateReasons.some((x) => /no scored clinical dimension/.test(x)), false, "a scored clinical dim exists, so the new gate must not fire");
+  });
 });
 
 describe("parseJudgeResponse", () => {
@@ -574,6 +645,193 @@ describe("parseJudgeResponse", () => {
     assert.equal(result?.scores.CRIT, 91);
     assert.equal(result?.scores.QUAL, 87);
     assert.equal(result?.overall, 90);
+  });
+
+  // FIX 1 (scoring-core-3): the parser must preserve RAW [0,100] values with NO
+  // floor at 1 and NO per-value Likert rescale. The old branch routed any dim
+  // <= 5 through clampScore (Math.max(1, Math.min(5, ...))), so a genuine 0 was
+  // floored to 1 and a 0-5 value was kept on the Likert scale per-value, the
+  // exact inflation scoring.ts rejected in favour of one per-RESULT decision.
+  describe("FIX 1: raw value preservation (no per-value Likert / floor)", () => {
+    it("preserves a genuine CRIT=0 (old behavior floored it to 1)", () => {
+      const result = parseJudgeResponse(JSON.stringify({
+        verdict: "FAIL",
+        scores: { CRIT: 0, QUAL: 50, TERM: 60, GUIDE: 70, RAG: 80 },
+        overall: 0,
+        critical_failures: [],
+        missing: [],
+        hallucinated: [],
+        spot_checks: [],
+        fix: "",
+      }));
+      // Old per-value path: clampScore(0) => Math.max(1, 0) => 1. New: stays 0.
+      assert.equal(result?.scores.CRIT, 0, "genuine 0 must NOT be floored to 1");
+      assert.equal(result?.overall, 0, "genuine overall 0 must stay 0, not 1");
+    });
+
+    it("preserves a small raw 0-100 value (no per-value *20 or floor)", () => {
+      const result = parseJudgeResponse(JSON.stringify({
+        verdict: "FAIL",
+        scores: { CRIT: 3, QUAL: 88, TERM: 90, GUIDE: 85, RAG: 80 },
+        overall: 40,
+        critical_failures: [],
+        missing: [],
+        hallucinated: [],
+        spot_checks: [],
+        fix: "",
+      }));
+      // The parser only validates; it must return the raw 3, never 60 (3*20) or 1.
+      assert.equal(result?.scores.CRIT, 3, "raw 3 preserved verbatim by the parser");
+    });
+
+    it("combineScores owns scale: a parsed catastrophic CRIT=3 stays catastrophic", () => {
+      const judge = parseJudgeResponse(JSON.stringify({
+        verdict: "FAIL",
+        scores: { CRIT: 3, QUAL: 88, TERM: 90, GUIDE: 85, RAG: 80 },
+        overall: 40,
+        critical_failures: [],
+        missing: [],
+        hallucinated: [],
+        spot_checks: [],
+        fix: "",
+      }));
+      const detDims = {} as Record<Dim, DimSummary>;
+      for (const dim of DIMS) detDims[dim] = { score: 100, pass: 10, total: 10, critFails: 0, verdict: "PASS", appliedWeight: WEIGHTS[dim] };
+      const result = combineScores(detDims, judge, []);
+      // Mixed magnitudes => NOT Likert => CRIT=3 is min(100, 3) = 3, never 60.
+      assert.equal(result.combined.CRIT, 3, "parser+combineScores keep CRIT=3 catastrophic");
+    });
+
+    it("a genuine 1-5 Likert result parsed end-to-end still rescales by 20", () => {
+      // The judge emits an all-<=5 Likert result. The parser preserves raw 1..4
+      // and combineScores' judgeScoresAreLikert detects and rescales them.
+      const judge = parseJudgeResponse(JSON.stringify({
+        verdict: "PARTIAL",
+        scores: { CRIT: 1, QUAL: 2, TERM: 3, GUIDE: 4, RAG: 5 },
+        overall: 3,
+        critical_failures: [],
+        missing: [],
+        hallucinated: [],
+        spot_checks: [],
+        fix: "",
+      }));
+      assert.equal(judge?.scores.CRIT, 1, "raw Likert 1 preserved (not floored, not rescaled in parser)");
+      assert.equal(judgeScoresAreLikert(DIMS.map((dim) => judge?.scores?.[dim])), true, "all <=5 => Likert");
+      const detDims = {} as Record<Dim, DimSummary>;
+      for (const dim of DIMS) detDims[dim] = { score: 100, pass: 10, total: 10, critFails: 0, verdict: "PASS", appliedWeight: WEIGHTS[dim] };
+      const result = combineScores(detDims, judge, []);
+      assert.equal(result.combined.CRIT, 20, "Likert 1 -> 20 via the single per-result decision");
+      assert.equal(result.combined.RAG, 100, "Likert 5 -> 100");
+    });
+  });
+
+  // FIX 2 (judge-2): JSON extraction must tolerate leading AND trailing prose by
+  // brace-balance. The old /\{[\s\S]*\}$/ regex anchored the closing brace to
+  // end-of-string, so any trailing text returned null and the judge was silently
+  // dropped.
+  describe("FIX 2: brace-balanced JSON extraction (trailing prose tolerant)", () => {
+    const payload = {
+      verdict: "PASS",
+      scores: { CRIT: 91, QUAL: 87, TERM: 96, GUIDE: 83, RAG: 89 },
+      overall: 90,
+      critical_failures: [],
+      missing: [],
+      hallucinated: [],
+      spot_checks: [],
+      fix: "",
+    };
+
+    it("parses an object followed by a trailing period (old regex returned null)", () => {
+      const result = parseJudgeResponse(JSON.stringify(payload) + ".");
+      assert.equal(result?.scores.CRIT, 91);
+      assert.equal(result?.verdict, "PASS");
+    });
+
+    it("parses an object followed by a trailing note (old regex returned null)", () => {
+      const result = parseJudgeResponse(JSON.stringify(payload) + "\n\nNote: evaluated against gold.");
+      assert.equal(result?.scores.QUAL, 87);
+    });
+
+    it("parses a fenced block followed by trailing text (old regex returned null)", () => {
+      const result = parseJudgeResponse("```json\n" + JSON.stringify(payload) + "\n```\nDone, see above.");
+      assert.equal(result?.overall, 90);
+      assert.equal(result?.scores.RAG, 89);
+    });
+
+    it("parses an object with leading prose before the first brace", () => {
+      const result = parseJudgeResponse("Here is my verdict: " + JSON.stringify(payload));
+      assert.equal(result?.scores.TERM, 96);
+    });
+
+    it("ignores braces inside string literals when balancing", () => {
+      const result = parseJudgeResponse(JSON.stringify({ ...payload, fix: "add } and { to the report" }) + " end.");
+      assert.equal(result?.scores.CRIT, 91);
+      assert.equal(result?.fix, "add } and { to the report");
+    });
+  });
+
+  // FIX 3 (judge-3): clearly out-of-range dimension values must be treated as
+  // INVALID (dropped to null), never clamped into the favourable band. The old
+  // clampScore100 turned 500 -> 100 and -50 -> 1, silently converting a
+  // malformed/hallucinated value into a (near-)maximum score.
+  describe("FIX 3: out-of-range values are dropped, not clamped to max", () => {
+    it("drops CRIT=500 instead of clamping to 100", () => {
+      const result = parseJudgeResponse(JSON.stringify({
+        verdict: "PASS",
+        scores: { CRIT: 500, QUAL: 87, TERM: 96, GUIDE: 83, RAG: 89 },
+        overall: 90,
+        critical_failures: [],
+        missing: [],
+        hallucinated: [],
+        spot_checks: [],
+        fix: "",
+      }));
+      assert.equal(result?.scores.CRIT, undefined, "out-of-range 500 must be dropped, never become 100");
+      assert.equal(result?.scores.QUAL, 87, "valid dims are unaffected");
+    });
+
+    it("drops CRIT=-50 instead of clamping to 1/0", () => {
+      const result = parseJudgeResponse(JSON.stringify({
+        verdict: "FAIL",
+        scores: { CRIT: -50, QUAL: 40, TERM: 50, GUIDE: 60, RAG: 70 },
+        overall: 40,
+        critical_failures: [],
+        missing: [],
+        hallucinated: [],
+        spot_checks: [],
+        fix: "",
+      }));
+      assert.equal(result?.scores.CRIT, undefined, "out-of-range -50 must be dropped, not clamped");
+    });
+
+    it("drops an out-of-range overall instead of clamping to 100", () => {
+      const result = parseJudgeResponse(JSON.stringify({
+        verdict: "PASS",
+        scores: { CRIT: 91, QUAL: 87, TERM: 96, GUIDE: 83, RAG: 89 },
+        overall: 250,
+        critical_failures: [],
+        missing: [],
+        hallucinated: [],
+        spot_checks: [],
+        fix: "",
+      }));
+      assert.equal(result?.overall, null, "out-of-range overall must be dropped, never become 100");
+    });
+
+    it("keeps the boundary values 0 and 100 (inclusive range)", () => {
+      const result = parseJudgeResponse(JSON.stringify({
+        verdict: "PARTIAL",
+        scores: { CRIT: 0, QUAL: 100, TERM: 50, GUIDE: 50, RAG: 50 },
+        overall: 50,
+        critical_failures: [],
+        missing: [],
+        hallucinated: [],
+        spot_checks: [],
+        fix: "",
+      }));
+      assert.equal(result?.scores.CRIT, 0, "0 is in range");
+      assert.equal(result?.scores.QUAL, 100, "100 is in range");
+    });
   });
 });
 

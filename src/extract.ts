@@ -74,8 +74,19 @@ function extractMeasurementsFromText(text: string): string[] {
 
 // ---- Severity heuristics ----
 
-export const CRITICAL_KEYWORDS_PT = /hematoma|hemorragia|embolia|tromboembolismo|pneumotorax|pneumot[oó]rax|fratura|luxação|isquemia aguda|\bavc\b|acidente vascular|oclusão|dissecção|hernia[çc]ão cerebral|ruptura|tamponamento|efeito de massa|desvio da linha m[eé]dia/i;
-export const CRITICAL_KEYWORDS_EN = /hemorrhage|hematoma|embolism|thromboembol|pneumothorax|fracture|dislocation|acute ischemi|stroke|occlusion|dissection|herniation|rupture|tamponade|acute bleed|mass effect|midline shift/i;
+// crit-extract-3: every CRITICAL_CATEGORIES entity below MUST also have a
+// keyword anchor here in BOTH locales. The critical-anchor logic in
+// evaluators/crit.ts (isScoredCriticalLabel / isSourceBackedCriticalMention) and
+// classifySeverity key on these regexes, so a CRITICAL_CATEGORIES emergency with
+// no anchor here can be missed as a scored critical. Additions are additive and
+// move scoring in the SAFE direction (more criticals recognized). The trailing
+// group below reconciles the previously-omitted emergencies: bowel obstruction,
+// perforation / free air (pneumoperitoneum), spinal cord compression, mesenteric
+// / intestinal ischemia, cauda equina, testicular / ovarian torsion, necrotizing
+// fasciitis, acute appendicitis, intussusception, ectopic pregnancy, contrast
+// extravasation, and subarachnoid hemorrhage.
+export const CRITICAL_KEYWORDS_PT = /hematoma|hemorragia|embolia|tromboembolismo|pneumotorax|pneumot[oó]rax|fratura|luxação|isquemia aguda|\bavc\b|acidente vascular|oclusão|dissecção|hernia[çc]ão cerebral|ruptura|tamponamento|efeito de massa|desvio da linha m[eé]dia|obstru[çc][ãa]o\s+intestinal|[ií]leo\s+(?:mec[âa]nico|obstrutivo)|perfura[çc][ãa]o|pneumoperit[oô]nio|compress[ãa]o\s+(?:medular|da\s+medula)|isquemia\s+mesent[eé]rica|isquemia\s+intestinal|cauda\s+equina|tor[çc][ãa]o\s+testicular|tor[çc][ãa]o\s+ovariana|fasci[ií]te\s+necrotizante|apendicite\s+aguda|invagina[çc][ãa]o\s+intestinal|intussuscep[çc][ãa]o|gravidez\s+ect[óo]pica|prenhez\s+ect[óo]pica|extravasamento|hemorragia\s+subaracn[óo]idea|subaracn[óo]ide[ao]/i;
+export const CRITICAL_KEYWORDS_EN = /hemorrhage|hematoma|embolism|thromboembol|pneumothorax|fracture|dislocation|acute ischemi|stroke|occlusion|dissection|herniation|rupture|tamponade|acute bleed|mass effect|midline shift|bowel\s+obstruction|perforation|pneumoperitoneum|free\s+(?:intraperitoneal\s+)?air|(?:cord|spinal)\s+compression|mesenteric\s+ischemia|intestinal\s+ischemia|cauda\s+equina|testicular\s+torsion|ovarian\s+torsion|necrotizing\s+fasciitis|appendicitis|intussusception|ectopic\s+pregnancy|extravasation|subarachnoid/i;
 
 const MAJOR_KEYWORDS_PT = /nódulo|massa|neoplasia|tumor|metástase|lesão expansiva|coleção|abscesso|obstrução|hidronefrose|derrame pleural|consolidação|pneumonia|linfonodomegalia|estenose|trombose/i;
 const MAJOR_KEYWORDS_EN = /nodule|mass|neoplasm|tumor|metastas|lesion|collection|abscess|obstruction|hydronephrosis|pleural effusion|consolidation|pneumonia|lymphadenomegaly|stenosis|thrombosis/i;

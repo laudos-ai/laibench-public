@@ -7,12 +7,21 @@ import type { SuiteRunResult, CaseRunResult, Verdict } from "./types.js";
 // judge.critical_failures, and verdict.
 function mkCase(
   id: string,
-  opts: { criticalFail?: boolean; judgeCriticalFail?: boolean; verdict?: Exclude<Verdict, "UNSCORED"> } = {},
+  opts: {
+    criticalFail?: boolean;
+    judgeCriticalFail?: boolean;
+    /** A failed severity:'critical' check in a dimension other than CRIT (detDims.CRIT.critFails stays 0). */
+    criticalCheckFail?: boolean;
+    verdict?: Exclude<Verdict, "UNSCORED">;
+  } = {},
 ): CaseRunResult {
   const detDims = { CRIT: { critFails: opts.criticalFail ? 1 : 0 } };
   const judge = opts.judgeCriticalFail ? { critical_failures: [{ dim: "CRIT", issue: "x", evidence: "y" }] } : null;
+  const checks = opts.criticalCheckFail
+    ? [{ dim: "QUAL", id: "c", name: "critical preserved", severity: "critical", passed: false, evidence: "missed" }]
+    : [];
   const verdict = opts.verdict ?? (opts.criticalFail ? "FAIL" : "PASS");
-  return { case: { id }, detDims, judge, verdict } as unknown as CaseRunResult;
+  return { case: { id }, detDims, judge, checks, verdict } as unknown as CaseRunResult;
 }
 
 function mkRun(name: string, cases: CaseRunResult[]): SuiteRunResult {
@@ -89,6 +98,11 @@ describe("reliabilityAtK", () => {
     assert.equal(isCriticalSafe(mkCase("X", { criticalFail: true })), false);
     // judge-flagged critical failure is also caught
     assert.equal(isCriticalSafe(mkCase("Y", { judgeCriticalFail: true })), false);
+    // FIX (gap-4/gap-5): a failed severity:'critical' CHECK — even in a dimension
+    // other than CRIT, so detDims.CRIT.critFails is still 0 — must NOT be rated
+    // critical-safe. This FAILS against the old isCriticalSafe, which ignored
+    // result.checks entirely.
+    assert.equal(isCriticalSafe(mkCase("W", { criticalCheckFail: true })), false);
     // a non-critical FAIL verdict (e.g. low RAG) does NOT count as a critical miss
     assert.equal(isCriticalSafe(mkCase("Z", { verdict: "FAIL" })), true);
   });

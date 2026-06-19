@@ -32,6 +32,14 @@ describe("KeywordCriticalExtractor", () => {
     assert.deepEqual(r.falseNegatives, ["pneumothorax"]);
   });
 
+  it("rejects wrong-side critical mentions as misses and false positives", () => {
+    const r = ex.detect(["right pneumothorax"], "<p>Large left pneumothorax is present.</p>", "en-US");
+    assert.deepEqual(r.truePositives, []);
+    assert.deepEqual(r.falseNegatives, ["right pneumothorax"]);
+    assert.equal(r.falsePositives.length, 1);
+    assert.match(r.falsePositives[0].text, /left pneumothorax/i);
+  });
+
   it("is unvalidated and self-identifies", () => {
     assert.equal(ex.validated, false);
     assert.equal(ex.name, "keyword-substring-v1");

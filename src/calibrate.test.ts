@@ -85,6 +85,17 @@ describe("calibrateJudges", () => {
     assert.ok(r.detVsJudgeCorrelation.spearman >= 0.4);
   });
 
+  it("handles tied ranks and native 0-100 judge scores without scale inflation", () => {
+    const cases = [
+      { id: "a", det: 70, judge: 70 },
+      { id: "b", det: 70, judge: 70 },
+      { id: "c", det: 85, judge: 85 },
+      { id: "d", det: 95, judge: 95 },
+    ];
+    const r = calibrateJudges([fakeRun("r1", "j", cases)]);
+    assert.equal(r.detVsJudgeCorrelation.spearman, 1);
+  });
+
   it("flags 'uncalibrated' when det↔judge correlation is near zero", () => {
     const cases = Array.from({ length: 20 }, (_, i) => ({ id: `c${i}`, det: 60 + i * 2, judge: 3 - i * 0.1 + (i % 2) }));
     const run = fakeRun("r1", "j", cases);

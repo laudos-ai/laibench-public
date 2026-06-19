@@ -74,8 +74,8 @@ function extractMeasurementsFromText(text: string): string[] {
 
 // ---- Severity heuristics ----
 
-const CRITICAL_KEYWORDS_PT = /hematoma|hemorragia|embolia|tromboembolismo|pneumotorax|pneumot[oó]rax|fratura|luxação|isquemia aguda|avc |acidente vascular|oclusão|dissecção|hernia[çc]ão cerebral|ruptura|tamponamento/i;
-const CRITICAL_KEYWORDS_EN = /hemorrhage|hematoma|embolism|thromboembol|pneumothorax|fracture|dislocation|acute ischemi|stroke|occlusion|dissection|herniation|rupture|tamponade|acute bleed|mass effect|midline shift/i;
+export const CRITICAL_KEYWORDS_PT = /hematoma|hemorragia|embolia|tromboembolismo|pneumotorax|pneumot[oó]rax|fratura|luxação|isquemia aguda|\bavc\b|acidente vascular|oclusão|dissecção|hernia[çc]ão cerebral|ruptura|tamponamento|efeito de massa|desvio da linha m[eé]dia/i;
+export const CRITICAL_KEYWORDS_EN = /hemorrhage|hematoma|embolism|thromboembol|pneumothorax|fracture|dislocation|acute ischemi|stroke|occlusion|dissection|herniation|rupture|tamponade|acute bleed|mass effect|midline shift/i;
 
 const MAJOR_KEYWORDS_PT = /nódulo|massa|neoplasia|tumor|metástase|lesão expansiva|coleção|abscesso|obstrução|hidronefrose|derrame pleural|consolidação|pneumonia|linfonodomegalia|estenose|trombose/i;
 const MAJOR_KEYWORDS_EN = /nodule|mass|neoplasm|tumor|metastas|lesion|collection|abscess|obstruction|hydronephrosis|pleural effusion|consolidation|pneumonia|lymphadenomegaly|stenosis|thrombosis/i;
@@ -156,7 +156,7 @@ type ClassificationPattern = {
 const CLASSIFICATION_PATTERNS: ClassificationPattern[] = [
   {
     system: "birads",
-    rx: /bi-?rads\s*[:\s]?\s*(\d[a-cA-C]?)/gi,
+    rx: /(?:acr\s+)?bi-?rads(?:\s*®|\s*\u00ae)?\s*[:\s]?\s*(\d[a-cA-C]?)/gi,
     normalizer: (raw) => raw.toUpperCase(),
   },
   {
@@ -213,9 +213,9 @@ export function extractClassifications(html: string): ExtractedClassification[] 
   const results: ExtractedClassification[] = [];
 
   for (const pattern of CLASSIFICATION_PATTERNS) {
-    const rx = new RegExp(pattern.rx.source, pattern.rx.flags);
-    let match: RegExpExecArray | null;
-    while ((match = rx.exec(text)) !== null) {
+    // matchAll iterates a fresh internal regex state, so the shared g-flagged
+    // pattern never needs to be cloned to reset lastIndex.
+    for (const match of text.matchAll(pattern.rx)) {
       const rawValue = match[1] ?? "";
       results.push({
         system: pattern.system,
@@ -411,6 +411,109 @@ export function isNegated(sentence: string, locale: LocaleKey): boolean {
   return localeSpec.negationPatterns.some((rx) => rx.test(normalized));
 }
 
+const NEGATION_PREFIX_PT = /\b(?:sem|nao\s+(?:ha|foram?|foi|se|mais\s+se|existe(?:m)?|identificad|observad|detectad|evidenciad|caracterizad|visualizad|apresenta|demonstrad)|ausencia de|livres? de|afastad[oa]s?|excluid[oa]s?|inden[ei]s?)\b/;
+const NEGATION_PREFIX_EN = /\b(?:no|without|absent|negative for|ruled out|excluded|not\s+(?:identified|seen|detected|demonstrated|observed|present|visualized))\b/;
+const NEGATION_SUFFIX_PT = /\b(?:ausentes?|nao (?:caracterizad|identificad|evidenciad|observad|detectad)|descartad[oa]s?)\b/;
+const NEGATION_SUFFIX_EN = /\b(?:absent|not (?:identified|seen|detected|demonstrated|observed|present)|excluded|ruled out)\b/;
+
+/**
+ * Clause-scoped negation: decides whether the specific finding mention inside a
+ * sentence is negated, instead of flagging the whole sentence. This keeps
+ * "Grade III splenic laceration, without active extravasation" positive for the
+ * laceration while recognizing the extravasation clause as negated.
+ * Falls back to sentence-level isNegated when the match cannot be located.
+ */
+/**
+ * True when the sentence carries any negation cue (prefix or suffix form).
+ * Coarser than isFindingNegated; used where no specific match span is known.
+ */
+export function hasNegationCue(text: string, locale: LocaleKey): boolean {
+  const normalized = normalizeLoose(text);
+  const prefixRx = locale === "pt-BR" ? NEGATION_PREFIX_PT : NEGATION_PREFIX_EN;
+  const suffixRx = locale === "pt-BR" ? NEGATION_SUFFIX_PT : NEGATION_SUFFIX_EN;
+  return prefixRx.test(normalized) || suffixRx.test(normalized) || isNegated(text, locale);
+}
+
+// Contrast / accompaniment markers that close a negation's scope. A leading
+// negation ("No effusion ...") must NOT bleed past one of these into an
+// affirmed compound critical ("... but acute hemorrhage present"). These join
+// the punctuation boundaries (',' ';' ':') used to scope the clause window.
+//
+// IMPORTANT: the coordinating conjunctions "and"/"or" (PT "e"/"ou") are
+// deliberately EXCLUDED. In radiology they overwhelmingly coordinate items
+// under a SINGLE shared negation ("no hemorrhage or mass effect", "sem
+// hemorragia ou efeito de massa") — both items are denied. Treating them as
+// scope-closers would un-negate the second item and fabricate a critical
+// detection (a false alarm in the UNSAFE direction). Only true contrast
+// ("but"/"mas"/"porem"/"contudo"/"entretanto") and accompaniment ("with"/"com")
+// introduce a genuinely separate clause that a leading negation must not scope.
+const CLAUSE_CONJUNCTION_RX = /\b(?:but|with|mas|com|porem|contudo|entretanto)\b/g;
+
+/**
+ * Boundary index of the LAST conjunction-marker strictly before `idx`, or -1.
+ * Returned so that the shared `Math.max(...) + 1` lands just AFTER the
+ * conjunction word (matching the convention of the punctuation boundaries,
+ * which return the separator index). Used to bound the clause window on its
+ * left so a negation in an earlier clause does not scope across the conjunction
+ * onto the matched finding.
+ */
+function lastConjunctionBoundaryBefore(text: string, idx: number): number {
+  let pos = -1;
+  CLAUSE_CONJUNCTION_RX.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = CLAUSE_CONJUNCTION_RX.exec(text)) !== null) {
+    if (m.index >= idx) break;
+    // -1 so the shared `+ 1` in clauseStart points right after the conjunction word.
+    pos = m.index + m[0].length - 1;
+    if (CLAUSE_CONJUNCTION_RX.lastIndex === m.index) CLAUSE_CONJUNCTION_RX.lastIndex++;
+  }
+  return pos;
+}
+
+/** Index of the FIRST conjunction-marker boundary at/after `from`, or -1. */
+function firstConjunctionBoundaryFrom(text: string, from: number): number {
+  CLAUSE_CONJUNCTION_RX.lastIndex = Math.max(0, from);
+  const m = CLAUSE_CONJUNCTION_RX.exec(text);
+  return m ? m.index : -1;
+}
+
+export function isFindingNegated(sentence: string, matchText: string, locale: LocaleKey): boolean {
+  const normSentence = normalizeLoose(sentence);
+  const normMatch = normalizeLoose(matchText);
+  const idx = normSentence.indexOf(normMatch);
+  // When the (often multi-token) match is not a literal substring, scope on the
+  // whole sentence using the SAME clause-level cues (NEGATION_PREFIX/SUFFIX, via
+  // hasNegationCue) rather than the weaker isNegated, whose locale patterns omit
+  // bare "no X" / "sem X". This closes negation-matching-1: a report DENYING a
+  // critical ("No pneumothorax." / "Sem pneumotorax.") must register as negated
+  // so the critical is NOT credited as mentioned.
+  if (idx < 0) return hasNegationCue(sentence, locale);
+  // Clause window: punctuation boundaries AND contrast/conjunction markers. The
+  // conjunction boundaries (crit-extract-2) stop a leading negation from
+  // bleeding across "but"/"and"/"with"/etc. onto an affirmed compound critical
+  // ("No effusion but acute hemorrhage present").
+  const conjBefore = lastConjunctionBoundaryBefore(normSentence, idx);
+  const clauseStart = Math.max(
+    normSentence.lastIndexOf(",", idx),
+    normSentence.lastIndexOf(";", idx),
+    normSentence.lastIndexOf(":", idx),
+    conjBefore,
+  ) + 1;
+  const matchEnd = idx + normMatch.length;
+  let clauseEnd = normSentence.length;
+  for (const sep of [",", ";", ":"]) {
+    const next = normSentence.indexOf(sep, matchEnd);
+    if (next >= 0 && next < clauseEnd) clauseEnd = next;
+  }
+  const conjAfter = firstConjunctionBoundaryFrom(normSentence, matchEnd);
+  if (conjAfter >= 0 && conjAfter < clauseEnd) clauseEnd = conjAfter;
+  const prefix = normSentence.slice(clauseStart, idx);
+  const suffix = normSentence.slice(matchEnd, clauseEnd);
+  const prefixRx = locale === "pt-BR" ? NEGATION_PREFIX_PT : NEGATION_PREFIX_EN;
+  const suffixRx = locale === "pt-BR" ? NEGATION_SUFFIX_PT : NEGATION_SUFFIX_EN;
+  return prefixRx.test(prefix) || suffixRx.test(suffix);
+}
+
 /**
  * Extract mentions of critical/urgent findings from report HTML.
  */
@@ -424,17 +527,23 @@ export function extractCriticalMentions(html: string, locale?: LocaleKey): Extra
   for (const sentence of sentences) {
     for (const cat of CRITICAL_CATEGORIES) {
       const rx = effectiveLocale === "en-US" ? cat.rxEn : cat.rxPt;
-      if (rx.test(sentence)) {
-        // BUG 1 FIX: Skip negated mentions - "no evidence of PE" should NOT count as PE detected
-        if (isNegated(sentence, effectiveLocale)) {
-          break; // negated, skip this sentence entirely
-        }
-        results.push({
-          text: sentence,
-          category: cat.category,
-        });
-        break; // one category per sentence
-      }
+      const match = rx.exec(sentence);
+      if (!match) continue;
+      // Clause-scoped negation. Skip only when the matched critical term itself
+      // is negated within its clause, using the same predicate the gold path and
+      // QUAL channel use. This (a) closes the pt-BR gap where bare pertinent
+      // negatives ("Sem hemorragia", "Sem fratura") were not filtered and
+      // force-FAILed correct reports, and (b) avoids suppressing an affirmed
+      // critical that shares a sentence with a negated one ("sem desvio da linha
+      // media, mas com hematoma subdural agudo"). A negated match falls through
+      // to the next category so a second, affirmed critical in the same sentence
+      // is still detected.
+      if (isFindingNegated(sentence, match[0], effectiveLocale)) continue;
+      results.push({
+        text: sentence,
+        category: cat.category,
+      });
+      break; // one affirmed category per sentence
     }
   }
 
@@ -455,6 +564,8 @@ export function extractCriticalMentions(html: string, locale?: LocaleKey): Extra
 export function normalizeClassificationValue(value: string): string {
   const normalizedInput = normalizeLoose(value);
   let result = normalizeLoose(value)
+    .replace(/\bacr\s+/i, "")
+    .replace(/®|\u00ae/g, "")
     .replace(/bi[-\s]?rads\s*/i, "")
     .replace(/ti[-\s]?rads\s*/i, "")
     .replace(/li[-\s]?rads\s*/i, "")

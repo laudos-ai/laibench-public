@@ -80,4 +80,9 @@ describe("isPerturbationCaught", () => {
     const result = fakeResult({ combined: { RAG: 75, QUAL: 75 } });
     assert.equal(isPerturbationCaught(PERTURBATIONS.measurement_scramble, result), true);
   });
+
+  it("counts a critical deterministic failure when the perturbation expects a major failure", () => {
+    const result = fakeResult({ detFails: [{ dim: "QUAL", severity: "critical" }] });
+    assert.equal(isPerturbationCaught(PERTURBATIONS.negation_insert, result), true);
+  });
 });

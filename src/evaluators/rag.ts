@@ -5,6 +5,7 @@
  * Support retrieval+generation pipeline evaluation.
  */
 
+import { normalizeLoose, stripTags } from "../normalize.js";
 import type { BenchCase, Check, EvaluatorResult, ExamMeta, LocaleKey, RetrievalRelevance } from "../types.js";
 
 function structuralScore(checks: Check[]): number {
@@ -13,6 +14,33 @@ function structuralScore(checks: Check[]): number {
   const total = checks.reduce((sum, check) => sum + weight(check), 0);
   const passed = checks.reduce((sum, check) => sum + (check.passed ? weight(check) : 0), 0);
   return Math.round((passed / total) * 100);
+}
+
+function structuralRagFallbackChecks(structuralChecks: Check[]): Check[] {
+  return structuralChecks.filter((check) => check.dim === "RAG" && check.id !== "R05");
+}
+
+function unsupportedTechniqueDetails(reportHtml: string, benchCase: BenchCase): string[] {
+  const report = normalizeLoose(stripTags(reportHtml));
+  const source = normalizeLoose([
+    benchCase.exam,
+    benchCase.findings,
+    benchCase.referenceReport ?? "",
+  ].join(" "));
+  const candidates = [
+    { label: "T1 sequence", rx: /\bt1\b/ },
+    { label: "T2 sequence", rx: /\bt2\b/ },
+    { label: "FLAIR sequence", rx: /\bflair\b/ },
+    { label: "DWI sequence", rx: /\bdwi\b|\bdifusao\b/ },
+    { label: "axial acquisition", rx: /\baxial\b|\baxiais\b/ },
+    { label: "sagittal acquisition", rx: /\bsagital\b|\bsagitais\b/ },
+    { label: "coronal acquisition", rx: /\bcoronal\b|\bcoronais\b/ },
+    { label: "slice thickness", rx: /\b\d+(?:[.,]\d+)?\s*mm\s+de\s+espessura\b|\bthickness\b/ },
+  ];
+
+  return candidates
+    .filter(({ rx }) => rx.test(report) && !rx.test(source))
+    .map(({ label }) => label);
 }
 
 // ---- IR metrics ----
@@ -100,7 +128,7 @@ function mrr(relevances: number[], threshold = 1): number {
  * Requires retrievalGold on the case; otherwise returns UNSCORED.
  */
 export function evaluateRetrieval(
-  _reportHtml: string,
+  reportHtml: string,
   benchCase: BenchCase,
   _locale: LocaleKey,
   _meta: ExamMeta,
@@ -113,9 +141,21 @@ export function evaluateRetrieval(
   // If no retrieval gold data, fall back to structural RAG checks or skip
   if (!benchCase.retrievalGold || benchCase.retrievalGold.length === 0) {
     // If there are structural RAG checks, use them
-    const ragChecks = structuralChecks.filter((c) => c.dim === "RAG");
+    const ragChecks = structuralRagFallbackChecks(structuralChecks);
+    const unsupported = unsupportedTechniqueDetails(reportHtml, benchCase);
+    if (unsupported.length > 0) {
+      ragChecks.push({
+        dim: "RAG",
+        id: "R04",
+        name: "No unsupported acquisition details",
+        severity: "major",
+        passed: false,
+        evidence: unsupported.join(", "),
+      });
+    }
     if (ragChecks.length > 0) {
       details.mode = "structural-fallback";
+      details.unsupportedTechniqueDetails = unsupported;
       const score = structuralScore(ragChecks);
       return { dim: "RAG", score, checks: ragChecks, details };
     }
@@ -143,7 +183,7 @@ export function evaluateRetrieval(
     details.note = "retrievalGold present but no retrieval pipeline results to evaluate";
 
     // Still check structural RAG checks if available
-    const ragChecks = structuralChecks.filter((c) => c.dim === "RAG");
+    const ragChecks = structuralRagFallbackChecks(structuralChecks);
     if (ragChecks.length > 0) {
       const score = structuralScore(ragChecks);
       return { dim: "RAG", score, checks: ragChecks, details };

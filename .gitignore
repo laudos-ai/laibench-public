@@ -36,3 +36,4 @@ suites/corpus-public*.json
 *.nii
 *.nii.gz
 *.mha
+node_modules

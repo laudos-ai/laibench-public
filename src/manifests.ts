@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
-import { sha256 } from "./hash.js";
 import { readJsonFile } from "./io.js";
+import { suiteHashFromCases } from "./provenance.js";
 import type { BenchCase, EntityType, LocaleKey, RunManifest, ScoreCombinationMode, SubmissionValidation, SuiteManifest, SystemType, TrackId } from "./types.js";
 
 export async function loadSuiteManifest(path: string): Promise<SuiteManifest> {
   const suite = await readJsonFile<SuiteManifest>(path);
-  if (suite.benchmarkName !== "laibench") throw new Error(`Invalid suite benchmarkName in ${path}`);
+  if (suite.benchmarkName !== "laibench" && suite.benchmarkName !== "laibench-pro") throw new Error(`Invalid suite benchmarkName in ${path}`);
   return suite;
 }
 
@@ -19,8 +19,7 @@ export async function loadCasesForSuite(suitePath: string, suite: SuiteManifest)
 }
 
 export async function computeSuiteHash(cases: BenchCase[]): Promise<string> {
-  const canonical = JSON.stringify(cases.map((item) => ({ id: item.id, exam: item.exam, findings: item.findings, locale: item.locale ?? null })), null, 0);
-  return sha256(canonical);
+  return suiteHashFromCases(cases);
 }
 
 export function buildComparableKey(args: {
@@ -86,7 +85,7 @@ export function buildRunManifest(args: {
   const entityType = args.entityType ?? inferEntityType(systemType);
   const comparisonClass = args.comparisonClass ?? systemType;
   return {
-    benchmarkName: "laibench",
+    benchmarkName: "laibench-pro",
     benchmarkVersion: args.suite.benchmarkVersion,
     createdAt: new Date().toISOString(),
     runName: args.runName,

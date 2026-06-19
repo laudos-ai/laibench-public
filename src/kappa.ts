@@ -209,7 +209,11 @@ export function pairedBootstrap(
   const centered = resampled.map((x) => x - observed);
   let extreme = 0;
   for (const x of centered) if (Math.abs(x) >= Math.abs(observed)) extreme++;
-  const pValue = extreme / nResamples;
+  // Davison & Hinkley (1997) add-one estimator: a Monte-Carlo p-value cannot be
+  // exactly 0 from a finite resample. The true tail probability is bounded below
+  // by 1/(N+1); reporting 0.0000 would overstate certainty at the benchmark's
+  // headline discrimination claim. meanDiff/CI and all case scores are untouched.
+  const pValue = (extreme + 1) / (nResamples + 1);
 
   return {
     meanDiff: round6(observed),

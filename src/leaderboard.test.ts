@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { buildComparableKey } from "./manifests.js";
 import { assertSuiteRunIntegrity, buildLeaderboard, leaderboardToMarkdown } from "./leaderboard.js";
-import type { CaseRunResult, SuiteRunResult, SubmissionValidation } from "./types.js";
+import type { CaseRunResult, Dim, DimSummary, SuiteRunResult, SubmissionValidation } from "./types.js";
 
 function validation(valid: boolean): SubmissionValidation {
   return {
@@ -70,6 +70,25 @@ function run(
   };
 }
 
+// Build deterministic dimension summaries that are internally consistent with a
+// uniform per-dim score. Integrity now requires real DimSummaries (FIX 2): an
+// empty {} cannot be re-verified through the gated combiner, so fixtures that
+// must PASS integrity supply concrete dims here.
+function mkDims(score: number, verdict: "PASS" | "PARTIAL" | "FAIL", critFails = 0): Record<Dim, DimSummary> {
+  const dims = {} as Record<Dim, DimSummary>;
+  for (const dim of ["CRIT", "QUAL", "TERM", "GUIDE", "RAG"] as Dim[]) {
+    dims[dim] = {
+      score,
+      pass: verdict === "PASS" ? 1 : 0,
+      total: 1,
+      critFails: dim === "CRIT" ? critFails : 0,
+      verdict,
+      appliedWeight: 0,
+    };
+  }
+  return dims;
+}
+
 function singleResult(overall = 50, verdict: "PASS" | "PARTIAL" | "FAIL" = "FAIL"): CaseRunResult {
   return {
     case: { id: "R001", exam: "tc cranio", findings: "normal", locale: "pt-BR" },
@@ -88,7 +107,7 @@ function singleResult(overall = 50, verdict: "PASS" | "PARTIAL" | "FAIL" = "FAIL
       expectedRegionTokens: [],
     },
     checks: [],
-    detDims: {} as never,
+    detDims: mkDims(overall, verdict),
     detOverall: overall,
     judge: null,
     combined: { CRIT: overall, QUAL: overall, TERM: overall, GUIDE: overall, RAG: overall },
@@ -101,6 +120,81 @@ function singleResult(overall = 50, verdict: "PASS" | "PARTIAL" | "FAIL" = "FAIL
     latencyMs: 10,
     trace: [],
   };
+}
+
+// A case with a deterministic critical-finding MISS: a failed severity:'critical'
+// check drives the gated combiner to overall 59.9 / verdict FAIL. The combined
+// dims stay honest (CRIT capped low) so combinedOverall === 59.9 is itself
+// truthful — only the verdict can be tampered.
+function criticalMissResult(): CaseRunResult {
+  const checks = [{
+    dim: "CRIT" as Dim,
+    id: "crit-missed",
+    name: "no missed critical finding",
+    severity: "critical" as const,
+    passed: false,
+    evidence: "missed acute hemorrhage",
+  }];
+  return {
+    case: { id: "R001", exam: "tc cranio", findings: "hemorragia aguda", locale: "pt-BR" },
+    locale: "pt-BR",
+    rawHtml: "",
+    normalizedHtml: "",
+    sanitizedHtml: "",
+    meta: {
+      modality: "CT",
+      contrast: false,
+      region: "head",
+      normalizedExam: "tc cranio",
+      normalizedFindings: "hemorragia aguda",
+      abnormalStudy: true,
+      expectedTitleTokens: [],
+      expectedRegionTokens: [],
+    },
+    checks,
+    detDims: mkDims(59.9, "FAIL", 1),
+    detOverall: 59.9,
+    judge: null,
+    combined: { CRIT: 59.9, QUAL: 59.9, TERM: 59.9, GUIDE: 59.9, RAG: 59.9 },
+    combinedOverall: 59.9,
+    verdict: "FAIL",
+    confidence: "low",
+    phaseStatus: "degraded",
+    gateReasons: ["deterministic critical failure"],
+    costUsd: 0,
+    latencyMs: 10,
+    trace: [],
+  };
+}
+
+// Wrap a single result into a complete, integrity-consistent run artifact.
+function runWithResult(result: CaseRunResult): SuiteRunResult {
+  const artifact = run("critical-miss-agent", true, 0, result.combinedOverall, {
+    validation: {
+      valid: true,
+      expectedIds: [result.case.id],
+      receivedIds: [result.case.id],
+      missingIds: [],
+      duplicateIds: [],
+      extraIds: [],
+      emptyOutputs: [],
+      errors: [],
+    },
+  });
+  artifact.results = [result];
+  const nonFail = result.verdict !== "FAIL";
+  const isPass = result.verdict === "PASS";
+  artifact.summary = {
+    accuracyRate: isPass ? 100 : 0,
+    averageOverall: result.combinedOverall,
+    passRate: nonFail ? 100 : 0,
+    strictPassRate: isPass ? 100 : 0,
+    averageLatencyMs: result.latencyMs,
+    totalCostUsd: 0,
+    verdictCounts: { PASS: isPass ? 1 : 0, PARTIAL: result.verdict === "PARTIAL" ? 1 : 0, FAIL: result.verdict === "FAIL" ? 1 : 0 },
+    averagePerDim: { CRIT: result.combined.CRIT ?? 0, QUAL: result.combined.QUAL ?? 0, TERM: result.combined.TERM ?? 0, GUIDE: result.combined.GUIDE ?? 0, RAG: result.combined.RAG ?? 0 },
+  };
+  return artifact;
 }
 
 describe("buildLeaderboard", () => {
@@ -305,6 +399,59 @@ describe("assertSuiteRunIntegrity", () => {
     assert.throws(() => assertSuiteRunIntegrity(artifact, "legacy"), /comparableKey mismatch/);
   });
 
+  it("accepts an honest critical-miss run (verdict FAIL, overall 59.9)", () => {
+    // Sanity: the untampered critical-miss artifact must PASS integrity, so the
+    // tamper test below proves the verdict re-derivation — not some unrelated
+    // inconsistency — is what rejects the edited copy.
+    const artifact = runWithResult(criticalMissResult());
+    assert.doesNotThrow(() => assertSuiteRunIntegrity(artifact, "honest-critical-miss"));
+  });
+
+  it("rejects a verdict flipped FAIL->PASS while combinedOverall stays honest", () => {
+    // The attacker leaves combinedOverall at the truthful 59.9 (so the overall
+    // recompute passes) and edits ONLY the verdict to PASS. Re-deriving the
+    // verdict through the gated combiner catches it.
+    const artifact = runWithResult(criticalMissResult());
+    artifact.results[0].verdict = "PASS";
+    // Keep the summary self-consistent with the tampered verdict so the ONLY
+    // surviving mismatch is the re-derived per-case verdict, proving FIX 1.
+    artifact.summary.verdictCounts = { PASS: 1, PARTIAL: 0, FAIL: 0 };
+    artifact.summary.passRate = 100;
+    artifact.summary.strictPassRate = 100;
+    artifact.summary.accuracyRate = 100;
+    assert.throws(
+      () => assertSuiteRunIntegrity(artifact, "verdict-tamper"),
+      /verdict mismatch: expected FAIL, got PASS|verdict must be FAIL/,
+    );
+  });
+
+  it("rejects a critical-finding miss whose verdict is anything but FAIL (hard veto)", () => {
+    // Even if the gated re-derivation could be bypassed, the absolute critical
+    // veto (failed critical check => FAIL) must reject a PARTIAL critical-miss.
+    const artifact = runWithResult(criticalMissResult());
+    artifact.results[0].verdict = "PARTIAL";
+    artifact.summary.verdictCounts = { PASS: 0, PARTIAL: 1, FAIL: 0 };
+    artifact.summary.passRate = 100;
+    artifact.summary.strictPassRate = 0;
+    artifact.summary.accuracyRate = 0;
+    assert.throws(
+      () => assertSuiteRunIntegrity(artifact, "critical-veto"),
+      /verdict must be FAIL|verdict mismatch/,
+    );
+  });
+
+  it("rejects a public artifact lacking deterministic dimension summaries", () => {
+    // FIX 2: without real detDims the gated combiner cannot run, so the run is
+    // unverifiable and must be rejected rather than validated against an ungated
+    // mean (which would let a capped critical-miss masquerade as passing).
+    const artifact = runWithResult(criticalMissResult());
+    artifact.results[0].detDims = {} as never;
+    assert.throws(
+      () => assertSuiteRunIntegrity(artifact, "no-detdims"),
+      /missing deterministic dimension summaries/,
+    );
+  });
+
   it("CLI leaderboard rejects private template runs without shipped locked cases", () => {
     const artifact = run("fake-private-template", true, 0, 50, {
       suiteId: "lite-public.pt-BR",
@@ -352,7 +499,7 @@ describe("assertSuiteRunIntegrity", () => {
     writeFileSync(input, JSON.stringify(artifact, null, 2));
     assert.throws(
       () => execFileSync(process.execPath, ["--import", "tsx", "src/cli.ts", "leaderboard", "--inputs", input, "--out", out], { cwd: process.cwd(), encoding: "utf8", stdio: "pipe" }),
-      /does not ship locked cases|suiteVisibility=private, but local suite .* is public/,
+      /does not ship locked cases|suiteVisibility=private, but local suite .* is public|evaluationMode=cloud-private, but local suite .* is local/,
     );
     rmSync(dir, { recursive: true, force: true });
   });

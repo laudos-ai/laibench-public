@@ -15,7 +15,8 @@
  * radiologist labels, it must not silently replace the default.
  */
 
-import { extractCriticalMentions, isNegated, type ExtractedCriticalMention } from "../extract.js";
+import { extractCriticalMentions, hasNegationCue, isFindingNegated, type ExtractedCriticalMention } from "../extract.js";
+import { clinicalComparableText, clinicalTokenCoverage, clinicalTokens } from "../clinical-match.js";
 import { normalizeLoose, stripTags } from "../normalize.js";
 import type { LocaleKey } from "../types.js";
 
@@ -53,15 +54,33 @@ function findBestTokenMatchSentence(reportHtml: string, goldTokens: string[]): s
   let bestSentence: string | null = null;
   let bestRatio = 0;
   for (const sentence of sentences) {
-    const norm = normalizeLoose(sentence);
-    const matched = goldTokens.filter((t) => norm.includes(t));
-    const ratio = goldTokens.length > 0 ? matched.length / goldTokens.length : 0;
+    const ratio = clinicalTokenCoverage(goldTokens.join(" "), sentence);
     if (ratio > bestRatio) {
       bestRatio = ratio;
       bestSentence = sentence;
     }
   }
   return bestRatio >= 0.5 ? bestSentence : null;
+}
+
+function lateralitySet(value: string): Set<"right" | "left" | "bilateral"> {
+  const n = normalizeLoose(value);
+  const sides = new Set<"right" | "left" | "bilateral">();
+  if (/\b(?:right|direit[ao]s?)\b/.test(n)) sides.add("right");
+  if (/\b(?:left|esquerd[ao]s?)\b/.test(n)) sides.add("left");
+  if (/\b(?:bilateral|bilaterais)\b/.test(n)) sides.add("bilateral");
+  return sides;
+}
+
+function hasLateralityConflict(expectedText: string, observedText: string): boolean {
+  const expected = lateralitySet(expectedText);
+  if (expected.size === 0) return false;
+  const observed = lateralitySet(observedText);
+  if (observed.size === 0) return false;
+  if (expected.has("bilateral")) return !observed.has("bilateral") && (observed.has("right") !== observed.has("left"));
+  if (expected.has("right") && observed.has("left") && !observed.has("right")) return true;
+  if (expected.has("left") && observed.has("right") && !observed.has("left")) return true;
+  return false;
 }
 
 /**
@@ -83,11 +102,20 @@ export class KeywordCriticalExtractor implements CriticalFindingExtractor {
 
     for (const goldLabel of goldLabels) {
       const goldNorm = normalizeLoose(goldLabel);
+      const comparableGold = clinicalComparableText(goldLabel);
 
       // Try direct substring match first
-      if (reportText.includes(goldNorm)) {
-        const matchingSentence = findMatchingSentence(reportHtml, goldNorm);
-        if (matchingSentence && isNegated(matchingSentence, locale)) {
+      const directMatch = reportText.includes(goldNorm);
+      const clinicalExactMatch = comparableGold.length > 0 && clinicalTokenCoverage(goldLabel, reportText) >= 0.92;
+      if (directMatch || clinicalExactMatch) {
+        const matchingSentence = directMatch
+          ? findMatchingSentence(reportHtml, goldNorm)
+          : findBestTokenMatchSentence(reportHtml, clinicalTokens(goldLabel));
+        if (matchingSentence && hasLateralityConflict(goldLabel, matchingSentence)) {
+          falseNegatives.push(goldLabel);
+          continue;
+        }
+        if (matchingSentence && isFindingNegated(matchingSentence, goldLabel, locale)) {
           falseNegatives.push(goldLabel);
           continue;
         }
@@ -103,13 +131,16 @@ export class KeywordCriticalExtractor implements CriticalFindingExtractor {
       }
 
       // Try token-level matching
-      const goldTokens = goldNorm.split(/\s+/).filter((t) => t.length > 2);
-      const matchedTokens = goldTokens.filter((t) => reportText.includes(t));
-      const tokenRatio = goldTokens.length > 0 ? matchedTokens.length / goldTokens.length : 0;
+      const goldTokens = clinicalTokens(goldLabel);
+      const tokenRatio = clinicalTokenCoverage(goldLabel, reportText);
 
-      if (tokenRatio >= 0.5) {
+      if (tokenRatio >= 0.55) {
         const bestSentence = findBestTokenMatchSentence(reportHtml, goldTokens);
-        if (bestSentence && isNegated(bestSentence, locale)) {
+        if (bestSentence && hasLateralityConflict(goldLabel, bestSentence)) {
+          falseNegatives.push(goldLabel);
+          continue;
+        }
+        if (bestSentence && isFindingNegated(bestSentence, goldLabel, locale)) {
           falseNegatives.push(goldLabel);
           continue;
         }
@@ -119,7 +150,7 @@ export class KeywordCriticalExtractor implements CriticalFindingExtractor {
         for (let i = 0; i < extractedMentions.length; i++) {
           if (usedMentions.has(i)) continue;
           const mentionNorm = normalizeLoose(extractedMentions[i].text);
-          const sim = goldTokens.filter((t) => mentionNorm.includes(t)).length / goldTokens.length;
+          const sim = clinicalTokenCoverage(goldTokens.join(" "), mentionNorm);
           if (sim > bestSim) {
             bestSim = sim;
             bestIdx = i;
@@ -131,14 +162,18 @@ export class KeywordCriticalExtractor implements CriticalFindingExtractor {
       }
     }
 
-    // False positives: extracted critical mentions not matched to any gold label
+    // False positives: extracted critical mentions not matched to any gold label.
+    // Negated mentions are pertinent negatives ("Sem desvio da linha media",
+    // "No intracranial hemorrhage") — clinically required statements, never
+    // hallucinated criticals — so they must not count against precision.
     const falsePositives: ExtractedCriticalMention[] = [];
     for (let i = 0; i < extractedMentions.length; i++) {
       if (!usedMentions.has(i)) {
+        const mention = extractedMentions[i];
+        if (hasNegationCue(mention.text, locale)) continue;
         const mentionText = normalizeLoose(extractedMentions[i].text);
         const hasAnyOverlap = goldLabels.some((gl) => {
-          const tokens = normalizeLoose(gl).split(/\s+/).filter((t) => t.length > 2);
-          return tokens.some((t) => mentionText.includes(t));
+          return clinicalTokenCoverage(gl, mentionText) >= 0.25 && !hasLateralityConflict(gl, extractedMentions[i].text);
         });
         if (!hasAnyOverlap) falsePositives.push(extractedMentions[i]);
       }

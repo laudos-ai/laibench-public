@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync } from "node:fs";
 import { readdir } from "node:fs/promises";
+import { availableParallelism } from "node:os";
 import { basename, resolve } from "node:path";
 import { benchmarkCase, benchmarkSuiteFromGenerator, benchmarkSuiteFromPredictions } from "./benchmark.js";
 import { writeJsonFile, writeTextFile } from "./io.js";
@@ -19,7 +20,7 @@ import { buildProvenanceManifest } from "./provenance.js";
 import { bootstrapCI } from "./stats.js";
 import { buildConsolidatedReport, reportToMarkdown } from "./report.js";
 import { reliabilityAtK, reliabilityToMarkdown } from "./reliability.js";
-import type { EntityType, GeneratorAdapter, JudgeAdapter, LocaleKey, ScoreCombinationMode, SystemType, TrackId } from "./types.js";
+import type { CaseRunResult, EntityType, GeneratorAdapter, JudgeAdapter, LocaleKey, ScoreCombinationMode, SystemType, TrackId } from "./types.js";
 
 type Flags = Record<string, string | boolean | string[]>;
 type Pricing = { inputPer1M?: number; outputPer1M?: number };
@@ -123,6 +124,49 @@ function resolveScoreMode(flags: Flags): ScoreCombinationMode {
   throw new Error(`Invalid --score-mode: ${value}. Use conservative-min or judge-primary.`);
 }
 
+const HTTP_PROVIDERS = new Set(["openrouter", "openai-compatible"]);
+
+/** Default pool width for generator runs: HTTP providers parallelize well, local commands stay serial. */
+function defaultGeneratorConcurrency(provider: string): number {
+  return HTTP_PROVIDERS.has(provider) ? 4 : 1;
+}
+
+/** Default pool width for prediction-mode runs (eval-submission, perturb-run): CPU-bound scoring. */
+function defaultPredictionConcurrency(): number {
+  return Math.min(availableParallelism(), 8);
+}
+
+/** Minimum delay between request dispatches: --sleep-ms flag wins over LAIBENCH_INTER_REQ_SLEEP_MS. */
+function resolveSleepMs(flags: Flags): number | undefined {
+  const flagValue = getNumber(flags, "sleep-ms");
+  if (flagValue !== undefined) return flagValue;
+  const raw = process.env.LAIBENCH_INTER_REQ_SLEEP_MS;
+  if (!raw) return undefined;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed <= 0) return undefined;
+  return parsed;
+}
+
+function formatEta(ms: number): string {
+  const totalSeconds = Math.max(0, Math.round(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function makeProgressPrinter(): (index: number, total: number, caseResult: CaseRunResult) => void {
+  const startedAt = Date.now();
+  let completed = 0;
+  return (index, total, caseResult) => {
+    completed += 1;
+    const dims = Object.entries(caseResult.combined).filter(([, v]) => v !== null).map(([k, v]) => `${k}=${(v as number).toFixed(0)}%`).join(" ");
+    const costStr = caseResult.costUsd > 0 ? ` | $${caseResult.costUsd.toFixed(4)}` : "";
+    const avgMsPerCase = (Date.now() - startedAt) / completed;
+    const etaStr = ` ETA ${formatEta(avgMsPerCase * (total - completed))}`;
+    console.log(`[${index}/${total}] ${caseResult.case.id} ${caseResult.verdict} ${caseResult.combinedOverall.toFixed(1)}% | ${dims} | ${caseResult.latencyMs}ms${costStr}${etaStr}`);
+  };
+}
+
 function resolvePublicSystemMeta(flags: Flags): PublicSystemMeta {
   return {
     entityName: getString(flags, "entity-name"),
@@ -216,12 +260,21 @@ function buildGenerator(flags: Flags): ProviderBuild {
     const model = required(flags, "model");
     const apiKey = getString(flags, "api-key") ?? process.env.OPENROUTER_API_KEY;
     if (!apiKey) throw new Error("Missing OpenRouter API key. Use --api-key or OPENROUTER_API_KEY.");
+    // Footgun guard: OpenRouter ":free" endpoints require consent to free-model
+    // training. With the default data_collection=deny every request 404s ("No
+    // endpoints found matching your data policy") and the model silently scores
+    // 0%. Warn loudly instead of producing a misleading zero.
+    const dataCollection = getString(flags, "data-collection") ?? process.env.OPENROUTER_DATA_COLLECTION;
+    if (model.includes(":free") && dataCollection !== "allow") {
+      console.error(`WARN openrouter free-model data policy: ${model} is a ":free" endpoint. Set --data-collection allow (or OPENROUTER_DATA_COLLECTION=allow) or every request will 404 on the free-training data policy and the model will score 0%.`);
+    }
     const noSystemPrompt = flags["no-system-prompt"] === true;
     return {
       generator: buildOpenRouterGenerator(apiKey, model, buildPricing(flags), {
         maxTokens: getNumber(flags, "max-tokens"),
         temperature: getNumber(flags, "temperature"),
         noSystemPrompt,
+        dataCollection: dataCollection === "allow" ? "allow" : dataCollection === "deny" ? "deny" : undefined,
       }),
       provider,
       modelLabel: getString(flags, "agent-name") ?? model,
@@ -335,7 +388,7 @@ async function verifyLoadedRuns(runs: Array<{ path: string; run: import("./types
 
 function printHelp(): void {
   console.log(`
-laibench CLI
+LAIBench Pro CLI
 
 Commands:
   suites               List suite manifests
@@ -362,6 +415,12 @@ Examples:
   npm run bench -- matrix --suite suites/lite-public.pt-BR.json --provider openrouter --model model-a --model model-b --judge-model judge-model --score-mode judge-primary --out-dir runs/reference-en
   npm run bench -- leaderboard --inputs runs/a.json runs/b.json --out runs/leaderboard.json --markdown runs/leaderboard.md
   npm run bench -- compare --a runs/a.json --b runs/b.json
+
+Throttling:
+  --concurrency N        Parallel cases. Defaults: 4 for HTTP providers (openrouter, openai-compatible),
+                         1 for command, min(cpu cores, 8) for eval-submission/perturb-run.
+  --sleep-ms MS          Minimum delay between request dispatches, enforced globally across workers.
+                         Also honors the LAIBENCH_INTER_REQ_SLEEP_MS env var (flag wins).
 
 Scoring:
   --score-mode conservative-min  Default. LLM judge can only lower deterministic dimension scores.
@@ -408,15 +467,17 @@ async function runSuite(flags: Flags): Promise<void> {
   const judge = buildJudge(flags, provider);
   const scoreMode = resolveScoreMode(flags);
   const runName = required(flags, "run-name");
-  const concurrency = getNumber(flags, "concurrency", 1);
+  const concurrency = getNumber(flags, "concurrency") ?? defaultGeneratorConcurrency(provider);
+  const minInterRequestMs = resolveSleepMs(flags);
   const track = resolveTrack(flags, provider);
   const notes = getString(flags, "notes");
   const publicMeta = resolvePublicSystemMeta(flags);
 
   console.log(`Running suite ${suite.id} (${cases.length} cases) | provider=${provider} | model=${modelLabel} | locale=${locale} | track=${track}`);
-  const completedResults: import("./types.js").CaseRunResult[] = [];
+  const completedResults: CaseRunResult[] = [];
   const out = required(flags, "out");
   registerPartialSave(out, () => ({ manifest: { runName, suiteId: suite.id, partial: true }, completedCount: completedResults.length, results: completedResults }));
+  const printProgress = makeProgressPrinter();
 
   const result = await benchmarkSuiteFromGenerator({
     suite,
@@ -431,12 +492,11 @@ async function runSuite(flags: Flags): Promise<void> {
     scoreMode,
     track,
     concurrency,
+    minInterRequestMs,
     notes,
     onCaseComplete(index, total, caseResult) {
       completedResults.push(caseResult);
-      const dims = Object.entries(caseResult.combined).filter(([, v]) => v !== null).map(([k, v]) => `${k}=${(v as number).toFixed(0)}%`).join(" ");
-      const costStr = caseResult.costUsd > 0 ? ` | $${caseResult.costUsd.toFixed(4)}` : "";
-      console.log(`[${index}/${total}] ${caseResult.case.id} ${caseResult.verdict} ${caseResult.combinedOverall.toFixed(1)}% | ${dims} | ${caseResult.latencyMs}ms${costStr}`);
+      printProgress(index, total, caseResult);
     },
   });
 
@@ -444,7 +504,7 @@ async function runSuite(flags: Flags): Promise<void> {
   console.log(`Wrote ${out}`);
   const caseCount = result.results.length || 1;
   const avgCost = result.summary.totalCostUsd / caseCount;
-  console.log(`\nClinical score: ${result.summary.averageOverall.toFixed(1)}% | Strict PASS gate: ${result.summary.accuracyRate.toFixed(1)}% | Non-fail: ${result.summary.passRate.toFixed(1)}% | Cost: $${result.summary.totalCostUsd.toFixed(4)} ($${avgCost.toFixed(4)}/case)`);
+  console.log(`\nAll-pass completion: ${(result.summary.allPassRate ?? 0).toFixed(1)}% | Criterion pass: ${(result.summary.criterionPassRate ?? 0).toFixed(1)}% | Clinical score: ${result.summary.averageOverall.toFixed(1)}% | Strict PASS gate: ${result.summary.accuracyRate.toFixed(1)}% | Cost: $${result.summary.totalCostUsd.toFixed(4)} ($${avgCost.toFixed(4)}/case)`);
 }
 
 async function runMatrix(flags: Flags): Promise<void> {
@@ -457,7 +517,8 @@ async function runMatrix(flags: Flags): Promise<void> {
   const judge = buildJudge(flags, provider);
   const scoreMode = resolveScoreMode(flags);
   const outDir = required(flags, "out-dir");
-  const concurrency = getNumber(flags, "concurrency", 1);
+  const concurrency = getNumber(flags, "concurrency") ?? defaultGeneratorConcurrency(provider);
+  const minInterRequestMs = resolveSleepMs(flags);
   const track = resolveTrack(flags, provider);
   const notes = getString(flags, "notes");
   const publicMeta = resolvePublicSystemMeta(flags);
@@ -487,12 +548,9 @@ async function runMatrix(flags: Flags): Promise<void> {
       scoreMode,
       track,
       concurrency,
+      minInterRequestMs,
       notes,
-      onCaseComplete(index, total, caseResult) {
-        const dims = Object.entries(caseResult.combined).filter(([, v]) => v !== null).map(([k, v]) => `${k}=${(v as number).toFixed(0)}%`).join(" ");
-        const costStr = caseResult.costUsd > 0 ? ` | $${caseResult.costUsd.toFixed(4)}` : "";
-        console.log(`[${index}/${total}] ${caseResult.case.id} ${caseResult.verdict} ${caseResult.combinedOverall.toFixed(1)}% | ${dims} | ${caseResult.latencyMs}ms${costStr}`);
-      },
+      onCaseComplete: makeProgressPrinter(),
     });
 
     await writeJson(out, result);
@@ -520,7 +578,8 @@ async function runValidateSubmission(flags: Flags, onlyValidate = true): Promise
   const scoreMode = resolveScoreMode(flags);
   const modelLabel = required(flags, "model-label");
   const runName = required(flags, "run-name");
-  const concurrency = getNumber(flags, "concurrency", 1);
+  const concurrency = getNumber(flags, "concurrency") ?? defaultPredictionConcurrency();
+  const minInterRequestMs = resolveSleepMs(flags);
   const track = resolveTrack(flags, provider);
   const notes = getString(flags, "notes");
   const publicMeta = resolvePublicSystemMeta(flags);
@@ -543,12 +602,9 @@ async function runValidateSubmission(flags: Flags, onlyValidate = true): Promise
     scoreMode,
     track,
     concurrency,
+    minInterRequestMs,
     notes,
-    onCaseComplete(index, total, caseResult) {
-      const dims = Object.entries(caseResult.combined).filter(([, v]) => v !== null).map(([k, v]) => `${k}=${(v as number).toFixed(0)}%`).join(" ");
-      const costStr = caseResult.costUsd > 0 ? ` | $${caseResult.costUsd.toFixed(4)}` : "";
-      console.log(`[${index}/${total}] ${caseResult.case.id} ${caseResult.verdict} ${caseResult.combinedOverall.toFixed(1)}% | ${dims} | ${caseResult.latencyMs}ms${costStr}`);
-    },
+    onCaseComplete: makeProgressPrinter(),
   });
 
   const out = required(flags, "out");
@@ -556,7 +612,7 @@ async function runValidateSubmission(flags: Flags, onlyValidate = true): Promise
   console.log(`Wrote ${out}`);
   const evalCaseCount = result.results.length || 1;
   const evalAvgCost = result.summary.totalCostUsd / evalCaseCount;
-  console.log(`\nClinical score: ${result.summary.averageOverall.toFixed(1)}% | Strict PASS gate: ${result.summary.accuracyRate.toFixed(1)}% | Non-fail: ${result.summary.passRate.toFixed(1)}% | Cost: $${result.summary.totalCostUsd.toFixed(4)} ($${evalAvgCost.toFixed(4)}/case) | Eligible: ${result.manifest.validation.valid}`);
+  console.log(`\nAll-pass completion: ${(result.summary.allPassRate ?? 0).toFixed(1)}% | Criterion pass: ${(result.summary.criterionPassRate ?? 0).toFixed(1)}% | Clinical score: ${result.summary.averageOverall.toFixed(1)}% | Strict PASS gate: ${result.summary.accuracyRate.toFixed(1)}% | Cost: $${result.summary.totalCostUsd.toFixed(4)} ($${evalAvgCost.toFixed(4)}/case) | Eligible: ${result.manifest.validation.valid}`);
 }
 
 async function runLeaderboard(flags: Flags): Promise<void> {
@@ -583,7 +639,7 @@ async function runLeaderboard(flags: Flags): Promise<void> {
       : group.judgeModel
         ? "judged/frozen conservative-min"
         : "deterministic";
-    console.log(`${group.suiteId} | ${group.locale} | ${group.track} | ${judgingMode} | entries=${group.entries.length} | #${top?.rank ?? "—"} ${top?.runName ?? "n/a"} score=${top?.averageOverall.toFixed(1) ?? "n/a"}% strictPass=${top?.accuracyRate.toFixed(1) ?? "n/a"}%`);
+    console.log(`${group.suiteId} | ${group.locale} | ${group.track} | ${judgingMode} | entries=${group.entries.length} | #${top?.rank ?? "—"} ${top?.runName ?? "n/a"} allPass=${top?.allPassRate?.toFixed(1) ?? "n/a"}% criterion=${top?.criterionPassRate?.toFixed(1) ?? "n/a"}% clinical=${top?.averageOverall.toFixed(1) ?? "n/a"}%`);
   }
 }
 
@@ -701,8 +757,8 @@ async function runPerturbRun(flags: Flags): Promise<void> {
   const target = cases.slice(0, limit);
   const out = required(flags, "out");
 
-  const { samples, links } = buildPerturbationDataset(target);
-  console.log(`Generated ${samples.length} perturbations across ${target.length} cases.`);
+  const { samples, links } = buildPerturbationDataset(target, { applicableOnly: true });
+  console.log(`Generated ${samples.length} applicable perturbations across ${target.length} cases.`);
 
   const predictions = samples.map((s) => ({
     instance_id: s.caseId,
@@ -733,7 +789,8 @@ async function runPerturbRun(flags: Flags): Promise<void> {
       modelLabel: `perturb:${kind}`,
       judge,
       track: "agent",
-      concurrency: getNumber(flags, "concurrency", 1)!,
+      concurrency: getNumber(flags, "concurrency") ?? defaultPredictionConcurrency(),
+      minInterRequestMs: resolveSleepMs(flags),
     });
 
     const subset = links.filter((l) => l.kind === kind);

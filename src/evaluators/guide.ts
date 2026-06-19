@@ -3,7 +3,8 @@
  * Registry of guideline modules, each checking applicability → presence → correctness.
  * Built-in modules: Fleischner, BI-RADS, TI-RADS, LI-RADS, PI-RADS, Bosniak, Lung-RADS.
  * If case has guidelineExpectations gold: validate against gold.
- * If no gold: detect from context and check presence.
+ * If no explicit gold: derive narrow guideline expectations from reference
+ * reports or clinically mandatory source context.
  * Falls back to anatomy coverage if no guidelines apply.
  */
 
@@ -20,10 +21,27 @@ function weightedCheckScore(checks: Check[], floor = 0): number {
 }
 
 function anatomyCoverageScore(checks: Check[]): number {
-  if (checks.length === 0) return 100;
-  const passCount = checks.filter((c) => c.passed).length;
-  const ratio = passCount / checks.length;
-  return Math.round(75 + ratio * 25);
+  return weightedCheckScore(checks);
+}
+
+function coverageToken(check: Check): string {
+  const fromEvidence = /^missing:\s*(.+)$/i.exec(check.evidence);
+  if (fromEvidence) return normalizeLoose(fromEvidence[1]);
+  const fromName = /Anatomical coverage:\s*(.+)$/i.exec(check.name);
+  return normalizeLoose(fromName?.[1] ?? "");
+}
+
+function scopedAnatomyCoverageChecks(checks: Check[], benchCase: BenchCase): Check[] {
+  const goldContext = (benchCase.goldFindings ?? [])
+    .map((g) => [g.finding, g.location, ...(g.measurements ?? [])].filter(Boolean).join(" "))
+    .join(" ");
+  const referenceContext = benchCase.referenceReport ? stripTags(benchCase.referenceReport) : "";
+  const context = normalizeLoose(`${benchCase.findings} ${goldContext} ${referenceContext}`);
+  if (!context) return checks;
+  return checks.filter((check) => {
+    const token = coverageToken(check);
+    return token.length > 0 && context.includes(token);
+  });
 }
 
 // ---- Valid value ranges per classification system ----
@@ -93,6 +111,76 @@ function sourceContextContains(benchCase: BenchCase, rx: RegExp): boolean {
   return rx.test(combined);
 }
 
+function expectationFromReference(
+  module: GuidelineModule,
+  benchCase: BenchCase,
+  meta: ExamMeta,
+  locale: LocaleKey,
+): GuidelineExpectation | null {
+  if (!benchCase.referenceReport) return null;
+  if (!module.appliesTo(benchCase, benchCase.referenceReport, meta, locale)) return null;
+
+  const referenceResult = module.evaluate(benchCase, benchCase.referenceReport, meta, locale);
+  if (!referenceResult.present) return null;
+
+  const referenceClassification = extractClassifications(benchCase.referenceReport)
+    .find((c) => c.system === module.id);
+
+  return {
+    guidelineId: module.id,
+    ...(referenceClassification ? { expectedClassification: referenceClassification.rawText } : {}),
+    ...(referenceResult.recommendationPresent ? { recommendationRequired: true } : {}),
+  };
+}
+
+function defaultClinicalExpectation(
+  module: GuidelineModule,
+  benchCase: BenchCase,
+  meta: ExamMeta,
+  locale: LocaleKey,
+): GuidelineExpectation | null {
+  if (benchCase.referenceReport) return null;
+  if (!module.appliesTo(benchCase, "", meta, locale)) return null;
+  if (module.id === "pirads" && !sourceContextContains(benchCase, /(?:lesao|les[aã]o|nodulo|n[oó]dulo|foco|area|[áa]rea|susp|neoplas|cancer|c[aâ]ncer).*(?:prostata|pr[oó]stata|prostate)|(?:prostata|pr[oó]stata|prostate).*(?:lesao|les[aã]o|nodulo|n[oó]dulo|foco|area|[áa]rea|susp|neoplas|cancer|c[aâ]ncer)/i)) {
+    return null;
+  }
+  return { guidelineId: module.id };
+}
+
+function buildGuidelineExpectations(
+  benchCase: BenchCase,
+  meta: ExamMeta,
+  locale: LocaleKey,
+): { expectations: GuidelineExpectation[]; sources: Record<string, string> } {
+  const expectations = new Map<string, GuidelineExpectation>();
+  const sources: Record<string, string> = {};
+
+  for (const expectation of benchCase.guidelineExpectations ?? []) {
+    expectations.set(expectation.guidelineId, expectation);
+    sources[expectation.guidelineId] = "explicit";
+  }
+
+  for (const module of GUIDELINE_REGISTRY) {
+    if (expectations.has(module.id)) continue;
+    const referenceExpectation = expectationFromReference(module, benchCase, meta, locale);
+    if (referenceExpectation) {
+      expectations.set(module.id, referenceExpectation);
+      sources[module.id] = "referenceReport";
+    }
+  }
+
+  for (const module of GUIDELINE_REGISTRY) {
+    if (expectations.has(module.id)) continue;
+    const inferredExpectation = defaultClinicalExpectation(module, benchCase, meta, locale);
+    if (inferredExpectation) {
+      expectations.set(module.id, inferredExpectation);
+      sources[module.id] = "source-context";
+    }
+  }
+
+  return { expectations: Array.from(expectations.values()), sources };
+}
+
 // ---- Built-in guideline modules ----
 
 const fleischnerModule: GuidelineModule = {
@@ -100,7 +188,7 @@ const fleischnerModule: GuidelineModule = {
   name: "Fleischner Society Guidelines (Pulmonary Nodules)",
   appliesTo(benchCase, reportHtml, meta) {
     if (meta.modality !== "CT") return false;
-    return sourceContextContains(benchCase, /nodulo.*pulmon|pulmon.*nodulo|pulmonary\s+nodule|lung\s+nodule/i);
+    return sourceContextContains(benchCase, /nodulo[\s\S]{0,50}pulmon|pulmon[\s\S]{0,50}nodulo|pulmonary\s+nodule|lung\s+nodule/i);
   },
   evaluate(benchCase, reportHtml, _meta, _locale, goldExpectation) {
     const reportText = stripTags(reportHtml);
@@ -131,7 +219,7 @@ const biradsModule: GuidelineModule = {
   appliesTo(benchCase, reportHtml, meta) {
     // BUG D FIX: Include MG (mammography) and MX (digital mammography) alongside US and MRI
     if (meta.modality !== "US" && meta.modality !== "MRI" && meta.modality !== "MG" && meta.modality !== "MX") return false;
-    return sourceContextContains(benchCase, /nodulo.*mama|mama.*nodulo|lesao.*mama|breast.*(?:nodule|mass|lesion)|(?:nodule|mass|lesion).*breast/i);
+    return sourceContextContains(benchCase, /nodulo[\s\S]{0,50}mama|mama[\s\S]{0,50}nodulo|lesao[\s\S]{0,50}mama|mama[\s\S]{0,50}lesao|massa[\s\S]{0,50}mama|mama[\s\S]{0,50}massa|breast[\s\S]{0,50}(?:nodule|mass|lesion)|(?:nodule|mass|lesion)[\s\S]{0,50}breast/i);
   },
   evaluate(benchCase, reportHtml, _meta, _locale, goldExpectation) {
     const reportText = stripTags(reportHtml);
@@ -166,7 +254,7 @@ const tiradsModule: GuidelineModule = {
   name: "TI-RADS (Thyroid Imaging)",
   appliesTo(benchCase, reportHtml, meta) {
     if (meta.modality !== "US") return false;
-    return sourceContextContains(benchCase, /nodulo.*tireoide|tireoide.*nodulo|thyroid.*nodule|nodule.*thyroid/i);
+    return sourceContextContains(benchCase, /nodulo[\s\S]{0,50}tireoide|tireoide[\s\S]{0,50}nodulo|thyroid[\s\S]{0,50}nodule|nodule[\s\S]{0,50}thyroid/i);
   },
   evaluate(benchCase, reportHtml, _meta, _locale, goldExpectation) {
     const reportText = stripTags(reportHtml);
@@ -202,7 +290,7 @@ const liradsModule: GuidelineModule = {
   appliesTo(benchCase, reportHtml, meta) {
     if (meta.modality !== "CT" && meta.modality !== "MRI") return false;
     const combined = normalizeLoose(`${benchCase.exam} ${benchCase.findings}`);
-    return /nodulo.*figado|figado.*nodulo|lesao.*hepat|hepat.*lesion|liver.*(?:nodule|mass|lesion)|(?:nodule|mass|lesion).*liver/i.test(combined) &&
+    return /nodulo[\s\S]{0,50}figado|figado[\s\S]{0,50}nodulo|lesao[\s\S]{0,50}hepat|hepat[\s\S]{0,50}lesion|liver[\s\S]{0,50}(?:nodule|mass|lesion)|(?:nodule|mass|lesion)[\s\S]{0,50}liver/i.test(combined) &&
       /cirros|hepatopat|cronico|cirrhosis|chronic\s+liver/i.test(combined);
   },
   evaluate(benchCase, reportHtml, _meta, _locale, goldExpectation) {
@@ -267,7 +355,7 @@ const bosniakModule: GuidelineModule = {
     // BUG E FIX: Bosniak classification requires CT or MRI modality (not US or XR)
     if (meta.modality !== "CT" && meta.modality !== "MRI") return false;
     const combined = normalizeLoose(`${benchCase.exam} ${benchCase.findings}`);
-    return /cisto.*ren|ren.*cisto|renal\s+cyst|kidney\s+cyst/i.test(combined) &&
+    return /cisto[\s\S]{0,50}ren|ren[\s\S]{0,50}cisto|renal\s+cyst|kidney\s+cyst/i.test(combined) &&
       /complex|sept|solid|irregular|septated|heterogen/i.test(combined);
   },
   evaluate(benchCase, reportHtml, _meta, _locale, goldExpectation) {
@@ -300,7 +388,7 @@ const lungradsModule: GuidelineModule = {
   appliesTo(benchCase, reportHtml, meta) {
     if (meta.modality !== "CT") return false;
     const combined = normalizeLoose(`${benchCase.exam} ${benchCase.findings}`);
-    return /nodulo.*pulmon|pulmon.*nodulo|pulmonary\s+nodule|lung\s+nodule/i.test(combined) &&
+    return /nodulo[\s\S]{0,50}pulmon|pulmon[\s\S]{0,50}nodulo|pulmonary\s+nodule|lung\s+nodule/i.test(combined) &&
       /screening|rastreamento|rastreio|low[\s-]?dose/i.test(combined);
   },
   evaluate(benchCase, reportHtml, _meta, _locale, goldExpectation) {
@@ -361,8 +449,10 @@ export function getGuidelineModule(id: string): GuidelineModule | undefined {
 
 /**
  * Evaluate guideline compliance.
- * If gold guidelineExpectations exist: validate each expected guideline.
- * If no gold: detect applicable guidelines from context, check presence.
+ * If gold guidelineExpectations exist, or a narrow expectation can be derived
+ * from the reference report/source context, validate each expected guideline.
+ * Otherwise validate observed guideline classifications and fall back to
+ * anatomy coverage.
  * Fall back to anatomy coverage if no guidelines apply.
  */
 export function evaluateGuidelines(
@@ -375,12 +465,14 @@ export function evaluateGuidelines(
   const checks: Check[] = [];
   const details: Record<string, unknown> = {};
   const evaluations: Array<{ moduleId: string; result: GuidelineEvaluation }> = [];
+  const guidelineExpectationSet = buildGuidelineExpectations(benchCase, meta, locale);
 
-  // Strategy 1: Gold guideline expectations
-  if (benchCase.guidelineExpectations && benchCase.guidelineExpectations.length > 0) {
-    details.mode = "gold-expectations";
+  // Strategy 1: Explicit, reference-derived, or narrow source-context expectations.
+  if (guidelineExpectationSet.expectations.length > 0) {
+    details.mode = "expected-guidelines";
+    details.expectationSources = guidelineExpectationSet.sources;
 
-    for (const expectation of benchCase.guidelineExpectations) {
+    for (const expectation of guidelineExpectationSet.expectations) {
       const module = getGuidelineModule(expectation.guidelineId);
       if (!module) {
         checks.push({
@@ -437,6 +529,22 @@ export function evaluateGuidelines(
             ? `found=${result.foundClassification} expected=${expectation.expectedClassification}`
             : `found=${result.foundClassification ?? "none"} expected=${expectation.expectedClassification}`,
         });
+      } else if (expectation.expectedClassification && result.present && !result.foundClassification) {
+        // qual-structural-guide-rag-1: the report named the guideline acronym
+        // (present=true) but supplied NO actionable category, so the module left
+        // result.correct null and no foundClassification. The presence check
+        // above would otherwise award credit while the correctness gate is
+        // silently dodged — a present-without-value report leaking free points.
+        // An expected category that is never actually stated is a critical miss,
+        // not a partial credit, so emit the correctness check as a hard FAIL.
+        checks.push({
+          dim: "GUIDE",
+          id: `GE-${module.id}-correct`,
+          name: `${module.name}: classification correct`,
+          severity: "critical",
+          passed: false,
+          evidence: `guideline named but no actionable category supplied; expected=${expectation.expectedClassification}`,
+        });
       }
 
       // Check 3: Recommendation present (if required)
@@ -475,19 +583,23 @@ export function evaluateGuidelines(
     return { dim: "GUIDE", score, checks, details };
   }
 
-  // Strategy 2: Auto-detect applicable guidelines (no gold expectations)
-  details.mode = "auto-detect";
+  // Strategy 2: Auto-detect applicable guidelines (no gold expectations).
+  // Without explicit gold expectations, context-only guideline inference is too
+  // noisy for public scoring. We validate classifications that are actually
+  // present, but absence remains unscored and falls through to anatomy coverage.
+  details.mode = "auto-detect-observed";
 
   let guidelinesApplied = false;
 
   for (const module of GUIDELINE_REGISTRY) {
     if (!module.appliesTo(benchCase, reportHtml, meta, locale)) continue;
 
-    guidelinesApplied = true;
     const result = module.evaluate(benchCase, reportHtml, meta, locale);
     evaluations.push({ moduleId: module.id, result });
+    if (!result.present) continue;
 
-    // Only check presence when auto-detecting (no gold to check correctness against)
+    guidelinesApplied = true;
+
     checks.push({
       dim: "GUIDE",
       id: `GA-${module.id}`,
@@ -519,7 +631,14 @@ export function evaluateGuidelines(
   // Strategy 3: Fall back to structural anatomy coverage checks
   if (!guidelinesApplied) {
     details.mode = "anatomical-coverage-fallback";
-    const guideChecks = structuralChecks.filter((c) => c.dim === "GUIDE");
+    const guideChecks = scopedAnatomyCoverageChecks(
+      structuralChecks.filter((c) => c.dim === "GUIDE"),
+      benchCase,
+    );
+    details.scopedCoverage = {
+      retained: guideChecks.length,
+      total: structuralChecks.filter((c) => c.dim === "GUIDE").length,
+    };
     const score = anatomyCoverageScore(guideChecks);
     return { dim: "GUIDE", score, checks: guideChecks, details };
   }

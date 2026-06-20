@@ -108,7 +108,42 @@
   .disc-tiny { font-size:11px; color:var(--faint); margin-top:14px; max-width:80ch; line-height:1.6; }
   [data-reveal]{ opacity:0; transform:translateY(18px); transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1); }
   [data-reveal].in{ opacity:1; transform:none; }
-  @media (max-width:760px){ nav .links a:not(.cta){ display:none; } .pub{ grid-template-columns:1fr; gap:8px; } .pub .venue{ justify-self:start; } }
+
+  /* Leaderboard table: never break the layout — scroll horizontally on narrow screens */
+  .t-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain; }
+  .t-scroll table{ min-width:600px; }
+
+  /* ---------- Responsive / mobile-first ---------- */
+  @media (max-width:900px){
+    .stats .grid{ grid-template-columns:repeat(2,1fr); }
+    .stats .cell{ padding:24px 22px; border-bottom:1px solid var(--line); }
+    .stats .cell:nth-child(odd){ padding-left:0; }
+    .stats .cell:nth-child(2n){ border-right:none; padding-right:0; }
+    .stats .cell:nth-last-child(-n+2){ border-bottom:none; }
+  }
+  @media (max-width:760px){
+    nav{ padding:14px clamp(18px,5vw,72px); }
+    nav .links a:not(.cta){ display:none; }
+    nav .rsrch{ display:none; }
+    nav .cta{ padding:9px 14px; }
+    header{ padding-top:clamp(56px,16vw,150px); }
+    .actions{ gap:10px; }
+    .actions .btn{ flex:1 1 auto; justify-content:center; }
+    .cards{ grid-template-columns:1fr; }
+    .card{ min-height:0; }
+    .card .sw{ margin-top:18px; }
+    .pub{ grid-template-columns:1fr; gap:8px; padding:22px 0; }
+    .pub .yr{ padding-top:0; }
+    .pub .venue{ justify-self:start; align-self:start; margin-top:6px; }
+    table{ font-size:13px; }
+  }
+  @media (max-width:480px){
+    .stats .grid{ grid-template-columns:1fr; border-top:1px solid var(--line); }
+    .stats .cell{ padding:20px 0; border-right:none; border-bottom:1px solid var(--line); }
+    .stats .cell:last-child{ border-bottom:none; }
+    .quote p{ max-width:none; }
+    .sec-head h2{ max-width:none; }
+  }
 </style>
 </head>
 <body>
@@ -274,7 +309,7 @@
         html += '<div class="board">';
         html += '<h3 style="font-size:20px;font-weight:500;letter-spacing:-.02em;margin:0 0 2px">'+b.title+'</h3>';
         html += '<div class="meta mono"><b>'+(loc.suite||b.key)+'</b> · '+(loc.cases||'?')+' cases · '+(loc.scoring||'')+' · '+b.sub+'</div>';
-        html += '<table><thead><tr><th class="l">#</th><th class="l">System</th><th>Clinical</th><th>CRIT</th><th>QUAL</th><th>TERM</th><th>GUIDE</th><th>RAG</th><th>Latency</th></tr></thead><tbody>';
+        html += '<div class="t-scroll"><table><thead><tr><th class="l">#</th><th class="l">System</th><th>Clinical</th><th>CRIT</th><th>QUAL</th><th>TERM</th><th>GUIDE</th><th>RAG</th><th>Latency</th></tr></thead><tbody>';
         entries.forEach(function(e,i){
           var lat = e.latencyMs!=null ? (Math.round(e.latencyMs/100)/10)+'s' : '—';
           html += '<tr>';
@@ -285,7 +320,7 @@
           html += '<td class="mono">'+lat+'</td>';
           html += '</tr>';
         });
-        html += '</tbody></table>';
+        html += '</tbody></table></div>';
         if(loc.disclosure) html += '<p class="disclosure">'+loc.disclosure+'</p>';
         html += '</div>';
       });

@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security / private disclosure
-    url: https://github.com/Vajbratya/laibench-public/security/advisories/new
+    url: https://github.com/laudos-ai/laibench-public/security/advisories/new
     about: Report secret exposure, run-artifact tampering, or any private-data leak privately — do not open a public issue.
   - name: Laudos.AI
     url: https://laudos.ai

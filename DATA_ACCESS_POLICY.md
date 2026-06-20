@@ -10,7 +10,7 @@ The only cases that may be published without a separate release review are synth
 
 Public cases are not a representative clinical dataset and must not be used to claim clinical validation. Real-derived, private controlled, or answer-key-bearing fixtures are not public data.
 
-The public demonstration cases are synthetic and input-only. The controlled pt-BR suite is synthetic and was authored and clinically reviewed by senior radiologists in Sao Paulo, SP, Brazil. This is an internal data-quality process. It is not an independent third-party validation, and it does not make the controlled suite an open-download benchmark. The separate public LAIBench set (2,670 cases) is the open artifact; the LAIBench Pro gold suite is controlled and aggregate-only.
+The public demonstration cases are synthetic and input-only. The controlled pt-BR suite is synthetic and was authored and clinically reviewed by senior radiologists in Sao Paulo, SP, Brazil. This is an internal data-quality process. It is not an independent third-party validation, and it does not make the controlled suite an open-download benchmark. This repository ships one runnable public suite — the synthetic `lite-public.en-US` demo set under `cases/public/` — for local reproduction; the controlled `lite-public.pt-BR` suite is gated and aggregate-only (`evaluationMode: cloud-private`, `casesPath: null`), so its case JSON, answer keys, and frozen predictions are not distributed here.
 
 ## Controlled Data
 

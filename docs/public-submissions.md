@@ -34,7 +34,7 @@ Do not submit manually edited score summaries. `leaderboard` and `compare` recom
 
 ```bash
 npm run bench -- validate-submission \
-  --suite suites/lite-public.pt-BR.json \
+  --suite suites/lite-public.en-US.json \
   --predictions predictions/my-system.jsonl
 ```
 
@@ -44,7 +44,7 @@ Validation fails on missing cases, duplicate IDs, extra IDs, empty outputs, malf
 
 ```bash
 npm run bench -- eval-submission \
-  --suite suites/lite-public.pt-BR.json \
+  --suite suites/lite-public.en-US.json \
   --predictions predictions/my-system.jsonl \
   --run-name my-system-reference \
   --model-label my-system \

@@ -46,7 +46,7 @@ Add a third run with a different judge model to also get cross-judge κ + α.
 ```bash
 # One-shot pipeline: build matrix → submit → score → emit catch-rate report
 npm run bench -- perturb-run \
-  --suite suites/lite-public.pt-BR.json \
+  --suite suites/lite-public.en-US.json \
   --limit 120 \
   --out runs/perturb-report.json
 ```
@@ -65,8 +65,8 @@ Whitespace-insensitive canary search. Defeats trivial evasion.
 
 ```bash
 npm run bench -- provenance \
-  --suite suites/lite-public.pt-BR.json \
-  --suite suites/lite-public.pt-BR.json \
+  --suite suites/lite-public.en-US.json \
+  --suite suites/lite-public.en-US.json \
   --out provenance.json
 ```
 

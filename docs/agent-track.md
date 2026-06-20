@@ -49,7 +49,7 @@ Evidence metadata is optional. When present, it is used only for public-safe fid
 
 ```bash
 npm run bench -- suite \
-  --suite suites/lite-public.pt-BR.json \
+  --suite suites/lite-public.en-US.json \
   --provider command \
   --cmd "node my-agent.mjs" \
   --agent-name my-agent \
@@ -66,11 +66,11 @@ This prevents generation, judging, and reporting from influencing each other in 
 
 ```bash
 npm run bench -- validate-submission \
-  --suite suites/lite-public.pt-BR.json \
+  --suite suites/lite-public.en-US.json \
   --predictions predictions/my-agent.jsonl
 
 npm run bench -- eval-submission \
-  --suite suites/lite-public.pt-BR.json \
+  --suite suites/lite-public.en-US.json \
   --predictions predictions/my-agent.jsonl \
   --run-name my-agent-reference \
   --model-label my-agent \

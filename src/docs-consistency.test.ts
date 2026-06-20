@@ -83,4 +83,30 @@ describe("docs/consistency: no local command runs a cloud-private suite", () => 
     }
     assert.equal(bad.length, 0, `The controlled suite must never be called an open/open-download benchmark:\n${bad.join("\n")}`);
   });
+
+  it("public board (site/data.js) is aggregate-only — no controlled case IDs or raw findings", () => {
+    const root = process.cwd();
+    const p = join(root, "site", "data.js");
+    if (!existsSync(p)) return; // site assets not in this checkout
+    const raw = readFileSync(p, "utf8").trim();
+    const json = raw.replace(/^window\.LAIBENCH_DATA\s*=\s*/, "").replace(/;\s*$/, "");
+    const data = JSON.parse(json) as { locales?: Record<string, { cases?: unknown }> };
+    const FORBIDDEN = new Set([
+      "caseId", "case_id", "instanceId", "instance_id", "goldFindings",
+      "criticalFindings", "referenceReport", "model_output", "prediction", "predictions",
+    ]);
+    const bad: string[] = [];
+    const walk = (o: unknown, path: string): void => {
+      if (!o || typeof o !== "object") return;
+      for (const k of Object.keys(o as Record<string, unknown>)) {
+        if (FORBIDDEN.has(k)) bad.push(`${path}.${k}`);
+        walk((o as Record<string, unknown>)[k], `${path}.${k}`);
+      }
+    };
+    walk(data, "data");
+    for (const lk of Object.keys(data.locales ?? {})) {
+      if (Array.isArray(data.locales![lk].cases)) bad.push(`locales.${lk}.cases is an array (must be an aggregate count)`);
+    }
+    assert.equal(bad.length, 0, `site/data.js must be aggregate-only (no per-case identifiers or raw findings); found: ${bad.join(", ")}`);
+  });
 });

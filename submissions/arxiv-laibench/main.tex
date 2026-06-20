@@ -184,7 +184,7 @@ A compositional report engine can be organized into seven layers:
 
 This architecture can be implemented with deterministic rules, probabilistic models, large language models, or hybrid systems. The key requirement is not the use of a particular model class. It is the preservation of an auditable intermediate semantic state that can be constrained and validated.
 
-\section{Evaluation Protocol}
+\section{Evaluation Protocol}\label{sec:eval}
 
 A compositional report engine should be evaluated against static templates and against unconstrained generation. The following protocol is designed to be feasible without private patient data.
 
@@ -211,6 +211,9 @@ A blinded radiologist panel can score reports generated from the same state by a
 
 \subsection{Interoperability}
 For each generated report, measure mapping coverage to controlled terminologies and structured data standards: proportion of findings, attributes, and recommendations with a corresponding RadLex, CDE, LOINC/RSNA Playbook, or FHIR-compatible representation where applicable.
+
+\subsection{Reference implementation: LAIBench}
+The protocol above is implemented as an open evaluation harness, \emph{LAIBench} (\url{https://laibench.laudos.ai}). LAIBench operationalizes the compositional thesis by scoring finding-text-to-report generation on five weighted dimensions (critical-finding preservation, clinical quality, terminology, guideline coverage, evidence fidelity) under hard failure gates: a missed or fabricated critical finding caps the score and forces failure rather than being averaged away, and there is no prose or aesthetic axis. This makes LAIBench a concrete instrument for the validity-and-consistency tests of Section~\ref{sec:eval}: synthetic valid/invalid report states (derivable without private patient data) become positive and adversarial cases, and the critical-finding gate measures exactly the preservation property a compositional engine must guarantee. We distinguish three evaluation tiers to keep claims honest: a public synthetic smoke set (contaminable; for harness inspection only), a gated controlled set scored aggregate-only as a first-party result, and a hidden holdout reserved for externally adjudicated claims. The results reported by the harness are first-party and aggregate; external inter-rater adjudication and a hidden-holdout split are required before any clinical-validation claim, and are explicitly out of scope here.
 
 \section{Discussion}
 

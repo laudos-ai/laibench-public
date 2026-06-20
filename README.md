@@ -142,8 +142,10 @@ The public demonstration cases under `cases/public/` are **synthetic and input-o
 
 This repository ships **synthetic, public-safe** material only — code, schemas, docs, the site, and a tiny synthetic demo suite. It contains **no** raw clinical reports, private corpus, hidden test sets, answer keys, private scoring criteria, credentials, or internal tooling. The boundary is enforced by `npm run guard:public` (and `guard:private`) in CI. See [DATA_ACCESS_POLICY.md](DATA_ACCESS_POLICY.md).
 
-## Contributing & security
+## Governance & contributing
 
+- [GOVERNANCE.md](GOVERNANCE.md) — suite tiers (public-smoke / controlled-eval / hidden-holdout / calibration), claim discipline, anti-gaming posture, and the honest roadmap to external-validation grade.
+- [docs/benchmark-cards.md](docs/benchmark-cards.md) — per-suite cards: visibility, case source, leakage risk, allowed use, disallowed claims, suite/scoring hashes, adjudication status.
 - [CONTRIBUTING.md](CONTRIBUTING.md) — how to propose scoring/methodology changes.
 - [SECURITY.md](SECURITY.md) — report vulnerabilities privately.
 - [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).

@@ -7,20 +7,19 @@
     "Francisco Akira",
     "Raquel Moreno"
   ],
-  "corresponding_author_email": "Pending author confirmation",
+  "corresponding_author_email": "oi@laudos.ai",
+  "affiliation": "Laudos.AI Research",
   "suggested_primary_category": "cs.AI",
   "suggested_cross_lists": [
     "cs.CL"
   ],
   "license_to_choose_on_arxiv": "Author decision required before submission. The arXiv license choice is irrevocable.",
   "abstract": "Radiology reporting is often framed as template selection, dictation, or free-text generation. This framing is incomplete. Diagnostic reports are rendered from a high-dimensional clinical state space involving modality, protocol, anatomy, indication, technique, findings, quantitative attributes, temporal comparison, diagnostic impression, recommendations, and local reporting style. Static template libraries improve standardization, but they attempt to pre-author report outputs in a space whose clinically meaningful variants grow combinatorially. We introduce a formal model of radiology report variability, define the Report Space Lower Bound (RSLB) and a log-scale Radiology Report Variability Index (RRVI), and compare the asymptotic scaling of template enumeration with compositional report generation. The model shows that even conservative subsets of mutually compatible reporting variables can exceed the practical capacity of manually maintained template catalogs by several orders of magnitude. We then propose a compositional report-engine architecture based on protocol ontologies, anatomy graphs, finding libraries, attribute schemas, clinical constraints, impression logic, consistency validation, and report rendering. The claim is not that templates are useless. Rather, templates are useful as presentation surfaces, but they are the wrong unit of computational scale. A scalable reporting system should represent report-relevant clinical state and render reports from constrained semantic components.",
-  "comments": "Draft arXiv-style preprint package. Affiliation, corresponding email, and final arXiv license remain pending author confirmation.",
+  "comments": "arXiv-style preprint package. Affiliation (Laudos.AI Research) and corresponding email (oi@laudos.ai) are set. The final arXiv license choice remains with the author and is made at submission time.",
   "public_artifact_id": "BEYOND-TEMPLATES-PREPRINT-2026-05-11",
   "submission_blockers": [
-    "Affiliations must be confirmed.",
-    "Corresponding author email must be confirmed.",
-    "Author must choose the final arXiv license and validate metadata before final submission.",
-    "arXiv may require endorsement for first-time submission or a new category."
+    "Author must choose the final arXiv license at submission time (the choice is irrevocable).",
+    "arXiv may require endorsement for a first-time submission or a new category (cs.AI)."
   ],
   "public_artifacts": {
     "preprint_pdf": "https://laibench.laudos.ai/laibench-preprint.pdf",

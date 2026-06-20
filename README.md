@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://laibench.laudos.ai"><img src="assets/banner.png" alt="LAIBench — benchmark for AI-assisted radiology reporting" width="100%"></a>
+  <a href="https://laibench.laudos.ai"><img src="assets/laudos-research-logo.png" alt="Laudos.AI Research" width="190"></a>
 </p>
 
 <h1 align="center">LAIBench</h1>
@@ -9,8 +9,10 @@
   Turn an exam descriptor + concise findings into a faithful report — scored where it matters clinically, not on prose.
 </p>
 
+<p align="center"><em>Authored by <a href="https://laudos.ai">Laudos.AI Research</a>.</em></p>
+
 <p align="center">
-  <a href="https://github.com/Vajbratya/laibench-public/actions/workflows/ci.yml"><img src="https://github.com/Vajbratya/laibench-public/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/laudos-ai/laibench-public/actions/workflows/ci.yml"><img src="https://github.com/laudos-ai/laibench-public/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-111111.svg" alt="License: MIT"></a>
   <img src="https://img.shields.io/badge/benchmarkVersion-3.10.0-0e7c7b" alt="benchmark version 3.10.0">
   <img src="https://img.shields.io/badge/tests-444%20passing-2ea44f" alt="444 tests passing">
@@ -23,7 +25,7 @@
   <a href="docs/laibench-leaderboard-methods.md">Methodology</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
   <a href="CONTRIBUTING.md">Contributing</a> ·
-  <a href="https://laudos.ai">By Laudos.AI</a>
+  <a href="https://laudos.ai">By Laudos.AI Research</a>
 </p>
 
 ---
@@ -151,7 +153,7 @@ This repository ships **synthetic, public-safe** material only — code, schemas
 ```bibtex
 @software{laibench,
   title  = {LAIBench: a governance-oriented benchmark for AI-assisted radiology reporting},
-  author = {{Laudos.AI}},
+  author = {{Laudos.AI Research}},
   year   = {2026},
   url    = {https://laibench.laudos.ai}
 }

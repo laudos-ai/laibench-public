@@ -11,11 +11,11 @@
 <meta property="og:title" content="LAIBench — Benchmark for AI-assisted radiology reporting" />
 <meta property="og:description" content="Turn an exam descriptor and findings into a faithful report — scored where it matters clinically, not on prose. Hard critical-finding gate, no aesthetic axis." />
 <meta property="og:url" content="https://laibench.laudos.ai/" />
-<meta property="og:image" content="https://laibench.laudos.ai/og-banner.png" />
+<meta property="og:image" content="https://laibench.laudos.ai/laudos-research-logo.png" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="LAIBench — Benchmark for AI-assisted radiology reporting" />
 <meta name="twitter:description" content="A governance-oriented benchmark for AI radiology reports. Hard critical-finding gate, no prose axis." />
-<meta name="twitter:image" content="https://laibench.laudos.ai/og-banner.png" />
+<meta name="twitter:image" content="https://laibench.laudos.ai/laudos-research-logo.png" />
 <style>
   :root{
     --blue:#10866f;
@@ -792,19 +792,19 @@
       <!-- ============ HOME ============ -->
       <section class="page" id="home" data-screen-label="Home">
         <div class="brand">
-          <svg class="smiley" viewBox="0 0 40 40" fill="none">
-            <circle cx="20" cy="14" r="5.2" stroke="currentColor" stroke-width="2.2"/>
-            <circle cx="10.5" cy="24" r="4.4" stroke="currentColor" stroke-width="2.2"/>
-            <circle cx="29.5" cy="24" r="4.4" stroke="currentColor" stroke-width="2.2"/>
-            <path d="M14.2 21.6l3.3-3.1M25.8 21.6l-3.3-3.1M15 28.2h10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          <svg class="smiley" viewBox="0 0 40 40" fill="none" aria-label="Laudos.AI Research">
+            <path d="M20 20 L20 5 A15 15 0 0 1 35 20 Z" fill="#161616"/>
+            <path d="M20 20 L35 20 A15 15 0 0 1 20 35 Z" fill="#6e6e6e"/>
+            <path d="M20 20 L20 35 A15 15 0 0 1 5 20 Z" fill="#9c9c9c"/>
+            <path d="M20 20 L5 20 A15 15 0 0 1 20 5 Z" fill="#3c3c3c"/>
           </svg>
-          <span class="word">laibench <b>pro</b></span>
+          <span class="word"><b>lai</b>bench</span>
         </div>
         <div class="content">
           <h1>The controlled radiology report benchmark.</h1>
-          <p>LAIBench Pro tests a narrow, auditable task: given an exam descriptor and text findings, can a system produce a faithful radiology report without losing clinically important facts?</p>
+          <p>LAIBench tests a narrow, auditable task: given an exam descriptor and text findings, can a system produce a faithful radiology report without losing clinically important facts?</p>
           <p>The pt-BR controlled suite is gated. The public page shows methodology and aggregate diagnostics only; case JSON, answer keys, frozen predictions and corpus provenance stay outside the public repository.</p>
-          <p>Built by <a href="https://laudos.ai" target="_blank" rel="noopener">Laudos.AI</a>. Reproducibility is available to authorized reviewers inside the private audit environment.</p>
+          <p>Authored by <a href="https://laudos.ai" target="_blank" rel="noopener">Laudos.AI Research</a>. Reproducibility is available to authorized reviewers inside the private audit environment.</p>
           <div class="home-actions">
             <a class="audit-link primary" href="#methods">Methods</a>
             <a class="audit-link" href="#leaderboard">Leaderboard</a>
@@ -816,13 +816,13 @@
       <!-- ============ LEADERBOARD ============ -->
       <section class="page scroll" id="leaderboard" hidden>
         <div class="crumb">
-          <svg class="smiley" viewBox="0 0 40 40" fill="none">
-            <circle cx="20" cy="14" r="5.2" stroke="currentColor" stroke-width="2.2"/>
-            <circle cx="10.5" cy="24" r="4.4" stroke="currentColor" stroke-width="2.2"/>
-            <circle cx="29.5" cy="24" r="4.4" stroke="currentColor" stroke-width="2.2"/>
-            <path d="M14.2 21.6l3.3-3.1M25.8 21.6l-3.3-3.1M15 28.2h10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          <svg class="smiley" viewBox="0 0 40 40" fill="none" aria-label="Laudos.AI Research">
+            <path d="M20 20 L20 5 A15 15 0 0 1 35 20 Z" fill="#161616"/>
+            <path d="M20 20 L35 20 A15 15 0 0 1 20 35 Z" fill="#6e6e6e"/>
+            <path d="M20 20 L20 35 A15 15 0 0 1 5 20 Z" fill="#9c9c9c"/>
+            <path d="M20 20 L5 20 A15 15 0 0 1 20 5 Z" fill="#3c3c3c"/>
           </svg>
-          <span>laibench pro</span>
+          <span>laibench</span>
           <span class="sep">/</span>
           <span class="here">Leaderboard</span>
           <button class="close" data-go="home" aria-label="Back home">
@@ -860,13 +860,13 @@
       <!-- ============ METHODS ============ -->
       <section class="page scroll" id="methods" hidden>
         <div class="crumb">
-          <svg class="smiley" viewBox="0 0 40 40" fill="none">
-            <circle cx="20" cy="14" r="5.2" stroke="currentColor" stroke-width="2.2"/>
-            <circle cx="10.5" cy="24" r="4.4" stroke="currentColor" stroke-width="2.2"/>
-            <circle cx="29.5" cy="24" r="4.4" stroke="currentColor" stroke-width="2.2"/>
-            <path d="M14.2 21.6l3.3-3.1M25.8 21.6l-3.3-3.1M15 28.2h10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          <svg class="smiley" viewBox="0 0 40 40" fill="none" aria-label="Laudos.AI Research">
+            <path d="M20 20 L20 5 A15 15 0 0 1 35 20 Z" fill="#161616"/>
+            <path d="M20 20 L35 20 A15 15 0 0 1 20 35 Z" fill="#6e6e6e"/>
+            <path d="M20 20 L20 35 A15 15 0 0 1 5 20 Z" fill="#9c9c9c"/>
+            <path d="M20 20 L5 20 A15 15 0 0 1 20 5 Z" fill="#3c3c3c"/>
           </svg>
-          <span>laibench pro</span>
+          <span>laibench</span>
           <span class="sep">/</span>
           <span class="here">Methods</span>
           <button class="close" data-go="home" aria-label="Back home">
@@ -888,7 +888,7 @@
 
         <div class="prose">
           <h2>Scope</h2>
-          <p>LAIBench Pro is a controlled technical benchmark framework — not a medical device, not regulatory approval, not clinical validation. The harness evaluates report generation from provided text evidence; it is not primary image interpretation. The pt-BR controlled suite, corpus provenance, frozen predictions and answer keys remain gated outside the public repository. Authorized reviewers can reproduce runs inside the controlled adjudication environment.</p>
+          <p>LAIBench is a controlled technical benchmark framework — not a medical device, not regulatory approval, not clinical validation. The harness evaluates report generation from provided text evidence; it is not primary image interpretation. The pt-BR controlled suite, corpus provenance, frozen predictions and answer keys remain gated outside the public repository. Authorized reviewers can reproduce runs inside the controlled adjudication environment.</p>
         </div>
 
         <div class="method-modal" id="method-modal" role="dialog" aria-modal="true" aria-labelledby="method-title" hidden>
@@ -913,13 +913,13 @@
       <!-- ============ API ============ -->
       <section class="page scroll" id="api" hidden>
         <div class="crumb">
-          <svg class="smiley" viewBox="0 0 40 40" fill="none">
-            <circle cx="20" cy="14" r="5.2" stroke="currentColor" stroke-width="2.2"/>
-            <circle cx="10.5" cy="24" r="4.4" stroke="currentColor" stroke-width="2.2"/>
-            <circle cx="29.5" cy="24" r="4.4" stroke="currentColor" stroke-width="2.2"/>
-            <path d="M14.2 21.6l3.3-3.1M25.8 21.6l-3.3-3.1M15 28.2h10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          <svg class="smiley" viewBox="0 0 40 40" fill="none" aria-label="Laudos.AI Research">
+            <path d="M20 20 L20 5 A15 15 0 0 1 35 20 Z" fill="#161616"/>
+            <path d="M20 20 L35 20 A15 15 0 0 1 20 35 Z" fill="#6e6e6e"/>
+            <path d="M20 20 L20 35 A15 15 0 0 1 5 20 Z" fill="#9c9c9c"/>
+            <path d="M20 20 L5 20 A15 15 0 0 1 20 5 Z" fill="#3c3c3c"/>
           </svg>
-          <span>laibench pro</span>
+          <span>laibench</span>
           <span class="sep">/</span>
           <span class="here">API</span>
           <button class="close" data-go="home" aria-label="Back home">

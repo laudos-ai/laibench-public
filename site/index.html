@@ -3,1311 +3,294 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>LAIBench — Benchmark for AI-assisted radiology reporting</title>
-<meta name="description" content="LAIBench: a governance-oriented benchmark and live leaderboard for AI-assisted radiology report generation. Hard critical-finding gate, no prose axis." />
+<title>LAIBench — Laudos.AI Research</title>
+<meta name="description" content="LAIBench: a governance-oriented benchmark for AI-assisted radiology report generation, by Laudos.AI Research. Hard critical-finding gate, no prose/aesthetic axis." />
 <link rel="canonical" href="https://laibench.laudos.ai/" />
 <meta property="og:type" content="website" />
-<meta property="og:site_name" content="LAIBench" />
-<meta property="og:title" content="LAIBench — Benchmark for AI-assisted radiology reporting" />
-<meta property="og:description" content="Turn an exam descriptor and findings into a faithful report — scored where it matters clinically, not on prose. Hard critical-finding gate, no aesthetic axis." />
+<meta property="og:site_name" content="LAIBench — Laudos.AI Research" />
+<meta property="og:title" content="LAIBench — Laudos.AI Research" />
+<meta property="og:description" content="A governance-oriented benchmark for AI radiology reports. Hard critical-finding gate, no aesthetic axis." />
 <meta property="og:url" content="https://laibench.laudos.ai/" />
 <meta property="og:image" content="https://laibench.laudos.ai/laudos-research-logo.png" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="LAIBench — Benchmark for AI-assisted radiology reporting" />
-<meta name="twitter:description" content="A governance-oriented benchmark for AI radiology reports. Hard critical-finding gate, no prose axis." />
 <meta name="twitter:image" content="https://laibench.laudos.ai/laudos-research-logo.png" />
 <style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
   :root{
-    --blue:#10866f;
-    --blue-deep:#0a6f5b;
-    --lavender:#ddf5ed;
-    --link:#0b7f68;
-
-    /* light theme */
-    --bg-a:#d7eadf;
-    --bg-b:#eef3f8;
-    --frame:#ededf0;
-    --frame-edge:#e3e3e7;
-    --screen:#f6f6f6;
-    --ink:#1b1b1c;
-    --muted:#6f6f72;
-    --grid:rgba(0,0,0,.045);
-    --tab-bg:#f8f8f9;
-    --tab-ink:#26262a;
-    --card:#f0f0f0;
-    --card-edge:rgba(0,0,0,.06);
-    --hair:rgba(0,0,0,.10);
-    --good:#0f8a4d;
-    --bad:#c43c3c;
-  }
-  .dark{
-    --frame:#141210;
-    --frame-edge:#262320;
-    --screen:#211e1b;
-    --ink:#ededeb;
-    --muted:#8d8a86;
-    --grid:rgba(255,255,255,.035);
-    --tab-bg:#2a2724;
-    --tab-ink:#c9c6c2;
-    --card:#2a2724;
-    --card-edge:rgba(255,255,255,.07);
-    --hair:rgba(255,255,255,.10);
-    --link:#47c2a4;
-    --good:#4cc98a;
-    --bad:#e57f7f;
-  }
-
-  *{box-sizing:border-box;}
-  html,body{height:100%;margin:0;}
-  body{
-    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
-    background:
-      radial-gradient(120% 90% at 18% 8%, #e9f0f8 0%, rgba(233,240,248,0) 46%),
-      linear-gradient(150deg, var(--bg-a) 0%, var(--bg-b) 60%, #f4f7fb 100%);
-    display:flex;align-items:center;justify-content:center;
-    -webkit-font-smoothing:antialiased;
-    overflow:hidden;
-  }
-  body.dark{
-    background:
-      radial-gradient(120% 90% at 18% 8%, #23201d 0%, rgba(35,32,29,0) 46%),
-      linear-gradient(150deg, #191613 0%, #211e1b 60%, #181512 100%);
-  }
-
-  /* ---------- window ---------- */
-  .frame{
-    position:relative;
-    width:min(1260px,94vw);
-    height:min(820px,92vh);
-    background:var(--frame);
-    border:1px solid var(--frame-edge);
-    border-radius:30px;
-    padding:11px;
-    box-shadow:
-      0 1px 0 rgba(255,255,255,.5) inset,
-      0 40px 80px -30px rgba(40,60,100,.45),
-      0 8px 24px -12px rgba(40,60,100,.30);
-    transition:background .45s ease, border-color .45s ease;
-  }
-  .screen{
-    position:relative;
-    width:100%;height:100%;
-    background:var(--screen);
-    border-radius:21px;
-    overflow:hidden;
-    transition:background .45s ease;
-  }
-  .grid-bg{
-    position:absolute;inset:0;
-    background-image:
-      linear-gradient(var(--grid) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-    background-size:46px 46px;
-    pointer-events:none;
-    transition:background-image .45s ease;
-  }
-
-  /* ---------- pages ---------- */
-  .page{
-    position:absolute;inset:0;
-    padding:34px 46px 34px 86px;
-    overflow:hidden;
-  }
-  .page[hidden]{display:none;}
-  .page.scroll{overflow-y:auto;}
-  .page.scroll::-webkit-scrollbar{width:8px;}
-  .page.scroll::-webkit-scrollbar-thumb{background:var(--hair);border-radius:8px;}
-  .page.scroll::-webkit-scrollbar-track{background:transparent;}
-
-  /* logo */
-  .brand{display:flex;align-items:center;gap:11px;color:var(--ink);}
-  .brand svg{display:block;}
-  .brand .word{font-size:25px;letter-spacing:-.01em;color:var(--ink);}
-  .brand .word b{font-weight:700;}
-  .smiley{width:38px;height:38px;}
-
-  /* home */
-  #home{
-    overflow-y:auto;
-    -webkit-overflow-scrolling:touch;
-  }
-  #home::-webkit-scrollbar{width:8px;}
-  #home::-webkit-scrollbar-thumb{background:var(--hair);border-radius:8px;}
-  #home::-webkit-scrollbar-track{background:transparent;}
-  #home .content{
-    max-width:560px;
-    margin-left:34%;
-    margin-top:78px;
-  }
-  #home h1{
-    font-size:46px;line-height:1.04;letter-spacing:-.02em;
-    font-weight:700;color:var(--ink);margin:0 0 30px;
-    text-wrap:balance;
-  }
-  #home p{
-    font-size:21px;line-height:1.5;color:var(--muted);
-    margin:0 0 22px;max-width:520px;
-  }
-  #home a{color:var(--link);text-decoration:none;}
-  #home a:hover{text-decoration:underline;}
-  .home-actions{
-    display:flex;flex-wrap:wrap;gap:10px;margin:26px 0 4px;
-  }
-  .audit-link{
-    position:relative;display:inline-flex;align-items:center;justify-content:center;
-    min-height:36px;padding:9px 14px;border-radius:999px;
-    border:1px solid var(--card-edge);background:var(--card);
-    color:var(--ink);font-size:12px;font-weight:600;letter-spacing:.08em;
-    text-transform:uppercase;text-decoration:none;
-    transition:transform .2s ease,border-color .2s ease,background .2s ease;
-  }
-  .audit-link:hover{transform:translateY(-2px);border-color:var(--hair);text-decoration:none!important;}
-  .audit-link.primary{background:var(--blue-deep);border-color:#075646;color:#fff;}
-  #home .audit-link.primary,
-  #home .audit-link.primary:visited,
-  #home .audit-link.primary:hover{color:#fff;}
-  .homestats{
-    display:flex;gap:26px;margin-top:30px;
-    font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
-  }
-  .homestats b{display:block;font-size:23px;letter-spacing:-.01em;color:var(--ink);font-weight:600;margin-bottom:4px;}
-
-  /* ---------- MENU tab ---------- */
-  .panel{
-    position:absolute;top:0;left:0;bottom:0;
-    width:46%;
-    background:var(--blue);
-    transform:translateX(-100%);
-    transition:transform .58s cubic-bezier(.7,0,.18,1);
-    z-index:30;
-    will-change:transform;
-  }
-  .panel.open{transform:translateX(0);}
-
-  .tab{
-    position:absolute;left:100%;top:64px;
-    display:flex;align-items:center;justify-content:center;
-    width:46px;height:118px;
-    background:var(--tab-bg);
-    color:var(--tab-ink);
-    border:1px solid var(--frame-edge);
-    border-left:none;
-    border-radius:0 14px 14px 0;
-    cursor:pointer;
-    transition:background .35s ease,color .35s ease;
-  }
-  .tab span{
-    writing-mode:vertical-rl;transform:rotate(180deg);
-    font-size:13px;letter-spacing:.32em;font-weight:500;
-    padding-right:1px;
-  }
-  .panel.open .tab{
-    background:var(--lavender);
-    color:var(--blue);
-    border-color:rgba(255,255,255,.0);
-  }
-
-  /* panel inner */
-  .panel-inner{
-    position:absolute;inset:0;
-    padding:30px 0 30px 76px;
-    display:flex;flex-direction:column;
-    opacity:0;transition:opacity .3s ease .12s;
-  }
-  .panel.open .panel-inner{opacity:1;}
-
-  .pill{
-    display:inline-flex;align-items:center;gap:2px;
-    background:#fff;border-radius:999px;padding:6px;width:max-content;
-    box-shadow:0 4px 14px rgba(10,30,80,.18);
-  }
-  .pill button,.pill a{
-    width:34px;height:34px;border:none;background:transparent;
-    border-radius:999px;cursor:pointer;color:#1b3a8a;
-    display:flex;align-items:center;justify-content:center;
-    transition:background .2s ease,color .2s ease;
-  }
-  .pill button:hover,.pill a:hover{background:#eef3ff;}
-  .pill button.active{background:var(--blue);color:#fff;}
-
-  nav.menu{
-    margin-top:auto;margin-bottom:8px;
-    display:flex;flex-direction:column;gap:0;
-  }
-  .mitem{
-    position:relative;display:flex;align-items:center;
-    background:none;border:none;cursor:pointer;
-    padding:9px 0;color:#fff;text-align:left;
-    font-family:inherit;text-decoration:none;
-  }
-  /* fixed-width track: the dash grows INSIDE it, so the label never shifts */
-  .mitem .lead{
-    position:relative;
-    height:2px;width:62px;margin-right:20px;flex:none;
-    background:transparent;
-  }
-  .mitem .lead::after{
-    content:"";position:absolute;top:0;left:0;
-    height:2px;width:30px;background:rgba(255,255,255,.55);
-    border-radius:2px;
-    transition:width .3s cubic-bezier(.6,0,.2,1),background .25s ease;
-  }
-  .mitem .label{
-    font-size:34px;letter-spacing:-.01em;line-height:1;
-    color:rgba(255,255,255,.92);transition:color .25s ease;
-  }
-  .mitem:hover .lead::after{width:62px;background:#fff;}
-  .mitem.current .label{color:rgba(255,255,255,.42);}
-  .mitem.current .lead::after{background:rgba(255,255,255,.3);}
-
-  /* ruler */
-  .ruler{
-    position:absolute;left:30px;top:40px;bottom:40px;
-    display:flex;flex-direction:column;justify-content:space-between;
-  }
-  .ruler i{display:block;height:1.5px;background:rgba(255,255,255,.5);border-radius:2px;}
-
-  /* ---------- inner pages (crumb + content) ---------- */
-  .crumb{
-    display:flex;align-items:center;gap:11px;color:var(--ink);
-    font-size:22px;
-  }
-  .crumb .sep{color:var(--muted);font-size:18px;}
-  .crumb .here{color:var(--ink);}
-  .crumb .close{
-    width:26px;height:26px;border:none;background:none;cursor:pointer;
-    color:var(--muted);display:flex;align-items:center;justify-content:center;
-    border-radius:6px;margin-left:2px;
-  }
-  .crumb .close:hover{color:var(--ink);background:var(--hair);}
-  .crumb .smiley{width:34px;height:34px;}
-
-  .cards{
-    margin-top:30px;
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    grid-auto-rows:300px;
-    gap:18px;
-    padding-bottom:6px;
-  }
-  .cards.stats{grid-auto-rows:170px;margin-top:26px;}
-  #methods .cards{
-    grid-template-columns:repeat(3,minmax(0,1fr));
-    grid-auto-rows:minmax(172px,auto) !important;
-  }
-  .card{
-    position:relative;
-    background:var(--card);
-    border:1px solid var(--card-edge);
-    border-radius:16px;
-    padding:24px;
-    display:flex;flex-direction:column;justify-content:space-between;
-    overflow:visible;
-    transition:transform .28s cubic-bezier(.5,0,.2,1), border-color .28s ease, box-shadow .28s ease;
-  }
-  .card::before{
-    content:"";position:absolute;inset:0;
-    border-radius:inherit;
-    background-image:
-      linear-gradient(var(--grid) 1px,transparent 1px),
-      linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-    background-size:30px 30px;opacity:.6;pointer-events:none;
-  }
-  .card:hover{
-    transform:translateY(-6px);
-    border-color:var(--hair);
-    box-shadow:0 22px 40px -22px rgba(0,0,0,.5);
-  }
-  button.card{
-    width:100%;
-    border:1px solid var(--card-edge);
-    appearance:none;
-    -webkit-appearance:none;
-    font:inherit;
-    text-align:left;
-    cursor:pointer;
-    color:inherit;
-  }
-  button.card:focus-visible{
-    outline:3px solid color-mix(in srgb, var(--blue) 45%, transparent);
-    outline-offset:3px;
-  }
-  .card-cue{
-    position:absolute;right:18px;top:16px;
-    width:24px;height:24px;border-radius:999px;
-    border:1px solid currentColor;
-    display:flex;align-items:center;justify-content:center;
-    font-size:18px;line-height:1;color:var(--muted);
-    opacity:.58;
-  }
-  .card.blue .card-cue{color:rgba(255,255,255,.82);}
-  .card h3{
-    position:relative;margin:0;font-size:23px;font-weight:600;
-    letter-spacing:-.01em;color:var(--ink);
-  }
-  .card .big{
-    position:relative;font-size:38px;font-weight:700;letter-spacing:-.02em;color:var(--ink);
-  }
-  .card .big small{font-size:16px;font-weight:500;color:var(--muted);margin-left:6px;letter-spacing:0;}
-  .card p{position:relative;margin:10px 0 0;font-size:15px;line-height:1.45;color:var(--muted);}
-  .card .tags{
-    position:relative;align-self:flex-end;display:flex;gap:16px;
-    font-size:12px;letter-spacing:.08em;color:var(--muted);
-    text-transform:uppercase;
-  }
-  .cards.stats{grid-auto-rows:minmax(202px,auto);}
-  .cards.stats .card{padding:24px 24px 20px;gap:10px;justify-content:flex-start;min-height:202px;}
-  .cards.stats .card h3{font-size:22px;line-height:1.12;}
-  .cards.stats .card .big{font-size:38px;line-height:1;}
-  .cards.stats .card .big small{font-size:15px;}
-  .cards.stats .card p{margin:0;font-size:14px;line-height:1.42;}
-  .cards.stats .card .tags{align-self:flex-start;gap:10px;flex-wrap:wrap;font-size:11px;line-height:1.25;margin-top:auto;}
-  .card.blue{background:var(--blue);border-color:var(--blue-deep);}
-  .card.blue::before{background-image:
-      linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),
-      linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);}
-  .card.blue h3,.card.blue .big,.card.blue .big small{color:#fff;}
-  .card.blue p,.card.blue .tags{color:rgba(255,255,255,.75);}
-
-  /* ---------- leaderboard table ---------- */
-  .lb-tools{
-    margin-top:26px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-  }
-  .seg{
-    display:inline-flex;background:var(--card);border:1px solid var(--card-edge);
-    border-radius:999px;padding:4px;gap:2px;
-  }
-  .seg button{
-    border:none;background:transparent;cursor:pointer;
-    font-family:inherit;font-size:13px;letter-spacing:.03em;color:var(--muted);
-    padding:7px 16px;border-radius:999px;
-    transition:background .2s ease,color .2s ease;
-  }
-  .seg button.active{background:var(--blue);color:#fff;}
-  .lb-meta{
-    min-width:0;flex:1 1 420px;
-    font-size:12px;line-height:1.45;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
-    overflow-wrap:anywhere;
-  }
-
-  .lb-wrap{
-    width:100%;
-    overflow-x:auto;
-    -webkit-overflow-scrolling:touch;
-    margin-top:20px;
-    padding-bottom:10px;
-  }
-  .lb-wrap::-webkit-scrollbar{height:8px;}
-  .lb-wrap::-webkit-scrollbar-thumb{background:var(--hair);border-radius:8px;}
-  .lb-wrap::-webkit-scrollbar-track{background:transparent;}
-
-  table.lb{
-    width:100%;min-width:0;margin-top:0;border-collapse:collapse;
-    font-size:14px;color:var(--ink);
-  }
-  table.lb th{
-    text-align:left;font-size:11px;font-weight:500;letter-spacing:.1em;
-    text-transform:uppercase;color:var(--muted);
-    padding:9px 9px;border-bottom:1px solid var(--hair);
-    white-space:nowrap;
-  }
-  table.lb th.num,table.lb td.num{text-align:right;}
-  table.lb td{
-    padding:12px 9px;border-bottom:1px solid var(--hair);
-    vertical-align:middle;white-space:nowrap;
-  }
-  table.lb td.system-cell{white-space:normal;min-width:132px;}
-  table.lb td.metric{white-space:nowrap;}
-  table.lb tr.top td{background:linear-gradient(90deg, rgba(24,96,237,.10), rgba(24,96,237,.02));}
-  table.lb tr.divider td{
-    padding:9px 14px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
-    color:var(--muted);background:var(--card);border-bottom:1px solid var(--hair);
-  }
-  table.lb tr.fixture td{opacity:.62;}
-  table.lb tr.fixture td .sys{font-weight:500;}
-  table.lb tr.model-row td{
-    background:color-mix(in srgb, var(--card) 58%, transparent);
-  }
-  table.lb tr.model-row td .rank{
-    width:auto;min-width:30px;padding:0 7px;border-radius:999px;
-  }
-  table.lb td .rank{
-    display:inline-flex;align-items:center;justify-content:center;
-    width:26px;height:26px;border-radius:999px;
-    background:var(--card);border:1px solid var(--card-edge);
-    font-size:13px;color:var(--muted);
-  }
-  table.lb tr.top td .rank{background:var(--blue);border-color:var(--blue);color:#fff;}
-  table.lb td .sys{font-weight:600;letter-spacing:-.01em;}
-  table.lb td .sub{display:block;font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-top:2px;}
-  .bar{
-    position:relative;display:inline-block;vertical-align:middle;
-    width:68px;height:6px;border-radius:6px;background:var(--hair);
-    margin-right:8px;
-  }
-  .bar i{position:absolute;inset:0 auto 0 0;border-radius:6px;background:var(--blue);}
-  table.lb .pct{font-variant-numeric:tabular-nums;font-weight:600;}
-  table.lb .dim{font-variant-numeric:tabular-nums;color:var(--muted);}
-  .pass{color:var(--good);font-weight:600;}
-  .fail{color:var(--bad);font-weight:600;}
-  .note{
-    margin-top:18px;font-size:13px;line-height:1.55;color:var(--muted);max-width:760px;
-  }
-  .note a{color:var(--link);text-decoration:none;}
-  .note a:hover{text-decoration:underline;}
-
-  /* methods + api prose */
-  .prose{margin-top:26px;max-width:740px;color:var(--muted);font-size:16px;line-height:1.6;}
-  .prose h2{font-size:23px;font-weight:600;letter-spacing:-.01em;color:var(--ink);margin:30px 0 10px;}
-  .prose a{color:var(--link);text-decoration:none;}
-  .prose a:hover{text-decoration:underline;}
-  .prose code{
-    font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13.5px;
-    background:var(--card);border:1px solid var(--card-edge);
-    border-radius:6px;padding:2px 6px;color:var(--ink);
-  }
-  pre.code{
-    position:relative;
-    background:var(--card);border:1px solid var(--card-edge);
-    border-radius:16px;padding:20px 22px;overflow-x:auto;
-    font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13px;line-height:1.6;
-    color:var(--ink);
-  }
-  pre.code::before{
-    content:"";position:absolute;inset:0;
-    background-image:
-      linear-gradient(var(--grid) 1px,transparent 1px),
-      linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-    background-size:30px 30px;opacity:.6;pointer-events:none;
-  }
-  pre.code code{position:relative;background:none;border:none;padding:0;}
-
-  /* table scroll wrapper */
-
-  /* methods detail dialog */
-  .method-modal{
-    position:fixed;inset:0;z-index:9;
-    display:flex;align-items:center;justify-content:center;
-    padding:36px 44px 36px 84px;
-  }
-  .method-modal[hidden]{display:none;}
-  .method-backdrop{
-    position:absolute;inset:0;
-    background:color-mix(in srgb, var(--screen) 72%, transparent);
-    backdrop-filter:blur(8px);
-  }
-  .method-sheet{
-    position:relative;width:min(760px,100%);max-height:min(620px,82vh);
-    overflow:auto;-webkit-overflow-scrolling:touch;
-    background:var(--card);border:1px solid var(--card-edge);
-    border-radius:16px;padding:28px 30px 30px;
-    box-shadow:0 34px 80px -36px rgba(0,0,0,.55);
-  }
-  .method-sheet::before{
-    content:"";position:absolute;inset:0;
-    background-image:
-      linear-gradient(var(--grid) 1px,transparent 1px),
-      linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-    background-size:30px 30px;opacity:.55;pointer-events:none;
-  }
-  .method-sheet > *{position:relative;}
-  .method-top{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:14px;}
-  .method-kicker{
-    margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);
-    font-weight:700;
-  }
-  .method-title{margin:0;font-size:36px;line-height:1;letter-spacing:-.03em;color:var(--ink);}
-  .method-summary{margin:0 0 22px;font-size:18px;line-height:1.45;color:var(--muted);max-width:640px;}
-  .method-close{
-    flex:0 0 auto;width:34px;height:34px;border:1px solid var(--card-edge);
-    background:var(--screen);color:var(--muted);border-radius:999px;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;
-  }
-  .method-close:hover{color:var(--ink);border-color:var(--hair);}
-  .method-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
-  .method-block{border-top:1px solid var(--hair);padding-top:13px;}
-  .method-block h4{
-    margin:0 0 8px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);
-  }
-  .method-block p,.method-block li{font-size:15px;line-height:1.52;color:var(--muted);}
-  .method-block p{margin:0;}
-  .method-block ul{margin:0;padding-left:18px;}
-  .method-foot{margin-top:18px;padding-top:14px;border-top:1px solid var(--hair);font-size:13px;line-height:1.5;color:var(--muted);}
-  .method-foot a{color:var(--link);text-decoration:none;}
-  .method-foot a:hover{text-decoration:underline;}
-
-  /* ---------- responsive ---------- */
-  @media (max-width:920px){
-    .cards{grid-template-columns:repeat(2,1fr);grid-auto-rows:220px;}
-    #methods .cards{grid-template-columns:repeat(2,1fr);}
-    .cards.stats{grid-auto-rows:160px;}
-    #home .content{margin-left:20%;}
-    .panel{width:62%;}
-  }
-
-  @media (min-width:721px) and (max-width:1100px){
-    .cards.stats{
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      grid-auto-rows:minmax(190px,auto);
-    }
-    .cards.stats .card{min-height:190px;}
-    .lb-wrap{
-      overflow-x:visible;
-      margin-top:16px;
-      padding-bottom:0;
-    }
-    table.lb{
-      min-width:0;
-      width:100%;
-      border-collapse:separate;
-      border-spacing:0;
-      font-size:14px;
-    }
-    table.lb thead{display:none;}
-    table.lb tbody{display:grid;gap:12px;}
-    table.lb tr{
-      display:grid;
-      grid-template-columns:34px minmax(0,1fr) minmax(150px,.7fr);
-      gap:10px 14px;
-      padding:14px;
-      border:1px solid var(--card-edge);
-      border-radius:8px;
-      background:var(--card);
-    }
-    table.lb tr.top td{background:transparent;}
-    table.lb td{
-      border-bottom:0;
-      padding:0;
-      white-space:normal;
-    }
-    table.lb td.rank-cell{grid-column:1;grid-row:1;align-self:start;}
-    table.lb td.system-cell{grid-column:2;grid-row:1;min-width:0;}
-    table.lb td.metric{
-      display:grid;
-      grid-template-columns:82px minmax(0,1fr);
-      align-items:center;
-      gap:10px;
-      min-height:24px;
-      text-align:left;
-    }
-    table.lb td.metric::before{
-      content:attr(data-label);
-      color:var(--muted);
-      font-size:10px;
-      font-weight:600;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-    }
-    table.lb td.score-cell{
-      grid-column:3;
-      grid-row:1;
-      grid-template-columns:64px minmax(0,1fr);
-    }
-    table.lb td.score-cell > .score-inline{
-      display:flex;
-      justify-content:flex-end;
-      align-items:center;
-      min-width:0;
-    }
-    table.lb td.metric:not(.score-cell){
-      grid-column:1 / -1;
-      grid-template-columns:110px minmax(0,1fr);
-    }
-    .bar{width:64px;margin-right:8px;}
-  }
-
-  @media (max-width:720px){
-    body{
-      display:block;
-      overflow:auto;
-      -webkit-overflow-scrolling:touch;
-    }
-    .frame{
-      width:100%;
-      height:100dvh;
-      min-height:100dvh;
-      border-radius:0;
-      border:none;
-      padding:0;
-      box-shadow:none;
-    }
-    .screen{border-radius:0;}
-
-    .page{padding:20px 18px 28px 56px;}
-    .page.scroll{overflow-y:auto;}
-
-    .brand .word{font-size:21px;}
-    .smiley{width:32px;height:32px;}
-
-    /* home */
-    #home{overflow-y:auto;}
-    #home .content{
-      max-width:100%;
-      margin-left:0;
-      margin-top:40px;
-    }
-    #home h1{font-size:32px;margin-bottom:20px;}
-    #home p{font-size:17px;line-height:1.55;margin-bottom:16px;}
-    .homestats{
-      flex-wrap:wrap;
-      gap:18px 24px;
-      margin-top:24px;
-    }
-    .home-actions{margin-top:22px;}
-    .audit-link{min-height:34px;padding:8px 12px;font-size:11px;}
-    .homestats b{font-size:20px;}
-
-    /* menu panel: near full-width drawer */
-    .panel{width:calc(100% - 46px);}
-    .tab{
-      top:50%;
-      transform:translateY(-50%);
-      width:40px;height:104px;
-    }
-    .tab span{font-size:12px;letter-spacing:.26em;}
-    .panel-inner{padding:24px 0 28px 28px;}
-    .ruler{display:none;}
-    .mitem .lead{width:38px;margin-right:14px;}
-    .mitem .lead::after{width:20px;}
-    .mitem:hover .lead::after{width:38px;}
-    .mitem .label{font-size:27px;}
-    .mitem{padding:11px 0;}
-
-    /* crumb */
-    .crumb{font-size:17px;flex-wrap:wrap;gap:8px;}
-    .crumb .smiley{width:28px;height:28px;}
-    .crumb .sep{font-size:15px;}
-
-    /* cards */
-    .cards{
-      grid-template-columns:1fr;
-      grid-auto-rows:auto;
-      gap:14px;
-      margin-top:22px;
-    }
-    .cards.stats{grid-auto-rows:auto;margin-top:20px;}
-    .card{padding:18px;min-height:120px;gap:14px;}
-    .card h3{font-size:19px;}
-    .card .big{font-size:30px;}
-    .card p{font-size:14px;}
-    .card-cue{right:14px;top:14px;width:22px;height:22px;font-size:16px;}
-
-    /* methods cards override inline grid-auto-rows */
-    #methods .cards{grid-auto-rows:auto !important;}
-    .method-modal{padding:18px 14px 18px 50px;align-items:flex-start;}
-    .method-sheet{max-height:calc(100dvh - 36px);padding:22px 20px 24px;border-radius:14px;}
-    .method-title{font-size:29px;}
-    .method-summary{font-size:16px;}
-    .method-grid{grid-template-columns:1fr;gap:12px;}
-
-    /* leaderboard tools */
-    .lb-tools{margin-top:20px;gap:10px;}
-    .seg button{padding:6px 13px;font-size:12px;}
-    .lb-meta{font-size:11px;line-height:1.5;}
-
-    /* leaderboard table: compact readable cards */
-    .lb-wrap{
-      overflow-x:visible;
-      margin-top:16px;
-      margin-right:0;
-      padding-right:0;
-    }
-    table.lb{
-      min-width:0;
-      width:100%;
-      border-collapse:separate;
-      border-spacing:0;
-      font-size:14px;
-    }
-    table.lb thead{display:none;}
-    table.lb tbody{display:grid;gap:12px;}
-    table.lb tr{
-      display:grid;
-      grid-template-columns:34px minmax(0,1fr);
-      gap:10px 12px;
-      padding:14px;
-      border:1px solid var(--card-edge);
-      border-radius:8px;
-      background:var(--card);
-    }
-    table.lb tr.top td{background:transparent;}
-    table.lb td{
-      border-bottom:0;
-      padding:0;
-      white-space:normal;
-    }
-    table.lb td.rank-cell{grid-column:1;grid-row:1;align-self:start;}
-    table.lb td.system-cell{grid-column:2;grid-row:1;min-width:0;}
-    table.lb td.metric{
-      grid-column:1 / -1;
-      display:grid;
-      grid-template-columns:88px minmax(0,1fr);
-      align-items:center;
-      gap:10px;
-      min-height:24px;
-      text-align:left;
-    }
-    table.lb td.metric::before{
-      content:attr(data-label);
-      color:var(--muted);
-      font-size:10px;
-      font-weight:600;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-    }
-    table.lb td.score-cell{
-      grid-template-columns:88px minmax(0,1fr);
-    }
-    table.lb td.score-cell > .score-inline{
-      display:flex;
-      justify-content:flex-end;
-      align-items:center;
-      min-width:0;
-    }
-    .bar{width:64px;margin-right:8px;}
-
-    .note{font-size:12.5px;}
-
-    /* prose / code */
-    .prose{font-size:15px;margin-top:22px;}
-    .prose h2{font-size:20px;margin:24px 0 8px;}
-    pre.code{padding:14px 16px;font-size:12px;border-radius:12px;}
-  }
-
-  @media (max-width:400px){
-    .page{padding:16px 14px 24px 50px;}
-    #home h1{font-size:27px;}
-    #home p{font-size:16px;}
-    .panel{width:calc(100% - 42px);}
-    .tab{width:36px;height:96px;}
-    .mitem .label{font-size:24px;}
-  }
+    --bg:#efedea; --ink:#1a1a1a; --ink2:#4d4a46; --muted:#57544f; --faint:#8a8782;
+    --line:#ddd9d3; --line2:#cbc7c0; --panel:#e8e5e0; --dark:#1a1a1a; --teal:#10866f;
+  }
+  body { background: var(--bg); color: var(--ink); font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+  ::selection { background:#1a1a1a; color:#efedea; }
+  a { color:inherit; }
+  .mono { font-family:ui-monospace,'SF Mono',Menlo,monospace; }
+  .wrap { max-width:1180px; margin:0 auto; }
+  .logo { position:relative; border-radius:50%; overflow:hidden; flex:none;
+    background:conic-gradient(#161616 0 90deg,#6e6e6e 90deg 180deg,#9c9c9c 180deg 270deg,#3c3c3c 270deg 360deg); }
+  .logo::before { content:''; position:absolute; left:calc(50% - .6px); top:0; width:1.2px; height:100%; background:var(--bg); }
+  .logo::after { content:''; position:absolute; top:calc(50% - .6px); left:0; height:1.2px; width:100%; background:var(--bg); }
+  nav { position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between;
+    padding:18px clamp(24px,5vw,72px); background:rgba(239,237,234,.82);
+    backdrop-filter:saturate(140%) blur(12px); -webkit-backdrop-filter:saturate(140%) blur(12px); border-bottom:1px solid var(--line); }
+  nav .brand { display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit; }
+  nav .word { font-size:17px; font-weight:500; letter-spacing:-.02em; }
+  nav .word .ai { color:var(--faint); }
+  nav .rsrch { font-size:10px; letter-spacing:.28em; color:var(--faint); font-weight:500; padding-left:10px; border-left:1px solid #d4d0ca; }
+  nav .links { display:flex; align-items:center; gap:clamp(16px,2.4vw,34px); }
+  nav .links a { text-decoration:none; color:var(--muted); font-size:14px; letter-spacing:-.01em; }
+  nav .links a:hover { color:var(--ink); }
+  nav .cta { display:inline-flex; align-items:center; gap:8px; color:#efedea!important; background:var(--ink); font-size:13px; padding:9px 16px; border-radius:999px; }
+  nav .cta:hover { background:#000; }
+  header { padding:clamp(64px,11vw,150px) clamp(24px,5vw,72px) clamp(40px,6vw,80px); }
+  .eyebrow { display:flex; align-items:center; gap:12px; margin-bottom:34px; }
+  .eyebrow .dot { width:7px; height:7px; border-radius:50%; background:var(--ink); }
+  .eyebrow span { font-size:12px; letter-spacing:.14em; color:#6f6c68; text-transform:uppercase; }
+  h1 { font-size:clamp(40px,7vw,92px); line-height:.96; letter-spacing:-.04em; font-weight:500; margin:0; }
+  .lede { font-size:clamp(17px,1.5vw,21px); line-height:1.55; color:var(--ink2); max-width:60ch; margin:30px 0 0; }
+  .actions { display:flex; flex-wrap:wrap; gap:14px; margin-top:42px; }
+  .btn { display:inline-flex; align-items:center; gap:10px; text-decoration:none; font-size:15px; padding:14px 24px; border-radius:999px; letter-spacing:-.01em; }
+  .btn.dark { color:#efedea; background:var(--ink); } .btn.dark:hover { background:#000; }
+  .btn.ghost { color:var(--ink); border:1px solid var(--line2); } .btn.ghost:hover { border-color:var(--ink); }
+  section { padding:clamp(52px,7vw,104px) clamp(24px,5vw,72px); }
+  .sec-head { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:clamp(36px,4.5vw,60px); }
+  .sec-head h2 { font-size:clamp(26px,3.4vw,42px); letter-spacing:-.03em; font-weight:500; margin:0; max-width:18ch; }
+  .sec-head .idx { font-size:12px; color:var(--faint); letter-spacing:.06em; }
+  .stats { padding:0 clamp(24px,5vw,72px) clamp(44px,6vw,90px); }
+  .stats .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); border-top:1px solid var(--line); }
+  .stats .cell { padding:30px 28px; border-right:1px solid var(--line); }
+  .stats .cell:first-child { padding-left:0; } .stats .cell:last-child { border-right:none; padding-right:0; }
+  .stats .num { font-size:clamp(34px,4vw,52px); letter-spacing:-.04em; font-weight:500; }
+  .stats .num .u { font-size:.5em; color:var(--faint); }
+  .stats .lbl { font-size:12px; color:#6f6c68; margin-top:8px; letter-spacing:.02em; }
+  .panel { background:var(--panel); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(248px,1fr)); gap:1px; background:#d6d2cc; border:1px solid #d6d2cc; }
+  .card { background:var(--bg); padding:clamp(26px,3vw,38px); min-height:230px; display:flex; flex-direction:column; }
+  .card:hover { background:#f4f2ef; }
+  .card .n { font-size:12px; color:var(--faint); }
+  .card .sw { margin:24px 0 0; width:28px; height:28px; border-radius:50%; }
+  .card h3 { font-size:21px; letter-spacing:-.02em; font-weight:500; margin:20px 0 0; line-height:1.15; }
+  .card p { font-size:14.5px; line-height:1.55; color:var(--muted); margin:11px 0 0; }
+  .board { margin-top:8px; }
+  .board + .board { margin-top:clamp(40px,5vw,64px); }
+  .board .meta { font-size:12px; color:var(--faint); margin:2px 0 16px; letter-spacing:.01em; }
+  .board .meta b { color:var(--muted); font-weight:500; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  thead th { text-align:right; font-weight:500; color:var(--faint); font-size:11px; letter-spacing:.06em; text-transform:uppercase; padding:0 0 12px; border-bottom:1px solid var(--line); }
+  thead th.l { text-align:left; }
+  tbody td { text-align:right; padding:15px 0; border-bottom:1px solid var(--line); color:var(--ink2); font-variant-numeric:tabular-nums; }
+  tbody td.l { text-align:left; }
+  tbody td.sys { color:var(--ink); font-weight:500; letter-spacing:-.01em; }
+  tbody td.rank { color:var(--faint); width:34px; }
+  tbody td.score { color:var(--ink); font-weight:500; }
+  .tag { font-size:10px; letter-spacing:.08em; text-transform:uppercase; border:1px solid var(--line2); border-radius:999px; padding:3px 9px; color:var(--muted); margin-left:10px; white-space:nowrap; }
+  .tag.prod { background:var(--ink); color:#efedea; border-color:var(--ink); }
+  .disclosure { font-size:12px; line-height:1.6; color:var(--faint); margin-top:18px; max-width:90ch; }
+  .pubs { border-top:1px solid var(--line); }
+  .pub { display:grid; grid-template-columns:96px 1fr auto; gap:clamp(16px,3vw,48px); align-items:start; padding:clamp(22px,2.6vw,32px) 0; border-bottom:1px solid var(--line); text-decoration:none; color:inherit; }
+  .pub:hover { background:linear-gradient(90deg,var(--panel),transparent); }
+  .pub .yr { font-size:13px; color:var(--faint); padding-top:4px; }
+  .pub h3 { font-size:clamp(18px,2vw,23px); letter-spacing:-.02em; font-weight:500; margin:0; line-height:1.22; max-width:44ch; }
+  .pub .auth { font-size:14px; color:#6f6c68; margin-top:9px; }
+  .pub .venue { font-size:11px; letter-spacing:.08em; color:var(--muted); text-transform:uppercase; border:1px solid var(--line2); border-radius:999px; padding:6px 12px; white-space:nowrap; align-self:center; }
+  .pub .venue.wip { background:var(--panel); }
+  .quote { border-bottom:1px solid var(--line); }
+  .quote .k { font-size:12px; letter-spacing:.16em; color:var(--faint); text-transform:uppercase; }
+  .quote p { font-size:clamp(25px,3.8vw,46px); line-height:1.16; letter-spacing:-.03em; font-weight:500; margin:26px 0 0; max-width:22ch; }
+  footer { padding:clamp(44px,6vw,76px) clamp(24px,5vw,72px) 40px; }
+  footer .top { display:flex; flex-wrap:wrap; justify-content:space-between; gap:32px; align-items:flex-start; }
+  footer .cols { display:flex; gap:clamp(40px,6vw,90px); flex-wrap:wrap; }
+  footer .col { display:flex; flex-direction:column; gap:12px; }
+  footer .col .h { font-size:11px; letter-spacing:.1em; color:var(--faint); text-transform:uppercase; }
+  footer .col a { text-decoration:none; color:var(--muted); font-size:14px; } footer .col a:hover { color:var(--ink); }
+  footer .legal { display:flex; flex-wrap:wrap; justify-content:space-between; gap:16px; margin-top:clamp(44px,6vw,76px); padding-top:24px; border-top:1px solid var(--line); }
+  footer .legal span { font-size:13px; color:var(--faint); }
+  .disc-tiny { font-size:11px; color:var(--faint); margin-top:14px; max-width:80ch; line-height:1.6; }
+  [data-reveal]{ opacity:0; transform:translateY(18px); transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1); }
+  [data-reveal].in{ opacity:1; transform:none; }
+  @media (max-width:760px){ nav .links a:not(.cta){ display:none; } .pub{ grid-template-columns:1fr; gap:8px; } .pub .venue{ justify-self:start; } }
 </style>
 </head>
 <body>
-  <div class="frame" id="frame">
-    <div class="screen">
-      <div class="grid-bg"></div>
+  <nav>
+    <a class="brand" href="#top">
+      <span class="logo" style="width:26px;height:26px"></span>
+      <span class="word">laudos<span class="ai">.ai</span></span>
+      <span class="rsrch">RESEARCH</span>
+    </a>
+    <div class="links">
+      <a href="#scoring">Scoring</a>
+      <a href="#leaderboard">Leaderboard</a>
+      <a href="#research">Research</a>
+      <a class="cta" href="https://laudos.ai" target="_blank" rel="noopener">Laudos.AI →</a>
+    </div>
+  </nav>
 
-      <!-- ============ HOME ============ -->
-      <section class="page" id="home" data-screen-label="Home">
-        <div class="brand">
-          <svg class="smiley" viewBox="0 0 40 40" fill="none" aria-label="Laudos.AI Research">
-            <path d="M20 20 L20 5 A15 15 0 0 1 35 20 Z" fill="#161616"/>
-            <path d="M20 20 L35 20 A15 15 0 0 1 20 35 Z" fill="#6e6e6e"/>
-            <path d="M20 20 L20 35 A15 15 0 0 1 5 20 Z" fill="#9c9c9c"/>
-            <path d="M20 20 L5 20 A15 15 0 0 1 20 5 Z" fill="#3c3c3c"/>
-          </svg>
-          <span class="word"><b>lai</b>bench</span>
-        </div>
-        <div class="content">
-          <h1>The controlled radiology report benchmark.</h1>
-          <p>LAIBench tests a narrow, auditable task: given an exam descriptor and text findings, can a system produce a faithful radiology report without losing clinically important facts?</p>
-          <p>The pt-BR controlled suite is gated. The public page shows methodology and aggregate diagnostics only; case JSON, answer keys, frozen predictions and corpus provenance stay outside the public repository.</p>
-          <p>Authored by <a href="https://laudos.ai" target="_blank" rel="noopener">Laudos.AI Research</a>. Reproducibility is available to authorized reviewers inside the private audit environment.</p>
-          <div class="home-actions">
-            <a class="audit-link primary" href="#methods">Methods</a>
-            <a class="audit-link" href="#leaderboard">Leaderboard</a>
-          </div>
-          <div class="homestats" id="homestats"></div>
-        </div>
-      </section>
+  <header id="top">
+    <div class="wrap">
+      <div class="eyebrow"><span class="dot"></span><span>Benchmark · AI-assisted radiology reporting</span></div>
+      <h1>LAIBench</h1>
+      <p class="lede">A governance-oriented benchmark for turning an exam descriptor and concise findings into a <strong>faithful</strong> radiology report — scored where it matters clinically, not on prose. A missed or fabricated critical finding is a hard veto, never a soft deduction.</p>
+      <div class="actions">
+        <a class="btn dark" href="#leaderboard">View leaderboard <span class="mono">→</span></a>
+        <a class="btn ghost" href="https://github.com/laudos-ai/laibench-public" target="_blank" rel="noopener">Open source</a>
+      </div>
+    </div>
+  </header>
 
-      <!-- ============ LEADERBOARD ============ -->
-      <section class="page scroll" id="leaderboard" hidden>
-        <div class="crumb">
-          <svg class="smiley" viewBox="0 0 40 40" fill="none" aria-label="Laudos.AI Research">
-            <path d="M20 20 L20 5 A15 15 0 0 1 35 20 Z" fill="#161616"/>
-            <path d="M20 20 L35 20 A15 15 0 0 1 20 35 Z" fill="#6e6e6e"/>
-            <path d="M20 20 L20 35 A15 15 0 0 1 5 20 Z" fill="#9c9c9c"/>
-            <path d="M20 20 L5 20 A15 15 0 0 1 20 5 Z" fill="#3c3c3c"/>
-          </svg>
-          <span>laibench</span>
-          <span class="sep">/</span>
-          <span class="here">Leaderboard</span>
-          <button class="close" data-go="home" aria-label="Back home">
-            <svg width="15" height="15" viewBox="0 0 15 15"><path d="M2 2l11 11M13 2L2 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          </button>
-        </div>
-
-        <div class="cards stats" id="lb-stats"></div>
-
-        <div class="lb-tools">
-          <div class="seg" id="locale-seg"></div>
-          <span class="lb-meta" id="lb-meta"></span>
-          <a class="audit-link" href="#methods">Methods</a>
-        </div>
-
-        <div class="lb-wrap">
-          <table class="lb">
-            <thead>
-              <tr>
-                <th>#</th><th>System</th>
-                <th class="num">Score</th>
-                <th class="num">Latency</th>
-                <th class="num">All-pass</th>
-                <th class="num">Criteria</th>
-                <th class="num">CRIT</th><th class="num">QUAL</th><th class="num">TERM</th><th class="num">GUIDE</th><th class="num">RAG</th>
-              </tr>
-            </thead>
-            <tbody id="lb-body"></tbody>
-          </table>
-        </div>
-
-        <p class="note" id="lb-note"></p>
-      </section>
-
-      <!-- ============ METHODS ============ -->
-      <section class="page scroll" id="methods" hidden>
-        <div class="crumb">
-          <svg class="smiley" viewBox="0 0 40 40" fill="none" aria-label="Laudos.AI Research">
-            <path d="M20 20 L20 5 A15 15 0 0 1 35 20 Z" fill="#161616"/>
-            <path d="M20 20 L35 20 A15 15 0 0 1 20 35 Z" fill="#6e6e6e"/>
-            <path d="M20 20 L20 35 A15 15 0 0 1 5 20 Z" fill="#9c9c9c"/>
-            <path d="M20 20 L5 20 A15 15 0 0 1 20 5 Z" fill="#3c3c3c"/>
-          </svg>
-          <span>laibench</span>
-          <span class="sep">/</span>
-          <span class="here">Methods</span>
-          <button class="close" data-go="home" aria-label="Back home">
-            <svg width="15" height="15" viewBox="0 0 15 15"><path d="M2 2l11 11M13 2L2 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          </button>
-        </div>
-
-        <div class="cards" id="method-cards" style="grid-auto-rows:210px;">
-          <button type="button" class="card blue" data-method="clinical" aria-label="Open clinical score method details"><span class="card-cue" aria-hidden="true">+</span><div><h3>Clinical score</h3><p>Weighted score across safety, quality, terminology, guideline and evidence-fidelity dimensions.</p></div><div class="tags"><span>Headline</span><span>Weighted</span></div></button>
-          <button type="button" class="card" data-method="crit" aria-label="Open CRIT method details"><span class="card-cue" aria-hidden="true">+</span><div><h3>CRIT</h3><p>Critical-finding preservation and unsafe-negation checks. Critical misses gate the case.</p></div><div class="tags"><span>30%</span><span>Gated</span></div></button>
-          <button type="button" class="card" data-method="qual" aria-label="Open QUAL method details"><span class="card-cue" aria-hidden="true">+</span><div><h3>QUAL</h3><p>Finding preservation, contradiction control and hallucination resistance.</p></div><div class="tags"><span>25%</span><span>Gated</span></div></button>
-          <button type="button" class="card" data-method="term" aria-label="Open TERM method details"><span class="card-cue" aria-hidden="true">+</span><div><h3>TERM</h3><p>Locale, modality, section structure and report terminology under the public contract.</p></div><div class="tags"><span>20%</span></div></button>
-          <button type="button" class="card" data-method="guide" aria-label="Open GUIDE method details"><span class="card-cue" aria-hidden="true">+</span><div><h3>GUIDE</h3><p>Guideline expectations and source-scoped anatomical coverage for the exam type.</p></div><div class="tags"><span>15%</span></div></button>
-          <button type="button" class="card" data-method="rag" aria-label="Open RAG method details"><span class="card-cue" aria-hidden="true">+</span><div><h3>RAG</h3><p>Evidence fidelity for ordering, laterality, levels, measurements and unsupported technique.</p></div><div class="tags"><span>10%</span></div></button>
-          <button type="button" class="card" data-method="diagnostics" aria-label="Open diagnostics method details"><span class="card-cue" aria-hidden="true">+</span><div><h3>Diagnostics</h3><p>All-pass and criterion pass rate are strict diagnostics beside the clinical score.</p></div><div class="tags"><span>Audit</span></div></button>
-          <button type="button" class="card" data-method="reliability" aria-label="Open reliability method details"><span class="card-cue" aria-hidden="true">+</span><div><h3>Reliability</h3><p>pass^k consistency across repeated runs of the same system on the same suite.</p></div><div class="tags"><span>3 runs</span></div></button>
-          <button type="button" class="card" data-method="provenance" aria-label="Open provenance method details"><span class="card-cue" aria-hidden="true">+</span><div><h3>Provenance</h3><p>Suite hash, track, scaffold, scoring mode and frozen predictions for reproducibility.</p></div><div class="tags"><span>Audit</span></div></button>
-        </div>
-
-        <div class="prose">
-          <h2>Scope</h2>
-          <p>LAIBench is a controlled technical benchmark framework — not a medical device, not regulatory approval, not clinical validation. The harness evaluates report generation from provided text evidence; it is not primary image interpretation. The pt-BR controlled suite, corpus provenance, frozen predictions and answer keys remain gated outside the public repository. Authorized reviewers can reproduce runs inside the controlled adjudication environment.</p>
-        </div>
-
-        <div class="method-modal" id="method-modal" role="dialog" aria-modal="true" aria-labelledby="method-title" hidden>
-          <div class="method-backdrop" data-method-close></div>
-          <article class="method-sheet">
-            <div class="method-top">
-              <div>
-                <p class="method-kicker" id="method-kicker"></p>
-                <h2 class="method-title" id="method-title"></h2>
-              </div>
-              <button type="button" class="method-close" data-method-close aria-label="Close method details">
-                <svg width="15" height="15" viewBox="0 0 15 15"><path d="M2 2l11 11M13 2L2 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-              </button>
-            </div>
-            <p class="method-summary" id="method-summary"></p>
-            <div class="method-grid" id="method-grid"></div>
-            <p class="method-foot" id="method-foot"></p>
-          </article>
-        </div>
-      </section>
-
-      <!-- ============ API ============ -->
-      <section class="page scroll" id="api" hidden>
-        <div class="crumb">
-          <svg class="smiley" viewBox="0 0 40 40" fill="none" aria-label="Laudos.AI Research">
-            <path d="M20 20 L20 5 A15 15 0 0 1 35 20 Z" fill="#161616"/>
-            <path d="M20 20 L35 20 A15 15 0 0 1 20 35 Z" fill="#6e6e6e"/>
-            <path d="M20 20 L20 35 A15 15 0 0 1 5 20 Z" fill="#9c9c9c"/>
-            <path d="M20 20 L5 20 A15 15 0 0 1 20 5 Z" fill="#3c3c3c"/>
-          </svg>
-          <span>laibench</span>
-          <span class="sep">/</span>
-          <span class="here">API</span>
-          <button class="close" data-go="home" aria-label="Back home">
-            <svg width="15" height="15" viewBox="0 0 15 15"><path d="M2 2l11 11M13 2L2 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          </button>
-        </div>
-
-        <div class="prose">
-          <h2>Laudos.AI evaluation access</h2>
-          <p>This public page is not a generic harness tutorial and does not publish private API routes, keys, prompts, frozen predictions, or command-line recipes for third-party systems.</p>
-
-          <h2>What the benchmark represents</h2>
-          <p>The controlled pt-BR suite now contains 120 staged cases, including critical-safety and negative-control strata. The displayed Laudos.AI row is the validated 120-case production-agent run. Runs are locked to a suite hash, scoring mode, track, scaffold class, and provenance chain before they are shown here.</p>
-
-          <h2>Reviewer workflow</h2>
-          <p>Authorized reviewers can reproduce the evaluation inside the controlled benchmark environment. Public visitors should read this page as a methodology and leaderboard surface for Laudos.AI, not as integration documentation for unrelated models or endpoints.</p>
-
-          <h2>Product API</h2>
-          <p>Operational access to Laudos.AI is handled through the product onboarding and permissioning flow. Benchmark artifacts and product credentials are intentionally separated.</p>
-        </div>
-      </section>
-
-      <!-- ============ MENU PANEL ============ -->
-      <aside class="panel" id="panel">
-        <div class="tab" id="tab"><span>MENU</span></div>
-        <div class="ruler" id="ruler"></div>
-        <div class="panel-inner">
-          <div class="pill">
-            <a id="btn-gh" href="https://github.com/laudos-ai/laibench-public" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            </a>
-            <button id="btn-theme" aria-label="Toggle theme" title="Toggle theme">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.4" stroke="currentColor" stroke-width="1.8"/><path d="M9 2.6a6.4 6.4 0 0 0 0 12.8z" fill="currentColor"/></svg>
-            </button>
-          </div>
-          <nav class="menu" id="menu">
-            <button class="mitem current" data-page="home"><span class="lead"></span><span class="label">Home</span></button>
-            <button class="mitem" data-page="leaderboard"><span class="lead"></span><span class="label">Leaderboard</span></button>
-            <button class="mitem" data-page="methods"><span class="lead"></span><span class="label">Methods</span></button>
-            <button class="mitem" data-page="api"><span class="lead"></span><span class="label">API</span></button>
-          </nav>
-        </div>
-      </aside>
-
+  <div class="stats wrap">
+    <div class="grid" data-reveal>
+      <div class="cell"><div class="num">5</div><div class="lbl mono">weighted clinical dimensions</div></div>
+      <div class="cell"><div class="num">120</div><div class="lbl mono">controlled pt-BR cases</div></div>
+      <div class="cell"><div class="num">90.0<span class="u">%</span></div><div class="lbl mono">Laudos.AI clinical score</div></div>
+      <div class="cell"><div class="num">0</div><div class="lbl mono">prose / aesthetic axes</div></div>
     </div>
   </div>
 
-<script src="data.js"></script>
-<script>
-(function(){
-  var frame   = document.getElementById('frame');
-  var panel   = document.getElementById('panel');
-  var tab     = document.getElementById('tab');
-  var menu    = document.getElementById('menu');
-  var ruler   = document.getElementById('ruler');
-  var btnTheme= document.getElementById('btn-theme');
+  <section id="scoring" class="panel">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <h2>Designed so form never rescues substance</h2>
+        <span class="idx mono">01 — HOW IT SCORES</span>
+      </div>
+      <div class="cards">
+        <div class="card" data-reveal><span class="n mono">01</span><div class="sw" style="background:#161616"></div><h3>Hard critical-finding veto</h3><p>A missed or fabricated critical finding caps the score and forces FAIL — regardless of how polished the rest of the report reads.</p></div>
+        <div class="card" data-reveal><span class="n mono">02</span><div class="sw" style="background:#3c3c3c"></div><h3>No prose / aesthetic axis</h3><p>No standalone style, fluency or "communication quality" dimension. The only discourse signals are minor, non-gating, fallback-only.</p></div>
+        <div class="card" data-reveal><span class="n mono">03</span><div class="sw" style="background:#6e6e6e"></div><h3>Conservative combination</h3><p>The combined dimension score is MIN(deterministic, judge): an optional LLM judge can lower a score but never inflate it past the gate.</p></div>
+        <div class="card" data-reveal><span class="n mono">04</span><div class="sw" style="background:#9c9c9c"></div><h3>Tamper-resistant numbers</h3><p>Every run is re-scored through the gated combiner; a relabeled critical-miss is rejected before it reaches the leaderboard. scoringHash + suiteHash provenance.</p></div>
+      </div>
+      <p class="disc-tiny">Dimensions: CRIT 30% · QUAL 25% · TERM 20% · GUIDE 15% · RAG 10%, with hard failure gates. LAIBench is a technical benchmark framework — not a medical device, not regulatory approval, not clinical validation.</p>
+    </div>
+  </section>
 
-  // build ruler ticks
-  for(var i=0;i<26;i++){
-    var t=document.createElement('i');
-    t.style.width = (i%5===0? 26 : 14)+'px';
-    ruler.appendChild(t);
-  }
+  <section id="leaderboard">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <h2>Leaderboard</h2>
+        <span class="idx mono">02 — RESULTS</span>
+      </div>
+      <p class="disc-tiny" style="margin:-24px 0 30px">Two governance tiers, never mixed: <b>controlled-eval</b> (gated, first-party, aggregate-only) and <b>public-smoke</b> (synthetic, contaminable, diagnostic baselines — not a ranking). See the <a href="https://github.com/laudos-ai/laibench-public/blob/main/docs/benchmark-cards.md" style="color:var(--muted);text-decoration:underline">benchmark cards</a> for case source, leakage risk, and adjudication status.</p>
+      <div id="boards"></div>
+    </div>
+  </section>
 
-  // ---- theme ----
-  function applyTheme(dark){
-    frame.classList.toggle('dark', dark);
-    document.body.classList.toggle('dark', dark);
-    btnTheme.classList.toggle('active', dark);
-    try{ localStorage.setItem('laibench-dark', dark?'1':'0'); }catch(e){}
-  }
-  var savedDark=false;
-  try{ savedDark = localStorage.getItem('laibench-dark')==='1'; }catch(e){}
-  document.documentElement.classList.remove('dark');
-  applyTheme(savedDark);
-  btnTheme.addEventListener('click', function(){
-    applyTheme(!frame.classList.contains('dark'));
-  });
+  <section id="research" class="panel">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <h2>Research</h2>
+        <span class="idx mono">03 — PAPERS</span>
+      </div>
+      <div class="pubs">
+        <a class="pub" data-reveal href="laibench-preprint.pdf" target="_blank" rel="noopener">
+          <span class="yr mono">2026</span>
+          <div>
+            <h3>Beyond Templates: A Compositional Model and Lower Bound for Radiology Report Variability</h3>
+            <div class="auth">N. Paraiso Ribeiro, P. Paraiso Ribeiro, S. Alba Herrera, F. Akira, R. Moreno · Laudos.AI Research</div>
+          </div>
+          <span class="venue">Preprint · PDF</span>
+        </a>
+        <a class="pub" data-reveal href="#research">
+          <span class="yr mono">2026</span>
+          <div>
+            <h3>Radiologist adjudication &amp; inter-rater agreement on the controlled report suite</h3>
+            <div class="auth">Laudos.AI Research · blinded multi-reader study to move gold labels from internal review to independent third-party adjudication.</div>
+          </div>
+          <span class="venue wip">Em andamento</span>
+        </a>
+        <a class="pub" data-reveal href="#research">
+          <span class="yr mono">2026</span>
+          <div>
+            <h3>External validation split for finding-to-report faithfulness across sites and equipment</h3>
+            <div class="auth">Laudos.AI Research · held-out, cross-institution evaluation to test generalization beyond the controlled suite.</div>
+          </div>
+          <span class="venue wip">Em andamento</span>
+        </a>
+      </div>
+    </div>
+  </section>
 
-  // ---- menu open/close ----
-  function setOpen(o){ panel.classList.toggle('open', o); }
-  tab.addEventListener('click', function(e){
-    e.stopPropagation();
-    setOpen(!panel.classList.contains('open'));
-  });
+  <section class="quote">
+    <div class="wrap" data-reveal>
+      <span class="k mono">Our principle</span>
+      <p>A report that reads beautifully but misses the pneumothorax must score worse than a plain one that catches it.</p>
+    </div>
+  </section>
 
-  // ---- navigation ----
-  function showPage(id){
-    closeMethod();
-    document.querySelectorAll('.page').forEach(function(p){ p.hidden = (p.id!==id); });
-    document.querySelectorAll('.mitem').forEach(function(m){
-      m.classList.toggle('current', m.dataset.page===id);
-    });
-    setOpen(false);
-  }
-  menu.addEventListener('click', function(e){
-    var it = e.target.closest('.mitem');
-    if(!it) return;
-    if(!it.dataset.page) return;
-    showPage(it.dataset.page);
-  });
-  document.addEventListener('click', function(e){
-    var go = e.target.closest('[data-go]');
-    if(!go) return;
-    e.preventDefault();
-    showPage(go.dataset.go);
-  });
-  document.addEventListener('keydown', function(e){
-    if(e.key!=='Escape') return;
-    if(closeMethod()) return;
-    setOpen(false);
-  });
+  <footer>
+    <div class="wrap">
+      <div class="top">
+        <a class="brand" href="#top" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit">
+          <span class="logo" style="width:30px;height:30px"></span>
+          <div>
+            <div style="font-size:18px;font-weight:500;letter-spacing:-.02em">laudos<span style="color:var(--faint)">.ai</span></div>
+            <div style="font-size:10px;letter-spacing:.28em;color:var(--faint);margin-top:2px">RESEARCH</div>
+          </div>
+        </a>
+        <div class="cols">
+          <div class="col">
+            <span class="h mono">LAIBench</span>
+            <a href="#scoring">Scoring</a>
+            <a href="#leaderboard">Leaderboard</a>
+            <a href="#research">Research</a>
+            <a href="https://github.com/laudos-ai/laibench-public" target="_blank" rel="noopener">GitHub</a>
+          </div>
+          <div class="col">
+            <span class="h mono">Contact</span>
+            <a href="mailto:research@laudos.ai">research@laudos.ai</a>
+            <a href="https://laudos.ai" target="_blank" rel="noopener">laudos.ai</a>
+          </div>
+        </div>
+      </div>
+      <div class="legal">
+        <span>© <span id="yr"></span> Laudos.AI Research — LAIBench is released under the MIT License.</span>
+        <span class="mono">São Paulo · Brasil</span>
+      </div>
+    </div>
+  </footer>
 
-  // ---- leaderboard rendering ----
-  var DATA = window.LAIBENCH_DATA || { locales:{}, generatedAt:null };
-  var localeKeys = Object.keys(DATA.locales);
-  var current = localeKeys.indexOf('pt-BR') >= 0 ? 'pt-BR' : localeKeys[0];
-
-  function pct(x){ return (x==null||isNaN(x)) ? '—' : (Math.round(x*1000)/10).toFixed(1)+'%'; }
-  function ms(x){ return x==null ? '—' : (x>=1000 ? (x/1000).toFixed(1)+'s' : Math.round(x)+'ms'); }
-  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
-
-  // ---- methods detail dialog ----
-  var methodModal = document.getElementById('method-modal');
-  var methodCards = document.getElementById('method-cards');
-  var methodKicker = document.getElementById('method-kicker');
-  var methodTitle = document.getElementById('method-title');
-  var methodSummary = document.getElementById('method-summary');
-  var methodGrid = document.getElementById('method-grid');
-  var methodFoot = document.getElementById('method-foot');
-  var lastMethodTrigger = null;
-  var METHOD_DETAILS = {
-    clinical: {
-      kicker: 'Headline score',
-      title: 'Clinical score',
-      summary: 'The leaderboard score is a weighted clinical score. It summarizes whether the generated report preserves the source findings and stays clinically safe.',
-      blocks: [
-        { title: 'What it combines', text: 'CRIT 30%, QUAL 25%, TERM 20%, GUIDE 15% and RAG 10%. The dimensions are weighted because a critical miss should matter more than a minor wording issue.' },
-        { title: 'How it gates', text: 'Some failures are not just deductions. Missing an affirmative critical finding, unsafe negation, invalid output structure, language-contract failures and unfilled placeholders can cap or fail the case.' },
-        { title: 'How to read it', items: ['Use this as the visible ranking score.', 'Use all-pass and criterion pass rate as stricter diagnostics, not as the headline grade.', 'Compare systems only on the same suite hash, locale, track and scoring mode.'] },
-        { title: 'Public scope', text: 'The public page explains methodology and aggregate calibration diagnostics. Case data, answer keys and frozen predictions are gated.' },
-      ],
-      foot: 'Current public page: gated pt-BR controlled suite with public methodology only.'
-    },
-    crit: {
-      kicker: '30% · gated',
-      title: 'CRIT',
-      summary: 'CRIT measures whether critical findings are preserved and whether the report creates unsafe negation around clinically important statements.',
-      blocks: [
-        { title: 'Gold-first rule', text: 'When a case declares critical findings, the evaluator uses those explicit gold labels first. It can also derive critical labels from goldFindings marked severity=critical.' },
-        { title: 'What fails hard', items: ['A critical finding present in the source but absent from the report.', 'A report that negates an expected critical finding.', 'Hard safety or contract failures that remain gate-critical.'] },
-        { title: 'What it is not', text: 'CRIT is not a hidden synonym list deciding the whole score. Locale pattern checks stay diagnostic when richer gold annotations exist.' },
-        { title: 'Why it matters', text: 'A report can look polished and still be unsafe if it loses a critical fact. CRIT prevents that from being averaged away.' },
-      ],
-      foot: 'A critical miss is treated as a gate failure because the clinical risk is asymmetric.'
-    },
-    qual: {
-      kicker: '25% · gated',
-      title: 'QUAL',
-      summary: 'QUAL measures clinical report quality: preserving the right findings, avoiding contradictions, and resisting invented or unsupported claims.',
-      blocks: [
-        { title: 'Gold findings', text: 'When goldFindings are present, the evaluator compares the report against those case-level facts with severity weighting for critical, major, minor and incidental findings.' },
-        { title: 'Failure modes', items: ['Missed source finding.', 'Contradiction against the source finding.', 'Hallucinated finding not supported by source or reference.', 'Conclusion that does not reflect the principal finding.'] },
-        { title: 'Not template worship', text: 'The score does not reward copying a reference report word-for-word. It rewards clinically faithful content in a coherent report.' },
-        { title: 'Adjudication', text: 'Stratified audit separates likely system errors, review-needed items and evaluator limitations so detector noise is visible.' },
-      ],
-      foot: 'QUAL is where the benchmark most directly checks whether the generated report says the clinically right thing.'
-    },
-    term: {
-      kicker: '20%',
-      title: 'TERM',
-      summary: 'TERM checks the report contract: language, modality naming, section names, and terminology expected for public submissions.',
-      blocks: [
-        { title: 'Language contract', text: 'A pt-BR case should produce a Portuguese report; an en-US case should produce an English report. Wrong-language output is a contract failure.' },
-        { title: 'Report form', items: ['Uses allowed HTML rather than markdown dumps.', 'Keeps expected radiology sections and labels.', 'Avoids placeholders and operational failure text.', 'Uses terminology compatible with modality and locale.'] },
-        { title: 'Why it has weight', text: 'A clinically correct finding can still be unusable if the output violates the integration or reporting contract.' },
-        { title: 'Boundary', text: 'TERM should not punish acceptable clinical synonymy. It is for contract and terminology problems, not style preference.' },
-      ],
-      foot: 'TERM protects reproducibility and integration quality across systems.'
-    },
-    guide: {
-      kicker: '15%',
-      title: 'GUIDE',
-      summary: 'GUIDE covers guideline classification and anatomical coverage expectations that are relevant to the exam and source content.',
-      blocks: [
-        { title: 'Guidelines', text: 'When a case declares guidelineExpectations, the evaluator checks for the expected system and classification, such as BI-RADS, TI-RADS, PI-RADS, Bosniak, Fleischner or Lung-RADS.' },
-        { title: 'Coverage fallback', text: 'When no explicit guideline gold exists, anatomical coverage is scoped to the source, gold and reference context. It should not infer unrelated requirements just because a generated report mentions another anatomy.' },
-        { title: 'How to read it', items: ['Low GUIDE can mean a missing declared classification.', 'It can also mean incomplete anatomy coverage for a relevant exam region.', 'It should not dominate over critical safety or evidence fidelity.'] },
-        { title: 'Example boundary', text: 'A rectal pelvis MRI should not be penalized for missing PI-RADS merely because the report mentions prostate incidentally.' },
-      ],
-      foot: 'GUIDE is intentionally narrower than a full radiology guideline engine.'
-    },
-    rag: {
-      kicker: '10%',
-      title: 'RAG',
-      summary: 'RAG is evidence fidelity: the generated report should stay attached to the supplied text evidence and avoid unsupported technical details.',
-      blocks: [
-        { title: 'With retrieval gold', text: 'If retrievalGold is present, LAIBench can compute IR-style metrics such as precision, recall, nDCG and MRR for retrieved evidence IDs.' },
-        { title: 'Controlled text fallback', text: 'In the controlled text-generation suite, RAG falls back to source-derived checks such as laterality, measurements, vertebral levels, section order and unsupported acquisition details.' },
-        { title: 'Anti-hardcode rule', text: 'The broad preservation-pattern check R05 is excluded from structural RAG fallback, so hidden synonym lists do not become the clinical score.' },
-        { title: 'What failures mean', items: ['The report changed side or measurement.', 'The report added unsupported sequence/acquisition detail.', 'The report lost source ordering or evidence alignment.'] },
-      ],
-      foot: 'RAG here means evidence-grounded report generation, not a claim that every public run uses a live retrieval pipeline.'
-    },
-    diagnostics: {
-      kicker: 'Audit metrics',
-      title: 'Diagnostics',
-      summary: 'Diagnostics explain strictness around the headline score. They are useful for debugging, but they are not the public ranking score.',
-      blocks: [
-        { title: 'All-pass', text: 'All-pass is zero-failure case completion: every binary criterion in the case passed simultaneously. With many criteria, it intentionally saturates lower than the clinical score.' },
-        { title: 'Criterion pass rate', text: 'Criterion pass rate pools all binary checks across all cases. It is useful for seeing detector volume, but it does not weight clinical severity like the clinical score does.' },
-        { title: 'Why both stay visible', items: ['All-pass shows strict case cleanliness.', 'Criterion pass rate shows broad harness friction.', 'Clinical score remains the severity-weighted ranking metric.'] },
-        { title: 'Stratified audit', text: 'Private stratified artifacts break failures into critical safety, fidelity, synthesis, guideline, terminology, measurement, anatomy and report-quality strata.' },
-      ],
-      foot: 'If all-pass looks surprisingly low, check the number of criteria per case before interpreting it as the model grade.'
-    },
-    reliability: {
-      kicker: 'Repeated runs',
-      title: 'Reliability',
-      summary: 'Reliability checks whether a system behaves consistently when the same suite is run multiple times.',
-      blocks: [
-        { title: 'pass^k', text: 'pass^k reports the fraction of cases that remain passing across k repeated runs. The board emphasizes critical-safe consistency.' },
-        { title: 'Why it matters', text: 'A one-off good run is less useful than a system that preserves safety across repeated calls. Reliability catches flaky tails.' },
-        { title: 'What k means', text: 'The current display uses repeated runs when compatible artifacts are available. Frozen predictions preserve the evidence for private audit.' },
-        { title: 'Interpretation', items: ['High score plus low reliability means unstable behavior.', 'Moderate score plus high reliability means predictable but limited behavior.', 'Reliability is complementary to clinical score, not a replacement.'] },
-      ],
-      foot: 'Reliability is reported only when compatible repeated runs exist for the same suite and scoring mode.'
-    },
-    provenance: {
-      kicker: 'Reproducibility',
-      title: 'Provenance',
-      summary: 'Provenance makes each leaderboard row auditable instead of just decorative.',
-      blocks: [
-        { title: 'What is disclosed', text: 'Rows include suite hash, track, scaffold class, scoring mode, system type, latency, cost when available, and validation status.' },
-        { title: 'Frozen predictions', text: 'A run can be re-scored from JSONL predictions with instance_id and model_output. This lets the benchmark improve without re-calling a paid or private model.' },
-        { title: 'Controlled boundary', text: 'The public site exposes methodology and aggregate diagnostics only. Controlled cases, frozen predictions, import scripts and corpus provenance stay outside the public repository.' },
-        { title: 'Why calibration fixtures exist', text: 'Reference and degraded harness fixtures verify that the evaluator separates a good report from a negative control. They are calibration evidence, not product claims.' },
-      ],
-      foot: 'Authorized reviewers reproduce artifacts inside the controlled environment; public case-level JSON exports are not distributed.'
-    }
-  };
-
-  function renderMethodBlock(block){
-    var body = block.items
-      ? '<ul>' + block.items.map(function(item){ return '<li>'+esc(item)+'</li>'; }).join('') + '</ul>'
-      : '<p>'+esc(block.text || '')+'</p>';
-    return '<section class="method-block"><h4>'+esc(block.title)+'</h4>'+body+'</section>';
-  }
-
-  function openMethod(key, trigger){
-    var detail = METHOD_DETAILS[key];
-    if(!detail || !methodModal) return;
-    lastMethodTrigger = trigger || null;
-    methodKicker.textContent = detail.kicker;
-    methodTitle.textContent = detail.title;
-    methodSummary.textContent = detail.summary;
-    methodGrid.innerHTML = detail.blocks.map(renderMethodBlock).join('');
-    methodFoot.textContent = detail.foot || '';
-    methodModal.hidden = false;
-    var close = methodModal.querySelector('.method-close');
-    if(close) close.focus();
-  }
-
-  function closeMethod(){
-    if(!methodModal || methodModal.hidden) return false;
-    methodModal.hidden = true;
-    if(lastMethodTrigger && typeof lastMethodTrigger.focus === 'function') lastMethodTrigger.focus();
-    lastMethodTrigger = null;
-    return true;
-  }
-
-  if(methodCards){
-    methodCards.addEventListener('click', function(e){
-      var card = e.target.closest('[data-method]');
-      if(!card) return;
-      openMethod(card.dataset.method, card);
-    });
-  }
-  if(methodModal){
-    methodModal.addEventListener('click', function(e){
-      if(e.target.closest('[data-method-close]')) closeMethod();
-    });
-  }
-
-  function renderSeg(){
-    var seg = document.getElementById('locale-seg');
-    if(!seg) return;
-    seg.innerHTML = '';
-    localeKeys.forEach(function(k){
-      var b = document.createElement('button');
-      b.textContent = k;
-      b.classList.toggle('active', k===current);
-      b.addEventListener('click', function(){ current=k; renderBoard(); renderSeg(); });
-      seg.appendChild(b);
-    });
-  }
-
-  function renderBoard(){
-    var board = DATA.locales[current];
-    var body = document.getElementById('lb-body');
-    var meta = document.getElementById('lb-meta');
-    var note = document.getElementById('lb-note');
-    var stats = document.getElementById('lb-stats');
-    if(!board || !body) return;
-
-    var audit = board.audit || {};
-    var rerunPending = audit.status === 'production-rerun-pending';
-    var lastRunCases = audit.lastValidatedRunCases || null;
-    meta.textContent = board.suite + ' · ' + board.cases + ' cases · track ' + board.track + ' · ' + board.scoring + ' · suite ' + (board.suiteHash||'').slice(0,8) +
-      (rerunPending && lastRunCases ? ' · controlled rerun pending · last validated ' + lastRunCases + '-case run' : '');
-
-    function scoreCell(e){
-      var value = e.score == null ? e.clinicalScore : e.score;
-      return '<span class="bar"><i style="width:'+Math.round((value||0)*100)+'%"></i></span><span class="pct">'+pct(value)+'</span>';
-    }
-
-    function row(e, rank, cls){
-      var rowClass = (rank===1?'top ':'') + (cls || '');
-      return '<tr class="'+rowClass.trim()+'">' +
-        '<td class="rank-cell"><span class="rank">'+(rank||'—')+'</span></td>' +
-        '<td class="system-cell"><span class="sys">'+esc(e.system)+'</span><span class="sub">'+esc(e.kind||'')+'</span></td>' +
-        '<td class="num metric score-cell" data-label="Score"><span class="score-inline">'+scoreCell(e)+'</span></td>' +
-        '<td class="num dim metric" data-label="Latency">'+ms(e.latencyMs)+'</td>' +
-        '<td class="num dim metric" data-label="All-pass">'+pct(e.allPass)+'</td>' +
-        '<td class="num dim metric" data-label="Criteria">'+pct(e.criterionPass)+'</td>' +
-        '<td class="num dim metric" data-label="CRIT">'+pct(e.dims.CRIT)+'</td>' +
-        '<td class="num dim metric" data-label="QUAL">'+pct(e.dims.QUAL)+'</td>' +
-        '<td class="num dim metric" data-label="TERM">'+pct(e.dims.TERM)+'</td>' +
-        '<td class="num dim metric" data-label="GUIDE">'+pct(e.dims.GUIDE)+'</td>' +
-        '<td class="num dim metric" data-label="RAG">'+pct(e.dims.RAG)+'</td>' +
-        '</tr>';
-    }
-
-    var production = board.entries.filter(function(e){ return e.group === 'production'; });
-    var modelRows = board.entries.filter(function(e){ return e.group === 'model'; });
-    var calibration = board.entries.filter(function(e){ return e.group === 'calibration'; });
-    var visible = production.length ? production : board.entries;
-    var html = production.map(function(e, i){ return row(e, i+1); }).join('');
-    if(modelRows.length){
-      html += '<tr class="divider"><td colspan="11">Free/open model comparison</td></tr>';
-      html += modelRows.map(function(e, i){ return row(e, 'M'+(i+1), 'model-row'); }).join('');
-    }
-    if(calibration.length){
-      html += '<tr class="divider"><td colspan="11">Calibration fixtures</td></tr>';
-      html += calibration.map(function(e){ return row(e, '—', 'fixture'); }).join('');
-    }
-    if(!html) html = visible.map(function(e, i){ return row(e, i+1); }).join('');
-    body.innerHTML = html;
-
-    var leader = visible[0];
-    if(stats && leader){
-      var leaderKind = leader.group === 'calibration' ? 'calibration fixture' : 'production agent';
-      if(rerunPending){
-        stats.innerHTML =
-          '<div class="card blue"><h3>#1 '+esc(leader.system)+'</h3><div class="big">'+pct(leader.score)+'<small>clinical</small></div><p>Weighted clinical score on the controlled suite.</p><div class="tags"><span>'+current+'</span><span>'+leaderKind+'</span><span>'+esc(String(lastRunCases || leader.runCases || board.cases))+'-case run</span></div></div>' +
-          '<div class="card"><h3>Suite</h3><div class="big">'+esc(String(board.cases))+'</div><p>Controlled cases are staged outside the public repository.</p><div class="tags"><span>aggregate only</span></div></div>' +
-          '<div class="card"><h3>Critical gate</h3><div class="big">Hard fail</div><p>Any deterministic or adversarial critical failure forces the case to FAIL.</p><div class="tags"><span>no averaging</span></div></div>' +
-          '<div class="card"><h3>Rerun</h3><div class="big">Pending</div><p>Production reruns require authorized benchmark credentials.</p><div class="tags"><span>controlled</span></div></div>';
-      }else{
-        stats.innerHTML =
-          '<div class="card blue"><h3>#1 '+esc(leader.system)+'</h3><div class="big">'+pct(leader.score)+'<small>clinical</small></div><p>Validated '+esc(String(board.cases))+'-case production-agent run.</p><div class="tags"><span>'+current+'</span><span>'+leaderKind+'</span></div></div>' +
-          '<div class="card"><h3>All-pass</h3><div class="big">'+pct(leader.allPass)+'</div><p>Strict case completion: every criterion in the case passed simultaneously.</p><div class="tags"><span>zero failed checks</span></div></div>' +
-          '<div class="card"><h3>Critical gate</h3><div class="big">Hard fail</div><p>If a critical finding is missed or unsafe negation appears, that case cannot pass.</p><div class="tags"><span>blocks PASS</span></div></div>' +
-          '<div class="card"><h3>Criteria</h3><div class="big">'+pct(leader.criterionPass)+'</div><p>Pooled binary checks across CRIT, QUAL, TERM, GUIDE and RAG.</p><div class="tags"><span>diagnostic</span></div></div>';
-      }
-    }
-
-    var disclosureText = board.disclosure ? '<br><br><b>'+esc(board.disclosure)+'</b>' : '';
-    note.innerHTML = (board.note||'') + disclosureText + (DATA.generatedAt ? ' Generated '+esc(DATA.generatedAt)+'.' : '');
-  }
-
-  function renderHome(){
-    var hs = document.getElementById('homestats');
-    var board = DATA.locales[current];
-    if(!hs || !board || !board.entries.length) return;
-    var production = board.entries.filter(function(e){ return e.group !== 'calibration'; });
-    var leader = production[0] || board.entries[0];
-    var audit = board.audit || {};
-    var runSuffix = audit.lastValidatedRunCases ? ' · '+audit.lastValidatedRunCases+'-case run' : '';
-    hs.innerHTML =
-      '<span><b>'+pct(leader.score)+'</b>#1 score · '+esc(leader.system)+runSuffix+'</span>' +
-      '<span><b>'+(board.reliability!=null?pct(board.reliability):'—')+'</b>pass^'+(board.reliabilityRuns||3)+' crit-safe</span>' +
-      '<span><b>'+board.cases+'</b>controlled cases</span>' +
-      '<span><b>'+(audit.criticalSafetyCases || '—')+'</b>critical-safety cases</span>';
-  }
-
-  renderSeg(); renderBoard(); renderHome();
-})();
-</script>
+  <script src="data.js"></script>
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+    (function(){
+      var els = [].slice.call(document.querySelectorAll('[data-reveal]'));
+      function onscreen(el){ var r=el.getBoundingClientRect(); return r.top < (innerHeight||800)*0.92 && r.bottom>0; }
+      els.forEach(function(el){ if(onscreen(el)) el.classList.add('in'); });
+      var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }); }, {threshold:0.1, rootMargin:'0px 0px -6% 0px'});
+      els.forEach(function(el){ io.observe(el); });
+      setTimeout(function(){ els.forEach(function(el){ el.classList.add('in'); }); }, 1600);
+    })();
+    (function(){
+      var data = window.LAIBENCH_DATA; if(!data || !data.locales) return;
+      var pct = function(x){ return (x==null) ? '—' : (Math.round(x*1000)/10).toFixed(1)+'%'; };
+      var dim = function(d,k){ return (d&&d[k]!=null) ? (Math.round(d[k]*1000)/10).toFixed(1) : '—'; };
+      var BOARDS = [
+        { key:'pt-BR', title:'Controlled-eval · first-party', sub:'gated · aggregate-only · not external validation', prod:true },
+        { key:'en-US', title:'Public-smoke · diagnostic baselines', sub:'synthetic · contaminable · not a ranking', prod:false }
+      ];
+      var html = '';
+      BOARDS.forEach(function(b){
+        var loc = data.locales[b.key]; if(!loc || !(loc.entries||[]).length) return;
+        var entries = loc.entries.slice().sort(function(a,c){ return (c.clinicalScore||0)-(a.clinicalScore||0); });
+        html += '<div class="board">';
+        html += '<h3 style="font-size:20px;font-weight:500;letter-spacing:-.02em;margin:0 0 2px">'+b.title+'</h3>';
+        html += '<div class="meta mono"><b>'+(loc.suite||b.key)+'</b> · '+(loc.cases||'?')+' cases · '+(loc.scoring||'')+' · '+b.sub+'</div>';
+        html += '<table><thead><tr><th class="l">#</th><th class="l">System</th><th>Clinical</th><th>CRIT</th><th>QUAL</th><th>TERM</th><th>GUIDE</th><th>RAG</th><th>Latency</th></tr></thead><tbody>';
+        entries.forEach(function(e,i){
+          var lat = e.latencyMs!=null ? (Math.round(e.latencyMs/100)/10)+'s' : '—';
+          html += '<tr>';
+          html += '<td class="l rank mono">'+(i+1)+'</td>';
+          html += '<td class="l sys">'+e.system+(b.prod?'<span class="tag prod">product agent</span>':'<span class="tag">open model</span>')+'</td>';
+          html += '<td class="score">'+pct(e.clinicalScore)+'</td>';
+          html += '<td>'+dim(e.dims,'CRIT')+'</td><td>'+dim(e.dims,'QUAL')+'</td><td>'+dim(e.dims,'TERM')+'</td><td>'+dim(e.dims,'GUIDE')+'</td><td>'+dim(e.dims,'RAG')+'</td>';
+          html += '<td class="mono">'+lat+'</td>';
+          html += '</tr>';
+        });
+        html += '</tbody></table>';
+        if(loc.disclosure) html += '<p class="disclosure">'+loc.disclosure+'</p>';
+        html += '</div>';
+      });
+      document.getElementById('boards').innerHTML = html;
+    })();
+  </script>
 </body>
 </html>

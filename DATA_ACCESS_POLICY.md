@@ -6,7 +6,7 @@ It does not include the controlled pt-BR cases, full clinical corpus, raw clinic
 
 ## Public Data
 
-The only cases that may be published without a separate release review are synthetic demonstration cases under `cases/public/`. They are intended for installation checks, smoke tests, harness review, and open benchmark reproduction.
+The only cases that may be published without a separate release review are synthetic demonstration cases under `cases/public/`. They are the `public-smoke` tier (see [benchmark cards](docs/benchmark-cards.md)): intended for installation checks, smoke tests, and harness review only — not for ranking or clinical claims.
 
 Public cases are not a representative clinical dataset and must not be used to claim clinical validation. Real-derived, private controlled, or answer-key-bearing fixtures are not public data.
 

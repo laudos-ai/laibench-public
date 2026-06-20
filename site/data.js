@@ -42,6 +42,46 @@ window.LAIBENCH_DATA = {
    "scoring": "conservative-min",
    "entries": [
     {
+     "system": "North Mini Code · Cohere",
+     "kind": "open-model",
+     "group": "free-open",
+     "score": 0.652,
+     "allPass": 0,
+     "criterionPass": 0.816,
+     "clinicalScore": 0.652,
+     "strictPass": 0.16699999999999998,
+     "dims": {
+      "CRIT": 1,
+      "QUAL": 0.75,
+      "TERM": 0.985,
+      "GUIDE": 0.382,
+      "RAG": 0.782
+     },
+     "latencyMs": 7337.6,
+     "track": "agent",
+     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
+    },
+    {
+     "system": "Laguna M.1 · Poolside",
+     "kind": "open-model",
+     "group": "free-open",
+     "score": 0.632,
+     "allPass": 0,
+     "criterionPass": 0.794,
+     "clinicalScore": 0.632,
+     "strictPass": 0.083,
+     "dims": {
+      "CRIT": 1,
+      "QUAL": 0.637,
+      "TERM": 0.9470000000000001,
+      "GUIDE": 0.392,
+      "RAG": 0.7609999999999999
+     },
+     "latencyMs": 38160.8,
+     "track": "agent",
+     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
+    },
+    {
      "system": "gpt-oss-120b · OpenAI",
      "kind": "open-model",
      "group": "free-open",
@@ -58,6 +98,46 @@ window.LAIBENCH_DATA = {
       "RAG": 0.727
      },
      "latencyMs": 10453.8,
+     "track": "agent",
+     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
+    },
+    {
+     "system": "Nex N2 Pro · Nex-AGI",
+     "kind": "open-model",
+     "group": "free-open",
+     "score": 0.586,
+     "allPass": 0.083,
+     "criterionPass": 0.861,
+     "clinicalScore": 0.586,
+     "strictPass": 0.083,
+     "dims": {
+      "CRIT": 1,
+      "QUAL": 0.903,
+      "TERM": 0.985,
+      "GUIDE": 0.369,
+      "RAG": 0.935
+     },
+     "latencyMs": 36466.8,
+     "track": "agent",
+     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
+    },
+    {
+     "system": "Nemotron 3 Nano Omni 30B · NVIDIA",
+     "kind": "open-model",
+     "group": "free-open",
+     "score": 0.586,
+     "allPass": 0,
+     "criterionPass": 0.7979999999999999,
+     "clinicalScore": 0.586,
+     "strictPass": 0.083,
+     "dims": {
+      "CRIT": 0.9670000000000001,
+      "QUAL": 0.754,
+      "TERM": 0.977,
+      "GUIDE": 0.311,
+      "RAG": 0.69
+     },
+     "latencyMs": 8362.7,
      "track": "agent",
      "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
     },
@@ -138,6 +218,26 @@ window.LAIBENCH_DATA = {
       "RAG": 0.639
      },
      "latencyMs": 88586,
+     "track": "agent",
+     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
+    },
+    {
+     "system": "Gemma 4 26B · Google",
+     "kind": "open-model",
+     "group": "free-open",
+     "score": 0.363,
+     "allPass": 0,
+     "criterionPass": 0.7659999999999999,
+     "clinicalScore": 0.363,
+     "strictPass": 0.083,
+     "dims": {
+      "CRIT": 0.54,
+      "QUAL": 0.48200000000000004,
+      "TERM": 0.561,
+      "GUIDE": 0.271,
+      "RAG": 0.55
+     },
+     "latencyMs": 10082.3,
      "track": "agent",
      "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
     }

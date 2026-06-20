@@ -308,7 +308,7 @@
       var dim = function(d,k){ return (d&&d[k]!=null) ? (Math.round(d[k]*1000)/10).toFixed(1) : '—'; };
       var BOARDS = [
         { key:'pt-BR', title:'Controlled-eval · first-party', sub:'gated · aggregate-only · not external validation', prod:true },
-        { key:'en-US', title:'Public-smoke · diagnostic baselines', sub:'synthetic · contaminable · not a ranking', prod:false }
+        { key:'en-US', title:'Public-smoke · diagnostic baselines', sub:'synthetic · contaminable · not a ranking · free endpoints rate-limited; incomplete runs excluded', prod:false }
       ];
       var html = '';
       BOARDS.forEach(function(b){

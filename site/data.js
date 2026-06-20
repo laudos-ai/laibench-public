@@ -102,6 +102,26 @@ window.LAIBENCH_DATA = {
      "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
     },
     {
+     "system": "gpt-oss-20b · OpenAI",
+     "kind": "open-model",
+     "group": "free-open",
+     "score": 0.5920000000000001,
+     "allPass": 0,
+     "criterionPass": 0.835,
+     "clinicalScore": 0.5920000000000001,
+     "strictPass": 0.083,
+     "dims": {
+      "CRIT": 0.99,
+      "QUAL": 0.8340000000000001,
+      "TERM": 0.97,
+      "GUIDE": 0.40700000000000003,
+      "RAG": 0.91
+     },
+     "latencyMs": 7532.3,
+     "track": "agent",
+     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
+    },
+    {
      "system": "Nex N2 Pro · Nex-AGI",
      "kind": "open-model",
      "group": "free-open",
@@ -142,6 +162,26 @@ window.LAIBENCH_DATA = {
      "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
     },
     {
+     "system": "Nemotron 3 Super 120B · NVIDIA",
+     "kind": "open-model",
+     "group": "free-open",
+     "score": 0.579,
+     "allPass": 0,
+     "criterionPass": 0.8240000000000001,
+     "clinicalScore": 0.579,
+     "strictPass": 0,
+     "dims": {
+      "CRIT": 1,
+      "QUAL": 0.741,
+      "TERM": 0.977,
+      "GUIDE": 0.402,
+      "RAG": 0.865
+     },
+     "latencyMs": 28686.4,
+     "track": "agent",
+     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
+    },
+    {
      "system": "Gemma 4 31B · Google",
      "kind": "open-model",
      "group": "free-open",
@@ -162,82 +202,22 @@ window.LAIBENCH_DATA = {
      "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
     },
     {
-     "system": "gpt-oss-20b · OpenAI",
-     "kind": "open-model",
-     "group": "free-open",
-     "score": 0.542,
-     "allPass": 0,
-     "criterionPass": 0.8270000000000001,
-     "clinicalScore": 0.542,
-     "strictPass": 0.083,
-     "dims": {
-      "CRIT": 0.883,
-      "QUAL": 0.79,
-      "TERM": 0.8859999999999999,
-      "GUIDE": 0.377,
-      "RAG": 0.8140000000000001
-     },
-     "latencyMs": 16799.7,
-     "track": "agent",
-     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
-    },
-    {
-     "system": "Nemotron 3 Super 120B · NVIDIA",
-     "kind": "open-model",
-     "group": "free-open",
-     "score": 0.429,
-     "allPass": 0,
-     "criterionPass": 0.785,
-     "clinicalScore": 0.429,
-     "strictPass": 0,
-     "dims": {
-      "CRIT": 0.74,
-      "QUAL": 0.586,
-      "TERM": 0.735,
-      "GUIDE": 0.248,
-      "RAG": 0.653
-     },
-     "latencyMs": 87718.7,
-     "track": "agent",
-     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
-    },
-    {
      "system": "Nemotron 3 Ultra 550B · NVIDIA",
      "kind": "open-model",
      "group": "free-open",
-     "score": 0.37,
+     "score": 0.529,
      "allPass": 0,
-     "criterionPass": 0.778,
-     "clinicalScore": 0.37,
+     "criterionPass": 0.7829999999999999,
+     "clinicalScore": 0.529,
      "strictPass": 0.083,
      "dims": {
-      "CRIT": 0.667,
-      "QUAL": 0.5379999999999999,
-      "TERM": 0.644,
-      "GUIDE": 0.264,
-      "RAG": 0.639
+      "CRIT": 0.833,
+      "QUAL": 0.584,
+      "TERM": 0.8029999999999999,
+      "GUIDE": 0.299,
+      "RAG": 0.6709999999999999
      },
-     "latencyMs": 88586,
-     "track": "agent",
-     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
-    },
-    {
-     "system": "Gemma 4 26B · Google",
-     "kind": "open-model",
-     "group": "free-open",
-     "score": 0.363,
-     "allPass": 0,
-     "criterionPass": 0.7659999999999999,
-     "clinicalScore": 0.363,
-     "strictPass": 0.083,
-     "dims": {
-      "CRIT": 0.54,
-      "QUAL": 0.48200000000000004,
-      "TERM": 0.561,
-      "GUIDE": 0.271,
-      "RAG": 0.55
-     },
-     "latencyMs": 10082.3,
+     "latencyMs": 84319.8,
      "track": "agent",
      "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
     }

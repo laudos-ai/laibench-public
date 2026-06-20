@@ -1,0 +1,46 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{microtype}
+\geometry{margin=1in}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+\title{Radiologist Adjudication and Inter-Rater Agreement for Automated Radiology Report Scoring\\[4pt]\large A Study Protocol}
+\author{
+  Natan Paraiso Ribeiro, MD \quad Petrus Paraiso Ribeiro, MD \quad Stephanie Alba Herrera, MD \\
+  Francisco Akira, MD \quad Raquel Moreno, MD \\[6pt]
+  \normalsize Laudos.AI Research \quad\textbullet\quad \texttt{research@laudos.ai}
+}
+\date{Protocol -- 2026 (pre-registration; no results reported)}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+LAIBench scores finding-text-to-report generation with deterministic clinical checks, a hard critical-finding gate, and an optional frozen judge. To date its labels are an internal data-quality process, not an independent third-party validation. This protocol pre-registers a blinded multi-reader study to estimate (i) inter-rater agreement among board-certified radiologists on the report-faithfulness constructs LAIBench measures, and (ii) the agreement between the LAIBench score and a radiologist consensus. We define the locked subset, blinding, disagreement-resolution procedure, agreement statistics, and acceptance thresholds in advance. \textbf{No results are reported here}; this document fixes the design before any data is collected.
+\end{abstract}
+
+\section{Objectives}
+\begin{enumerate}[leftmargin=*]
+\item Estimate inter-rater reliability (Cohen/Fleiss $\kappa$, Krippendorff $\alpha$) among radiologists for: critical-finding preservation, clinically relevant omission, hallucinated/unsupported finding, contradiction, and impression actionability.
+\item Estimate scorer--human agreement: correlation and rank concordance between the LAIBench per-case score (and its CRIT gate) and the radiologist consensus.
+\item Identify systematic scorer failure modes (where the deterministic checks and the human panel disagree) to drive calibration.
+\end{enumerate}
+
+\section{Design}
+\paragraph{Sample.} A \emph{locked} subset of $N$ report instances drawn from the controlled-eval suite, frozen by suite hash before reading begins. Cases stratified by modality, anatomy, and presence/absence of a critical finding (over-sampling critical and negative-control cases).
+\paragraph{Readers.} 2--3 board-certified radiologists, plus at least one reviewer \emph{not affiliated with Laudos.AI}. Readers are blinded to the system identity, to each other's ratings, and to the LAIBench score.
+\paragraph{Rating instrument.} Per case, each reader records a structured judgment on the constructs in Objective~1, with a free-text justification, on a fixed rubric agreed before reading.
+\paragraph{Disagreement protocol.} Discordant cases are resolved by a pre-specified rule (independent third reader, then consensus discussion); the adjudicated label and the raw per-reader labels are both retained.
+
+\section{Analysis plan}
+Inter-rater: report $\kappa$/$\alpha$ with bootstrap confidence intervals per construct. Scorer--human: Spearman $\rho$ and Pearson $r$ between LAIBench score and consensus, plus a confusion analysis of the binary critical-finding gate against the human critical-finding judgment (sensitivity/specificity of the gate). Calibration: reliability diagram of scorer score versus probability of human ``acceptable''. Pre-specified acceptance threshold for ``scorer tracks radiologists'': consensus correlation and gate sensitivity above thresholds fixed in the locked protocol.
+
+\section{Governance and limitations}
+The subset is locked and never used to tune the scorer (that would destroy it as a holdout). This is a measurement study of agreement, not a clinical trial: it does not establish clinical safety, diagnostic accuracy, or regulatory fitness, and it is not image interpretation. Until this study reports, the correct public claim for LAIBench remains \emph{technical benchmark framework}, not \emph{clinically validated benchmark}. Reader counts, exact $N$, and thresholds are finalized in the locked protocol prior to data collection. Validator and record schema for adjudication artifacts already exist in the LAIBench repository; this protocol governs the study that produces them.
+
+\end{document}

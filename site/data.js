@@ -120,6 +120,26 @@ window.LAIBENCH_DATA = {
      "latencyMs": 87718.7,
      "track": "agent",
      "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
+    },
+    {
+     "system": "Nemotron 3 Ultra 550B · NVIDIA",
+     "kind": "open-model",
+     "group": "free-open",
+     "score": 0.37,
+     "allPass": 0,
+     "criterionPass": 0.778,
+     "clinicalScore": 0.37,
+     "strictPass": 0.083,
+     "dims": {
+      "CRIT": 0.667,
+      "QUAL": 0.5379999999999999,
+      "TERM": 0.644,
+      "GUIDE": 0.264,
+      "RAG": 0.639
+     },
+     "latencyMs": 88586,
+     "track": "agent",
+     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
     }
    ],
    "reliability": null,

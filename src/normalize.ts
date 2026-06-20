@@ -50,9 +50,14 @@ export function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
+export function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export function matchAll(rx: RegExp, input: string): string[] {
-  const flags = rx.flags.includes("g") ? rx.flags : `${rx.flags}g`;
-  const global = new RegExp(rx.source, flags);
+  // String.match with a global regex always scans from index 0 and resets
+  // lastIndex, so an already-global regex can be reused without recompiling.
+  const global = rx.flags.includes("g") ? rx : new RegExp(rx.source, `${rx.flags}g`);
   return input.match(global) ?? [];
 }
 

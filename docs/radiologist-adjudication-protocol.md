@@ -23,6 +23,10 @@ Each case record must include:
 - `goldFindingsReviewed`: `true`;
 - `criticalFindingsReviewed`: `true`;
 - `guidelineExpectationsReviewed`: `true`;
+- `polarityReviewed`: `true`;
+- `lateralityReviewed`: `true`;
+- `measurementsReviewed`: `true`;
+- `criticalResultPolicyReviewed`: `true`;
 - `reviewerLabels`: at least two signed reviewer labels.
 
 Each reviewer label must include:
@@ -50,6 +54,7 @@ The subset is valid only when:
 - every case ID has labels from at least two known adjudicators;
 - all review/signature timestamps are present;
 - no reviewer note contains obvious patient identifiers;
+- every case has item-level review of finding polarity, laterality, measurements, and whether each `criticalFindings` item is truly an urgent critical result rather than a non-urgent guideline or biopsy recommendation;
 - clinical acceptability agreement is at least 80%;
 - per-dimension exact agreement is at least 70%.
 

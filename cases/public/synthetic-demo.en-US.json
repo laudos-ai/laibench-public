@@ -7,16 +7,15 @@
     "exam": "Chest radiograph, synthetic demonstration, without contrast.",
     "findings": "Synthetic text for harness testing. Lung fields without focal opacities. Cardiomediastinal silhouette within expected limits for the example. No pleural effusion or pneumothorax.",
     "locale": "en-US",
-    "tags": ["synthetic", "demo", "XR", "chest"],
-    "goldFindings": [
-      { "finding": "no focal opacities", "severity": "minor", "negated": true },
-      { "finding": "no pleural effusion", "severity": "minor", "negated": true },
-      { "finding": "no pneumothorax", "severity": "major", "negated": true }
+    "tags": [
+      "synthetic",
+      "demo",
+      "XR",
+      "chest"
     ],
-    "referenceReport": "<center><b>CHEST RADIOGRAPH - SYNTHETIC EXAMPLE</b></center><br><b>Findings</b><br>No focal opacities, pleural effusion, or pneumothorax in the synthetic example.<br><b>Impression</b><br>Synthetic example with no acute findings.",
-    "criticalFindings": [],
-    "guidelineExpectations": [],
-    "patientContext": { "indication": "Synthetic demonstration with no real data." },
+    "patientContext": {
+      "indication": "Synthetic demonstration with no real data."
+    },
     "difficulty": "easy"
   },
   {
@@ -27,16 +26,16 @@
     "exam": "Computed tomography of the head, synthetic demonstration, without contrast.",
     "findings": "Synthetic text for critical-finding preservation testing. Small right frontoparietal hyperattenuating extra-axial collection, with mild local mass effect. No midline shift in the example. Basal cisterns preserved.",
     "locale": "en-US",
-    "tags": ["synthetic", "demo", "CT", "head", "critical-finding"],
-    "goldFindings": [
-      { "finding": "hyperattenuating extra-axial collection", "location": "frontoparietal", "laterality": "right", "severity": "critical" },
-      { "finding": "mild local mass effect", "severity": "major" },
-      { "finding": "no midline shift", "severity": "major", "negated": true }
+    "tags": [
+      "synthetic",
+      "demo",
+      "CT",
+      "head",
+      "critical-finding"
     ],
-    "referenceReport": "<center><b>HEAD CT - SYNTHETIC EXAMPLE</b></center><br><b>Findings</b><br>Small right frontoparietal hyperattenuating extra-axial collection, with mild local mass effect. No midline shift.<br><b>Impression</b><br>Synthetic example of a critical extra-axial finding that must be preserved in the summary.",
-    "criticalFindings": ["right frontoparietal hyperattenuating extra-axial collection"],
-    "guidelineExpectations": [],
-    "patientContext": { "indication": "Synthetic demonstration of critical-finding preservation." },
+    "patientContext": {
+      "indication": "Synthetic demonstration of critical-finding preservation."
+    },
     "difficulty": "medium"
   },
   {
@@ -47,16 +46,15 @@
     "exam": "Upper abdominal ultrasound, synthetic demonstration.",
     "findings": "Synthetic text for omission and hallucination testing. Gallbladder with a small mobile stone. No wall thickening, no pericholecystic fluid, and no biliary duct dilatation. Liver with preserved echotexture in the example.",
     "locale": "en-US",
-    "tags": ["synthetic", "demo", "US", "abdomen"],
-    "goldFindings": [
-      { "finding": "mobile gallbladder stone", "severity": "major" },
-      { "finding": "no wall thickening", "severity": "minor", "negated": true },
-      { "finding": "no biliary duct dilatation", "severity": "major", "negated": true }
+    "tags": [
+      "synthetic",
+      "demo",
+      "US",
+      "abdomen"
     ],
-    "referenceReport": "<center><b>ABDOMINAL ULTRASOUND - SYNTHETIC EXAMPLE</b></center><br><b>Findings</b><br>Small mobile gallbladder stone. No synthetic signs of acute cholecystitis or biliary dilatation.<br><b>Impression</b><br>Cholelithiasis in the synthetic example, with no described signs of complication.",
-    "criticalFindings": [],
-    "guidelineExpectations": [],
-    "patientContext": { "indication": "Synthetic demonstration with no real data." },
+    "patientContext": {
+      "indication": "Synthetic demonstration with no real data."
+    },
     "difficulty": "easy"
   },
   {
@@ -67,15 +65,188 @@
     "exam": "Magnetic resonance imaging of the lumbar spine, synthetic demonstration, without contrast.",
     "findings": "Synthetic text for structure and laterality testing. Central posterior disc protrusion at L4-L5, abutting the thecal sac, without definite nerve root compression. Spinal canal of preserved caliber at the remaining levels in the example.",
     "locale": "en-US",
-    "tags": ["synthetic", "demo", "MRI", "spine"],
-    "goldFindings": [
-      { "finding": "central posterior disc protrusion at L4-L5", "location": "L4-L5", "severity": "major" },
-      { "finding": "no definite nerve root compression", "severity": "major", "negated": true }
+    "tags": [
+      "synthetic",
+      "demo",
+      "MRI",
+      "spine"
     ],
-    "referenceReport": "<center><b>LUMBAR SPINE MRI - SYNTHETIC EXAMPLE</b></center><br><b>Findings</b><br>Central posterior disc protrusion at L4-L5, abutting the thecal sac, without definite nerve root compression.<br><b>Impression</b><br>Central L4-L5 disc protrusion in the synthetic example, with no described nerve root compression.",
-    "criticalFindings": [],
-    "guidelineExpectations": [],
-    "patientContext": { "indication": "Synthetic demonstration with no real data." },
+    "patientContext": {
+      "indication": "Synthetic demonstration with no real data."
+    },
     "difficulty": "medium"
+  },
+  {
+    "id": "SYN-PRO-EN-005",
+    "label": "Synthetic head/neck CT angiography acute M1 occlusion demo",
+    "synthetic": true,
+    "schemaVersion": "1.0.0-public-synthetic",
+    "exam": "CT angiography of the head and neck (cervical and intracranial vessels), synthetic demonstration, with contrast.",
+    "findings": "Synthetic text for critical-finding preservation and laterality-trap testing. CT angiography demonstrates occlusion of the M1 segment of the left middle cerebral artery. Early ischemic changes in the left MCA territory, with loss of corticosubcortical differentiation in the left insula and hypoattenuation of the lentiform nucleus on the left. No intracranial hemorrhage in the example. Incidental right thyroid nodule, with no other changes.",
+    "locale": "en-US",
+    "tags": [
+      "synthetic",
+      "demo",
+      "CT",
+      "head",
+      "neck",
+      "critical-finding",
+      "laterality",
+      "stroke"
+    ],
+    "patientContext": {
+      "indication": "Synthetic demonstration of acute ischemic stroke (code-stroke protocol), with no real data."
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "SYN-PRO-EN-006",
+    "label": "Synthetic diagnostic mammography spiculated mass BI-RADS demo",
+    "synthetic": true,
+    "schemaVersion": "1.0.0-public-synthetic",
+    "exam": "Diagnostic mammography, synthetic demonstration.",
+    "findings": "Synthetic text for negation-trap and guideline classification testing. Spiculated mass measuring 12 mm in the upper outer quadrant of the left breast, associated with adjacent architectural distortion. No skin thickening. No axillary lymphadenopathy. Right breast without suspicious findings in the example. Synthetic findings classified as category BI-RADS 4.",
+    "locale": "en-US",
+    "tags": [
+      "synthetic",
+      "demo",
+      "MG",
+      "breast",
+      "birads",
+      "negation-trap"
+    ],
+    "patientContext": {
+      "indication": "Synthetic demonstration of a breast mass with negation trap, no real data."
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "SYN-PRO-EN-007",
+    "label": "Synthetic chest CTA pulmonary embolism demo",
+    "synthetic": true,
+    "schemaVersion": "1.0.0-public-synthetic",
+    "exam": "Computed tomography angiography of the chest for pulmonary embolism, synthetic demonstration, with contrast.",
+    "findings": "Synthetic text for critical-finding and safe-negation testing. Filling defect in a segmental pulmonary artery branch of the right lower lobe, consistent with segmental pulmonary embolism. No signs of right heart strain, with RV/LV ratio below 1 and interventricular septum of preserved morphology in the example. Small pleural effusion on the right. Remaining pulmonary arterial branches patent.",
+    "locale": "en-US",
+    "tags": [
+      "synthetic",
+      "demo",
+      "CT",
+      "chest",
+      "CTA",
+      "pulmonary-embolism",
+      "critical-finding",
+      "negation-trap"
+    ],
+    "patientContext": {
+      "indication": "Synthetic demonstration of suspected pulmonary embolism, with no real data."
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "SYN-PRO-EN-008",
+    "label": "Synthetic abdominal trauma CT splenic laceration demo",
+    "synthetic": true,
+    "schemaVersion": "1.0.0-public-synthetic",
+    "exam": "Contrast-enhanced computed tomography of the abdomen, synthetic demonstration, trauma protocol.",
+    "findings": "Synthetic text for measurement fidelity and critical-finding preservation testing in trauma. Grade III splenic laceration, with a parenchymal depth of 4.2 cm, in the mid third of the spleen. Moderate-volume hemoperitoneum in the perihepatic and perisplenic spaces, with blood layering in the pelvis measuring up to 2.4 cm. No active contrast extravasation on the arterial and portal phases in the example. Liver, gallbladder, bile ducts, pancreas, adrenal glands, and kidneys without traumatic injuries. Bowel loops and the urinary bladder without abnormalities. The abdominal aorta has a normal caliber. No enlarged lymph nodes.",
+    "locale": "en-US",
+    "tags": [
+      "synthetic",
+      "demo",
+      "CT",
+      "abdomen",
+      "trauma",
+      "critical-finding",
+      "measurement-trap"
+    ],
+    "patientContext": {
+      "indication": "Synthetic demonstration of blunt abdominal trauma, with no real data."
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "SYN-PRO-EN-009",
+    "label": "Synthetic chest CT solitary 7 mm nodule Fleischner demo",
+    "synthetic": true,
+    "schemaVersion": "1.0.0-public-synthetic",
+    "exam": "Computed tomography of the chest, synthetic demonstration, without contrast.",
+    "findings": "Synthetic text for hallucination and guideline-management testing. High-risk patient context. Single solid pulmonary nodule measuring 7 mm in the right upper lobe, with regular margins. No other pulmonary nodules. No pleural effusion. Remaining lung parenchyma unremarkable in the example.",
+    "locale": "en-US",
+    "tags": [
+      "synthetic",
+      "demo",
+      "CT",
+      "chest",
+      "nodule",
+      "fleischner",
+      "hallucination-bait"
+    ],
+    "patientContext": {
+      "indication": "Synthetic high-risk demonstration of an incidental pulmonary nodule, no real data."
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "SYN-PRO-EN-010",
+    "label": "Synthetic knee MRI ACL and bucket-handle meniscus demo",
+    "synthetic": true,
+    "schemaVersion": "1.0.0-public-synthetic",
+    "exam": "Magnetic resonance imaging of the left knee, synthetic demonstration, without contrast.",
+    "findings": "Synthetic text for laterality and location testing. Left knee. Complete tear of the anterior cruciate ligament, with fibers not visualized in their expected location. Bucket-handle tear of the medial meniscus, with a fragment displaced into the intercondylar notch, producing a double PCL sign. Lateral meniscus intact in the example. Posterior cruciate ligament preserved. No focal chondral defect. Small joint effusion.",
+    "locale": "en-US",
+    "tags": [
+      "synthetic",
+      "demo",
+      "MRI",
+      "knee",
+      "laterality-trap"
+    ],
+    "patientContext": {
+      "indication": "Synthetic demonstration of a twisting injury of the left knee, with no real data."
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "SYN-PRO-EN-011",
+    "label": "Synthetic thyroid ultrasound TI-RADS 5 nodule demo",
+    "synthetic": true,
+    "schemaVersion": "1.0.0-public-synthetic",
+    "exam": "Thyroid ultrasound, synthetic demonstration.",
+    "findings": "Synthetic text for guideline classification and measurement preservation testing. Solid hypoechoic nodule in the right thyroid lobe, measuring 1.8 cm in the largest axis, with irregular margins and microcalcifications (punctate echogenic foci). No extrathyroidal extension in the example. Left lobe and isthmus without nodules. No suspicious cervical lymphadenopathy.",
+    "locale": "en-US",
+    "tags": [
+      "synthetic",
+      "demo",
+      "US",
+      "thyroid",
+      "tirads",
+      "measurement-trap"
+    ],
+    "patientContext": {
+      "indication": "Synthetic demonstration of TI-RADS classification, with no real data."
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "SYN-PRO-EN-012",
+    "label": "Synthetic head CT subtle subdural omission-trap demo",
+    "synthetic": true,
+    "schemaVersion": "1.0.0-public-synthetic",
+    "exam": "Non-contrast computed tomography of the head, synthetic demonstration.",
+    "findings": "Synthetic text for subtle-finding omission testing. Cortical sulci and basal cisterns preserved. Small hypoattenuating lacunar lesion in the left corona radiata, chronic in appearance, consistent with an old lacunar infarct. Thin 5 mm hyperattenuating subdural collection along the falx cerebri, along its posterior aspect, without extension over the convexity. No midline shift. Ventricular system of normal morphology and size in the example. No skull fracture on bone windows.",
+    "locale": "en-US",
+    "tags": [
+      "synthetic",
+      "demo",
+      "CT",
+      "head",
+      "critical-finding",
+      "omission-trap"
+    ],
+    "patientContext": {
+      "indication": "Synthetic demonstration: ground-level fall, evaluation for mild head trauma."
+    },
+    "difficulty": "hard"
   }
 ]

@@ -60,6 +60,8 @@ The readiness score is an engineering score, not a clinical validity score.
 
 When optional judging is enabled, the run must declare its scoring mode. `judge-primary` uses the pinned LLM judge for the primary 0-100 report-quality score while deterministic critical checks remain gates. `conservative-min` remains available for regression calibration, where the combined dimension score is the lower of deterministic and judge scores.
 
+**No prose/aesthetic axis.** LAIBench deliberately has no standalone style, readability, fluency, or "communication quality" dimension, and form never rescues substance: a missed or fabricated critical finding is a hard veto regardless of how well-written a report is. The only discourse-adjacent signals (e.g. hedging ratio and verbosity) are `minor`, non-gating heuristics that apply **only on the no-gold structural-fallback path** when no reference report is available; they cannot lift a clinically weak report into PASS and are not exposed as a scored prose axis. This is a deliberate departure from style-weighted benchmarks where eloquence can mask clinical error.
+
 ## Daily Product Run
 
 The private daily run targets the complete product reporting flow and writes frozen artifacts before any score is used in public or admin surfaces. Direct model baselines can be run separately, but they are not product-agent scores.

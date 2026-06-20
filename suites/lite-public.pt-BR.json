@@ -1,17 +1,21 @@
 {
-  "benchmarkName": "laibench",
-  "benchmarkVersion": "2.0.0",
+  "benchmarkName": "laibench-pro",
+  "benchmarkVersion": "3.10.0",
   "id": "lite-public.pt-BR",
-  "label": "Synthetic Demo Public (pt-BR)",
-  "description": "Tiny synthetic-only public demo for local smoke testing. It is not a clinical corpus and is not a public benchmark split.",
+  "label": "Controlled Pro Aggregate (pt-BR)",
+  "description": "Controlled pt-BR report-generation benchmark with 120 gated text fixtures. The public repository exposes methodology and aggregate leaderboard results only; case JSON, answer keys and frozen predictions are not distributed.",
   "locale": "pt-BR",
-  "visibility": "public",
-  "evaluationMode": "local",
-  "casesPath": "../cases/public/synthetic-demo.pt-BR.json",
-  "caseCount": 4,
-  "tags": ["synthetic", "demo", "pt-BR"],
+  "visibility": "verified",
+  "evaluationMode": "cloud-private",
+  "casesPath": null,
+  "caseCount": 120,
+  "tags": [
+    "controlled",
+    "aggregate-only",
+    "pt-BR"
+  ],
   "recommendedTrack": "mini-agent",
   "canonicalScaffold": "mini-laibench-agent-v1",
   "canonicalJudgeModel": null,
-  "notes": "All public cases in this repository are synthetic demos. The clinical corpus and hidden test set are private/gated and are not open-download assets."
+  "notes": "The current 120-case suite includes modality/anatomy/complexity quotas, 54 critical-safety cases and 23 negative-control cases. These fixtures are gated and must not be published as an open benchmark. Public comparative claims require controlled-suite verification, contamination controls and radiologist adjudication."
 }

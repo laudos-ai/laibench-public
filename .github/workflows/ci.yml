@@ -23,6 +23,10 @@ jobs:
         run: npm run typecheck
       - name: Test (unit + integration)
         run: npm test
+      - name: Private release guard
+        run: npm run guard:private
+      - name: Public release guard
+        run: npm run guard:public
       - name: Smoke — mock-agent suite run
         run: npm run smoke:mock
       - name: Smoke — leaderboard
@@ -32,9 +36,9 @@ jobs:
       - name: Smoke — contamination scan
         run: npm run bench -- contamination --run runs/mock-agent.json
       - name: Smoke — provenance hash chain
-        run: npm run bench -- provenance --suite suites/lite-public.pt-BR.json --out runs/provenance.json
+        run: npm run bench -- provenance --suite suites/lite-public.en-US.json --out runs/provenance.json
       - name: Smoke — perturbation pipeline
-        run: npm run bench -- perturb-run --suite suites/lite-public.pt-BR.json --limit 3 --out runs/perturb-report.json
+        run: npm run bench -- perturb-run --suite suites/lite-public.en-US.json --limit 3 --out runs/perturb-report.json
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4

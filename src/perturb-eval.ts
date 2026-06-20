@@ -24,12 +24,18 @@
 
 import type { BenchCase, CaseRunResult, SuiteRunResult } from "./types.js";
 import type { PerturbationKind, PerturbationSpec, PerturbedSample } from "./perturb.js";
-import { PERTURBATIONS, applyPerturbation, summarizeRobustness } from "./perturb.js";
+import { PERTURBATIONS, applyPerturbation, isPerturbationApplicable, summarizeRobustness } from "./perturb.js";
 
 const SEVERITY_FLOOR: Record<"critical" | "major" | "minor", number> = {
   critical: 60,
   major: 80,
   minor: 90,
+};
+
+const SEVERITY_RANK: Record<"critical" | "major" | "minor", number> = {
+  minor: 1,
+  major: 2,
+  critical: 3,
 };
 
 export type PerturbationLink = {
@@ -43,8 +49,10 @@ export function isPerturbationCaught(spec: PerturbationSpec, result: CaseRunResu
 
   for (const dim of spec.expectedDims) {
     // (a) deterministic check fail at expected severity
-    const failedDet = result.checks.some(
-      (c) => c.dim === dim && !c.passed && c.severity === spec.expectedSeverity,
+    const failedDet = result.checks.some((c) =>
+      c.dim === dim
+      && !c.passed
+      && SEVERITY_RANK[c.severity] >= SEVERITY_RANK[spec.expectedSeverity]
     );
     if (failedDet) return true;
 
@@ -81,7 +89,7 @@ export function summarizePerturbationRun(
  */
 export function buildPerturbationDataset(
   cases: BenchCase[],
-  options: { kinds?: PerturbationKind[] } = {},
+  options: { kinds?: PerturbationKind[]; applicableOnly?: boolean } = {},
 ): { samples: PerturbedSample[]; links: PerturbationLink[] } {
   const kinds = (options.kinds ?? (Object.keys(PERTURBATIONS) as PerturbationKind[])) as PerturbationKind[];
   const samples: PerturbedSample[] = [];
@@ -90,6 +98,7 @@ export function buildPerturbationDataset(
     const source = c.referenceReport ?? c.findings;
     for (const kind of kinds) {
       const text = applyPerturbation(kind, c, source);
+      if (options.applicableOnly && !isPerturbationApplicable(kind, c, source, text)) continue;
       samples.push({ caseId: c.id, kind, text, spec: PERTURBATIONS[kind] });
       links.push({ caseId: c.id, kind, predictionId: c.id });
     }

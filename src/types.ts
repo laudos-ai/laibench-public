@@ -3,7 +3,7 @@ export type Severity = "critical" | "major" | "minor";
 export type Verdict = "PASS" | "PARTIAL" | "FAIL" | "UNSCORED";
 export type LocaleKey = "pt-BR" | "en-US";
 export type Modality = "CT" | "MRI" | "US" | "XR" | "MG" | "MX";
-export type Region = "head" | "chest" | "abdomen" | "spine" | "urinary" | "pelvis" | "unknown";
+export type Region = "head" | "chest" | "abdomen" | "spine" | "urinary" | "pelvis" | "breast" | "thyroid" | "neck" | "unknown";
 export type Confidence = "high" | "medium" | "low";
 export type TrackId = "mini-agent" | "model" | "agent";
 export type EntityType = "company" | "team" | "agent" | "model" | "research";
@@ -135,7 +135,7 @@ export type BenchCase = {
 };
 
 export type SuiteManifest = {
-  benchmarkName: "laibench";
+  benchmarkName: "laibench" | "laibench-pro";
   benchmarkVersion: string;
   id: string;
   label: string;
@@ -258,6 +258,10 @@ export type CaseRunResult = {
   judge: JudgeResult | null;
   combined: Record<Dim, number | null>;
   combinedOverall: number;
+  /** LAB-style task completion: every scored criterion/check for the case passed. */
+  allPass?: boolean;
+  criteriaPassed?: number;
+  criteriaTotal?: number;
   verdict: Exclude<Verdict, "UNSCORED">;
   confidence: Confidence;
   phaseStatus: "complete" | "degraded";
@@ -270,6 +274,13 @@ export type CaseRunResult = {
 export type SuiteSummary = {
   /** Compatibility field: strict PASS gate rate. Public surfaces should not label this as image/model accuracy. */
   accuracyRate: number;
+  /** LAB-style headline metric: percent of cases where every criterion/check passed. */
+  allPassRate?: number;
+  allPassCount?: number;
+  /** Diagnostic metric: pooled pass rate across all binary criteria/checks. */
+  criterionPassRate?: number;
+  criteriaPassed?: number;
+  criteriaTotal?: number;
   averageOverall: number;
   passRate: number;
   strictPassRate: number;
@@ -280,7 +291,7 @@ export type SuiteSummary = {
 };
 
 export type RunManifest = {
-  benchmarkName: "laibench";
+  benchmarkName: "laibench" | "laibench-pro";
   benchmarkVersion: string;
   createdAt: string;
   runName: string;
@@ -318,6 +329,8 @@ export type SuiteRunResult = {
 export type DifficultyBreakdown = {
   difficulty: CaseDifficulty;
   caseCount: number;
+  allPassRate?: number;
+  criterionPassRate?: number;
   averageOverall: number;
   accuracyRate: number;
   passRate: number;
@@ -339,6 +352,11 @@ export type LeaderboardEntry = {
   scaffoldId: string | null;
   judgeProvider: string | null;
   judgeModel: string | null;
+  allPassRate?: number;
+  allPassCount?: number;
+  criterionPassRate?: number;
+  criteriaPassed?: number;
+  criteriaTotal?: number;
   averageOverall: number;
   accuracyRate: number;
   passRate: number;

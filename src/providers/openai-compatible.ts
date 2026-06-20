@@ -1,4 +1,6 @@
+import { ProviderError, UsageError } from "../errors.js";
 import { estimateCost, type Pricing } from "../normalize.js";
+import { fetchWithRetry, isRetriableStatus } from "./http.js";
 import type { GenerationInput, GenerationOutput, JudgeAdapter, JudgeOutput, TraceEvent } from "../types.js";
 
 type ExtraPayload = Record<string, unknown>;
@@ -32,7 +34,7 @@ type OpenAICompatibleResponse = {
 
 function resolveChatCompletionsUrl(baseUrl: string): string {
   const trimmed = baseUrl.trim();
-  if (!trimmed) throw new Error("Missing baseUrl for openai-compatible provider.");
+  if (!trimmed) throw new UsageError("Missing baseUrl for openai-compatible provider.");
   if (/\/chat\/completions(?:\?|$)/i.test(trimmed)) return trimmed;
   return `${trimmed.replace(/\/+$/, "")}/chat/completions`;
 }
@@ -82,30 +84,6 @@ async function readErrorBody(response: Response): Promise<string> {
   return text;
 }
 
-const RETRY_DELAYS = [1000, 3000, 8000];
-const RETRIABLE_CODES = new Set([429, 500, 502, 503, 504]);
-
-async function fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
-  let lastError: Error | null = null;
-  for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
-    try {
-      const response = await fetch(url, init);
-      if (response.ok || !RETRIABLE_CODES.has(response.status) || attempt === RETRY_DELAYS.length) {
-        return response;
-      }
-      const delay = RETRY_DELAYS[attempt] ?? 8000;
-      const retryAfter = response.headers.get("retry-after");
-      const waitMs = retryAfter ? Math.min(Number(retryAfter) * 1000, 30_000) : delay;
-      await new Promise((resolve) => setTimeout(resolve, waitMs));
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      if (attempt === RETRY_DELAYS.length) throw lastError;
-      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS[attempt] ?? 8000));
-    }
-  }
-  throw lastError ?? new Error("Unexpected retry exhaustion");
-}
-
 export async function callOpenAICompatible(args: {
   config: OpenAICompatibleConfig;
   systemPrompt?: string;
@@ -126,11 +104,15 @@ export async function callOpenAICompatible(args: {
         { role: "user", content: args.prompt },
       ],
     }),
-  });
+  }, { provider: "openai-compatible" });
 
   if (!response.ok) {
     const details = await readErrorBody(response);
-    throw new Error(`OpenAI-compatible ${response.status}: ${details}`);
+    throw new ProviderError(`OpenAI-compatible ${response.status}: ${details}`, {
+      provider: "openai-compatible",
+      status: response.status,
+      retriable: isRetriableStatus(response.status),
+    });
   }
 
   const data = (await response.json()) as OpenAICompatibleResponse;

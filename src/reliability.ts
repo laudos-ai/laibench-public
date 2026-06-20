@@ -22,17 +22,27 @@ function round4(value: number): number {
 
 /**
  * A run is "critical-safe" for a case when it preserved every critical FINDING:
- * no deterministic critical-finding failure (CRIT-dimension critFails) and no
- * judge-flagged critical failure. This is intentionally NARROWER than the
- * overall gate — a case can FAIL its verdict on low RAG/structure while still
- * preserving all critical findings, and that distinction is the whole point of
- * a critical-finding safety metric. It is the per-(case, run) unit pass^k
- * aggregates.
+ * no deterministic critical-finding failure (CRIT-dimension critFails OR any
+ * failed severity:'critical' check) and no judge-flagged critical failure. This
+ * is intentionally NARROWER than the overall gate — a case can FAIL its verdict
+ * on low RAG/structure while still preserving all critical findings, and that
+ * distinction is the whole point of a critical-finding safety metric. It is the
+ * per-(case, run) unit pass^k aggregates.
+ *
+ * FIX (gap-4/gap-5): a deterministic failed critical check is the SAME signal
+ * scoring.ts vetoes on (hasDetCritical: checks.some(c => !c.passed &&
+ * c.severity==='critical')). A critical check can fail in a dimension other than
+ * CRIT (so detDims.CRIT.critFails stays 0), and the old headline silently passed
+ * it. Aligning here closes that escape — the critical-safe headline can never
+ * rate a case safe while a critical finding actually failed.
  */
 export function isCriticalSafe(result: CaseRunResult): boolean {
   const detCritFails = result.detDims?.CRIT?.critFails ?? 0;
   const judgeCritFails = result.judge?.critical_failures?.length ?? 0;
-  return detCritFails === 0 && judgeCritFails === 0;
+  const failedCriticalCheck = (result.checks ?? []).some(
+    (check) => !check.passed && check.severity === "critical",
+  );
+  return detCritFails === 0 && judgeCritFails === 0 && !failedCriticalCheck;
 }
 
 export type CaseReliability = {

@@ -1,0 +1,38 @@
+window.LAIBENCH_DATA = {
+ "generatedAt": null,
+ "locales": {
+  "pt-BR": {
+   "suite": "lite-public.pt-BR",
+   "suiteHash": "b7f412e25a71352072d525c9bee9d7630818eb09996d172e9c2664224d7b2217",
+   "cases": 120,
+   "track": "agent",
+   "scoring": "conservative-min",
+   "entries": [
+    {
+     "system": "Laudos.AI",
+     "kind": "product-agent",
+     "group": "production",
+     "score": 0.9,
+     "allPass": 0.492,
+     "criterionPass": 0.976,
+     "clinicalScore": 0.9,
+     "strictPass": 0.733,
+     "dims": {
+      "CRIT": 0.977,
+      "QUAL": 0.881,
+      "TERM": 1,
+      "GUIDE": 0.9670000000000001,
+      "RAG": 0.983
+     },
+     "latencyMs": 16991.1,
+     "track": "agent",
+     "suiteHash": "b7f412e25a71352072d525c9bee9d7630818eb09996d172e9c2664224d7b2217"
+    }
+   ],
+   "reliability": null,
+   "reliabilityRuns": 0,
+   "disclosure": "Disclosure: the ranked production agent (Laudos.AI) is a first-party system built by the same team that maintains LAIBench Pro. Free and open model rows are diagnostic comparisons only and are never ranked against the first-party production agent. Calibration fixtures are harness sanity checks, not product claims. The public demonstration cases are synthetic and input-only; they were not clinically reviewed and must not be used to claim clinical validation. The controlled pt-BR suite is synthetic and was authored and reviewed by senior radiologists in Sao Paulo, SP, Brazil as an internal data-quality process; this is not an independent third-party validation, and the suite is aggregate-only and is not an open-download benchmark. Independent external adjudication (vendor-versus-external inter-rater kappa) is tracked as future work and is not claimed here.",
+   "note": "Controlled benchmark preview. Production agents are ranked separately from free/open model comparisons and calibration fixtures. The public board excludes case JSON, answer keys, frozen predictions and corpus provenance. The pt-BR controlled suite is gated and must not be treated as an open-download benchmark. Score is weighted clinical fidelity score. Strict all-pass means zero-failure cases: every criterion in a case passes simultaneously, and any critical failure forces FAIL instead of being averaged into PASS. Runs are reproducible only inside the controlled adjudication environment. <a href=\"#methods\">Methods</a>."
+  }
+ }
+};

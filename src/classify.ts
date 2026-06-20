@@ -4,8 +4,8 @@ import { getLocale } from "./locales/index.js";
 
 function deriveModality(normalizedExam: string): Modality {
   if (/\b(rm|mri|ressonancia|magnetic resonance)\b/.test(normalizedExam)) return "MRI";
-  if (/\b(us|usg|ultra|ecografia|ultrasound)\b/.test(normalizedExam)) return "US";
-  if (/\b(rx|x-ray|radiograph)\b/.test(normalizedExam)) return "XR";
+  if (/\b(us|usg|ultra|ultrassom|ultrassonografia|ultrassonografico|ecografia|ecodoppler|doppler|ultrasound|ultrasonography|sonography|sonogram)\b/.test(normalizedExam)) return "US";
+  if (/\b(rx|x-ray|xray|radiograph|radiographs|radiography|radiografia|radiografias)\b|\braios?[\s-]?x\b/.test(normalizedExam)) return "XR";
   if (/\b(mamografia digital|digital mammography|mx)\b/.test(normalizedExam)) return "MX";
   if (/\b(mamografia|mammography|mammogram|mg)\b/.test(normalizedExam)) return "MG";
   return "CT";
@@ -13,7 +13,7 @@ function deriveModality(normalizedExam: string): Modality {
 
 function deriveContrast(normalizedExam: string, normalizedFindings: string): boolean {
   const examIndicatesContrast = /\b(cc|c\/c|com contraste|contrastado|with contrast|contrast-enhanced|contrast enhanced)\b/.test(normalizedExam);
-  const findingsIndicateContrast = /\b(?:meio de contraste|contraste administrado|pos contraste|gadol[ií]nio|gadolinio|realce|impregnacao|wash out|fase arterial|fase portal|fase venosa|fase tardia)\b/.test(normalizedFindings);
+  const findingsIndicateContrast = /\b(?:meio de contraste|contraste administrado|pos contraste|gadol[ií]nio|gadolinio|realce|impregnacao|contrastacao|wash out|fase arterial|fase portal|fase venosa|fase tardia)\b/.test(normalizedFindings);
   return examIndicatesContrast || findingsIndicateContrast;
 }
 

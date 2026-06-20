@@ -117,12 +117,12 @@ describe("summarizeReferenceProbe", () => {
       { caseId: "1", overall: 95 },
       { caseId: "2", overall: 90 },
       { caseId: "3", overall: 85 },
-      { caseId: "4", overall: 75 },
+      { caseId: "4", overall: 83 },
     ];
     const r = summarizeReferenceProbe(rows);
     assert.equal(r.totalCases, 4);
     assert.equal(r.passRate, 75);
-    assert.equal(r.failures.length, 1);
+    assert.deepEqual(r.failures.map((f) => f.caseId), ["4"]);
     assert.ok(r.median >= 85 && r.median <= 90);
   });
 
@@ -130,5 +130,38 @@ describe("summarizeReferenceProbe", () => {
     const r = summarizeReferenceProbe([]);
     assert.equal(r.totalCases, 0);
     assert.equal(r.passRate, 0);
+  });
+});
+
+describe("discriminate thin strata (per-cell n + CI)", () => {
+  it("surfaces a thin stratum (n < 5) with its n and CI instead of dropping it, and the CI widens as n shrinks", () => {
+    // Same per-case delta pattern in both strata, different n. Thin US stratum
+    // (n=3) must appear in thinStrata; wide CT stratum (n=20) stays ranked.
+    const pattern = [10, 20, 30];
+    const us = Array.from({ length: 3 }, (_, i) => ({ id: `us${i}`, base: 70, modality: "US" as const }));
+    const ct = Array.from({ length: 20 }, (_, i) => ({ id: `ct${i}`, base: 70, modality: "CT" as const }));
+    const all = [...us, ...ct];
+    const a = fakeRun("A", all.map((c, i) => ({ id: c.id, overall: c.base + pattern[i % 3], modality: c.modality })));
+    const b = fakeRun("B", all.map((c) => ({ id: c.id, overall: c.base, modality: c.modality })));
+
+    const r = discriminate(a, b);
+
+    const thinUs = r.thinStrata.find((t) => t.dimension === "modality" && t.key === "US");
+    assert.ok(thinUs, "thin US stratum should be surfaced");
+    assert.equal(thinUs!.n, 3);
+    assert.equal(thinUs!.ci.length, 2);
+    assert.ok(thinUs!.ci[1] >= thinUs!.ci[0], "CI is ordered [lower, upper]");
+
+    // US must NOT be ranked among the n>=5 strata.
+    assert.equal(r.perModality.some((m) => m.modality === "US"), false);
+    const ct20 = r.perModality.find((m) => m.modality === "CT");
+    assert.ok(ct20, "CT stratum (n=20) should be ranked");
+
+    const width = (ci: [number, number]) => ci[1] - ci[0];
+    assert.ok(
+      width(thinUs!.ci) > width(ct20!.ci),
+      `thin n=3 CI width ${width(thinUs!.ci)} should exceed n=20 CI width ${width(ct20!.ci)}`,
+    );
+    assert.ok(r.notes.some((note) => /thin stratum/.test(note)), "a thin-stratum note should be emitted");
   });
 });

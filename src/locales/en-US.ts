@@ -5,7 +5,7 @@ export const enUS: LocaleSpec = {
   key: "en-US",
   name: "English (US)",
   sections: {
-    analysis: /Findings/i,
+    analysis: /Findings|Analysis/i,
     conclusion: /Impression|Conclusion/i,
     technique: /Technique/i,
   },
@@ -16,7 +16,6 @@ export const enUS: LocaleSpec = {
   },
   titleAbbrev: [/^CT\s/i, /^MRI?\s/i, /^US\s/i, /^XR\s/i],
   forbiddenTerms: [
-    [/\blymphadenopathy\b/gi, "lymphadenopathy→lymphadenomegaly"],
     [/\bno evidence of\b/gi, "no evidence of→absent/no"],
     [/\bfluid\b/gi, "fluid→collection/effusion when specific"],
     [/\blesion\b/gi, "lesion→use more specific term when possible"],
@@ -35,12 +34,15 @@ export const enUS: LocaleSpec = {
     CT_fix: "signal intensity→attenuation",
   },
   titleModalityTokens: {
-    CT: ["computed", "tomography"],
-    MRI: ["magnetic", "resonance"],
-    US: ["ultrasound"],
-    XR: ["radiograph", "x-ray"],
-    MG: ["mammography", "mammogram"],
-    MX: ["mammography", "digital mammography"],
+    // Each entry is a slot of pipe-separated variants; isTitleMatch requires every
+    // slot to be satisfied by at least one variant. Standard abbreviations
+    // (CT, MRI, MR, CTA) are accepted alongside full forms.
+    CT: ["computed tomography|ct angiography|cta|ct"],
+    MRI: ["magnetic resonance|mri|mr "],
+    US: ["ultrasound|sonogra|doppler"],
+    XR: ["radiograph|x-ray|xray"],
+    MG: ["mammography|mammogram"],
+    MX: ["mammography|mammogram"],
   },
   titleRegionTokens: {
     head: ["head", "brain", "cranial"],
@@ -49,16 +51,29 @@ export const enUS: LocaleSpec = {
     spine: ["spine", "lumbar", "cervical", "thoracic"],
     urinary: ["urinary", "urogram", "urinary tract"],
     pelvis: ["pelvis", "pelvic"],
+    breast: ["breast", "mammogra"],
+    thyroid: ["thyroid"],
+    neck: ["neck", "cervical"],
     unknown: [],
   },
   coverage: {
-    "CT:head": ["ventricl", "sulci", "cistern", "parenchym", "calvari", "hemorrhag"],
-    "CT:chest": ["pulmon", "trache", "bronch", "mediast", "lymph", "pleura", "heart", "pericardi"],
-    "CT:abdomen": ["liver", "gallbladder", "bile duct", "pancreas", "spleen", "adrenal", "kidney", "bladder", "bowel", "periton", "aorta"],
+    "CT:head": ["ventricl", "sulci", "cistern", "parenchym", "calvari", "posterior fossa", "midline", "orbit", "paranasal sinus"],
+    "CT:chest": ["pulmon", "trache", "mediast", "lymph", "pleura", "heart", "pericardi", "aorta", "esophag"],
+    "CT:abdomen": ["liver", "gallbladder", "bile duct", "pancreas", "spleen", "adrenal", "kidney", "bowel", "aorta", "lymph"],
+    "CT:pelvis": ["bladder", "rectum", "lymph", "bone", "musculature", "fat"],
     "CT:urinary": ["kidney", "ureter", "bladder"],
-    "MRI:head": ["ventricl", "sulci", "parenchym", "signal", "diffusion"],
+    "CT:spine": ["alignment", "vertebra", "canal", "soft tissue"],
+    "MRI:head": ["ventricl", "sulci", "parenchym", "signal", "diffusion", "posterior fossa", "midline"],
+    "MRI:abdomen": ["liver", "bile duct", "pancreas", "spleen", "kidney", "adrenal"],
     "MRI:spine": ["alignment", "vertebra", "disc", "canal", "cord", "foramen"],
-    "US:abdomen": ["liver", "gallbladder", "bile duct", "pancreas", "spleen", "kidney", "bladder"],
+    "MRI:pelvis": ["bladder", "rectum", "mesorect", "lymph", "musculature"],
+    "US:abdomen": ["liver", "gallbladder", "bile duct", "pancreas", "spleen", "kidney", "aorta"],
+    "US:pelvis": ["bladder", "endometri", "cul-de-sac"],
+    "US:urinary": ["kidney", "bladder"],
+    "US:thyroid": ["right lobe", "left lobe", "isthmus", "nodule"],
+    "US:breast": ["nodule", "skin", "axilla"],
+    "MG:breast": ["nodule", "skin", "axilla"],
+    "XR:chest": ["cardiac", "mediast", "hila", "parenchym", "costophrenic", "soft tissue"],
   },
   negationPatterns: [
     /\bno evidence of\b/,
@@ -86,12 +101,15 @@ export const enUS: LocaleSpec = {
     { id: "normal", input: /^normal$/i, report: /no acute abnormality|unremarkable|within normal limits/i, label: "normality" }
   ],
   regionMap: (exam) => {
+    if (/thyroid/.test(exam)) return "thyroid";
+    if (/breast|mammo/.test(exam)) return "breast";
     if (/urinary|uro|urolog/.test(exam)) return "urinary";
     if (/pelv/.test(exam)) return "pelvis";
     if (/head|brain|cranial/.test(exam)) return "head";
     if (/chest|thorax|lung/.test(exam)) return "chest";
     if (/abd/.test(exam)) return "abdomen";
     if (/spine|lumbar|cervical|thoracic/.test(exam)) return "spine";
+    if (/neck/.test(exam)) return "neck";
     return "unknown";
   },
   buildSystemPrompt(meta: ExamMeta): string {

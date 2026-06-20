@@ -1,1416 +1,1313 @@
-<!doctype html>
-<html lang="pt-BR">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>laibench — A register of radiology report-generation failures</title>
-<meta name="description" content="LAIBench preview técnico público: demo sintética do harness, método público e avaliação oficial controlada para avaliação achado-para-laudo em radiologia." />
-<link rel="canonical" href="https://laibench.laudos.ai" />
-<meta property="og:url" content="https://laibench.laudos.ai" />
-<meta property="og:title" content="laibench — preview técnico público" />
-<meta property="og:description" content="Demo sintética pública do harness; a avaliação oficial permanece controlada e hospedada." />
+<title>LAIBench — Benchmark for AI-assisted radiology reporting</title>
+<meta name="description" content="LAIBench: a governance-oriented benchmark and live leaderboard for AI-assisted radiology report generation. Hard critical-finding gate, no prose axis." />
+<link rel="canonical" href="https://laibench.laudos.ai/" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="LAIBench" />
+<meta property="og:title" content="LAIBench — Benchmark for AI-assisted radiology reporting" />
+<meta property="og:description" content="Turn an exam descriptor and findings into a faithful report — scored where it matters clinically, not on prose. Hard critical-finding gate, no aesthetic axis." />
+<meta property="og:url" content="https://laibench.laudos.ai/" />
+<meta property="og:image" content="https://laibench.laudos.ai/og-banner.png" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:url" content="https://laibench.laudos.ai" />
-<meta name="twitter:title" content="laibench — preview técnico público" />
-<meta name="twitter:description" content="Demo sintética pública do harness; a avaliação oficial permanece controlada e hospedada." />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Geist+Mono:wght@400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<meta name="twitter:title" content="LAIBench — Benchmark for AI-assisted radiology reporting" />
+<meta name="twitter:description" content="A governance-oriented benchmark for AI radiology reports. Hard critical-finding gate, no prose axis." />
+<meta name="twitter:image" content="https://laibench.laudos.ai/og-banner.png" />
 <style>
-  html,body{ overflow-x:hidden; max-width:100%; }
   :root{
-    --paper: #EFEAD9;        /* cream */
-    --paper-2: #E5DFCB;
-    --bleed: #1A1612;        /* deep ink */
-    --ink: #1A1612;
-    --ink-2: #3A332A;
-    --mute: #6B5F4F;    --mute-2: #8B7E6A;
-    --rule: #C9BFA6;
-    --rule-2: #B3A98D;
-    --accent: #B83A1F;       /* one vermillion */
-    --accent-soft: #C76A48;
-    --pass: #2E5A3E;
-    --serif: "Newsreader", "Times New Roman", serif;
-    --mono: "Geist Mono", ui-monospace, monospace;
-    --sans: "Geist", system-ui, sans-serif;
-  }
-  [data-theme="dark"]{
-    --paper:#0E0C09; --paper-2:#15120D; --ink:#EFEAD9; --ink-2:#C8BFA6;
-    --mute:#8B7E6A; --mute-2:#6B5F4F; --rule:#2A2520; --rule-2:#3A332A;
-    --accent:#E66A48; --accent-soft:#C76A48; --pass:#6FAE82;
-  }
-  [data-theme="dark"] #canvas-bg{ mix-blend-mode:screen; opacity:0.12; }
-  [data-theme="dark"] .paper-sec{ background:#050403; }
-  /* paper-sec is dark in BOTH themes — lock its palette so author names stay legible */
-  .paper-sec{ --paper:#EFEAD9; --ink:#1A1612; --accent-soft:#C76A48; --accent:#E66A48; }
+    --blue:#10866f;
+    --blue-deep:#0a6f5b;
+    --lavender:#ddf5ed;
+    --link:#0b7f68;
 
-  html,body{
-    background: var(--paper);
-    color:var(--ink);
-    font-family:var(--serif);
+    /* light theme */
+    --bg-a:#d7eadf;
+    --bg-b:#eef3f8;
+    --frame:#ededf0;
+    --frame-edge:#e3e3e7;
+    --screen:#f6f6f6;
+    --ink:#1b1b1c;
+    --muted:#6f6f72;
+    --grid:rgba(0,0,0,.045);
+    --tab-bg:#f8f8f9;
+    --tab-ink:#26262a;
+    --card:#f0f0f0;
+    --card-edge:rgba(0,0,0,.06);
+    --hair:rgba(0,0,0,.10);
+    --good:#0f8a4d;
+    --bad:#c43c3c;
+  }
+  .dark{
+    --frame:#141210;
+    --frame-edge:#262320;
+    --screen:#211e1b;
+    --ink:#ededeb;
+    --muted:#8d8a86;
+    --grid:rgba(255,255,255,.035);
+    --tab-bg:#2a2724;
+    --tab-ink:#c9c6c2;
+    --card:#2a2724;
+    --card-edge:rgba(255,255,255,.07);
+    --hair:rgba(255,255,255,.10);
+    --link:#47c2a4;
+    --good:#4cc98a;
+    --bad:#e57f7f;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(120% 90% at 18% 8%, #e9f0f8 0%, rgba(233,240,248,0) 46%),
+      linear-gradient(150deg, var(--bg-a) 0%, var(--bg-b) 60%, #f4f7fb 100%);
+    display:flex;align-items:center;justify-content:center;
     -webkit-font-smoothing:antialiased;
-    font-feature-settings:"liga","kern","onum","ss01";
+    overflow:hidden;
   }
-  #canvas-bg{ position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0.07; mix-blend-mode:multiply; }
-  #canvas-bg canvas{ display:block; width:100%; height:100%; }
-  body > *:not(#canvas-bg):not(.gutter){ position:relative; z-index:1; }
-  body{ font-size:16px; line-height:1.55; }
-  a{color:inherit; text-decoration:none}
-  ::selection{background:var(--ink); color:var(--paper)}
-
-  .wrap{ max-width:1280px; margin:0 auto; padding:0 40px; }
-  .hr{ height:1px; background:var(--ink); }
-  .hr.thin{ background:var(--rule); }
-  .hr.dbl{ position:relative; height:5px; }
-  .hr.dbl::before, .hr.dbl::after{ content:""; position:absolute; left:0; right:0; height:1px; background:var(--ink); }
-  .hr.dbl::before{ top:0; } .hr.dbl::after{ bottom:0; }
-
-  /* type utilities */
-  .mono{ font-family:var(--mono); font-feature-settings:"tnum","ss01"; }
-  .sans{ font-family:var(--sans); }
-  .sc{ font-family:var(--sans); font-size:11px; letter-spacing:0.16em; text-transform:uppercase; font-weight:500; }
-  .sc.ink{ color:var(--ink) } .sc.mute{ color:var(--mute) }
-  .small{ font-size:13px; }
-  .num{ font-family:var(--mono); font-variant-numeric:tabular-nums; }
-  .it{ font-style:italic; color:var(--ink-2); }
-  .ampersand{ font-family:var(--serif); font-style:italic; color:var(--accent); font-weight:400; }
-
-  /* ─── MASTHEAD ─── */
-  .mast{ padding-top:24px; background:var(--paper); position:relative; }
-  .mast::before{ content:""; position:absolute; inset:-40px 0 0 -40px; right:-40px; background:var(--paper); z-index:-1; }
-  .strip-toggles{ display:inline-flex; gap:2px; align-items:center; }
-  .strip-toggles button{ font:inherit; font-family:var(--mono); font-size:11px; letter-spacing:0.06em; color:var(--mute); background:transparent; border:0; padding:2px 6px; cursor:pointer; text-transform:uppercase; }
-  .strip-toggles button.on{ color:var(--ink); border-bottom:1px solid var(--accent); }
-  .strip-toggles button:hover{ color:var(--ink); }
-  .strip-toggles .sep{ color:var(--rule-2); padding:0 6px; }
-  .mast .strip{ display:flex; justify-content:space-between; align-items:center; padding:6px 0; font-family:var(--mono); font-size:11px; letter-spacing:0.06em; color:var(--mute); }
-  .mast .name{ display:grid; grid-template-columns: 1fr auto 1fr; align-items:end; gap:32px; padding:18px 0 14px; }
-  .mast .name .l{ font-family:var(--mono); font-size:12px; color:var(--ink); letter-spacing:0.04em; line-height:1.55; }
-  .mast .name .l .blk{ display:block; }
-  .mast .name .l .accent{ color:var(--accent); }
-  .mast .name .r{ text-align:right; font-family:var(--mono); font-size:12px; color:var(--ink); letter-spacing:0.04em; line-height:1.55; }
-  .mast .name h1{
-    font-family:var(--serif); font-weight:400; font-style:normal;
-    font-size:148px; line-height:0.86; letter-spacing:-0.045em;
-    text-align:center; color:var(--ink); white-space:nowrap;
-    font-feature-settings:"liga","dlig","ss01";
-  }
-  .mast .name h1 .b{ font-weight:500; }
-  .mast .tagline{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:20px; padding:14px 0 8px; }
-  .mast .tagline .line{ height:1px; background:var(--ink); }
-  .mast .tagline .text{ font-family:var(--serif); font-style:italic; font-size:18px; color:var(--ink-2); white-space:nowrap; }
-  .mast .tagline .text b{ font-weight:500; font-style:normal; color:var(--ink); }
-  .mast .meta{ display:flex; justify-content:space-between; padding:12px 0; font-family:var(--mono); font-size:11.5px; color:var(--ink-2); letter-spacing:0.04em; }
-  .mast .meta span b{ color:var(--ink); font-weight:500; }
-
-  /* ─── HERO FLOW DIAGRAM ─── */
-  .flow{ padding:36px 0 8px; }
-  .flow .frame{ border:1px solid var(--rule); background:var(--paper); border-radius:2px; padding:28px; display:grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap:0; align-items:stretch; position:relative; }
-  .flow .col{ padding:6px 22px; display:flex; flex-direction:column; gap:14px; min-width:0; }
-  .flow .col:first-child{ padding-left:6px; }
-  .flow .col:last-child{ padding-right:6px; }
-  .flow .col .kk{ font-family:var(--mono); font-size:10.5px; letter-spacing:0.14em; color:var(--mute); text-transform:uppercase; }
-  .flow .col h4{ font-family:var(--serif); font-weight:400; font-size:22px; line-height:1.15; letter-spacing:-0.01em; color:var(--ink); margin:0; }
-  .flow .col h4 em{ font-style:italic; color:var(--accent); }
-  .flow .col ul{ list-style:none; padding:0; margin:4px 0 0; display:flex; flex-direction:column; gap:6px; }
-  .flow .col li{ font-family:var(--mono); font-size:12px; color:var(--ink-2); letter-spacing:0.01em; padding-left:14px; position:relative; line-height:1.55; }
-  .flow .col li::before{ content:""; position:absolute; left:0; top:9px; width:6px; height:1px; background:var(--ink-2); }
-  .flow .col .ft{ margin-top:auto; padding-top:14px; border-top:1px dashed var(--rule); font-family:var(--mono); font-size:10.5px; letter-spacing:0.04em; color:var(--mute); line-height:1.5; }
-  .flow .arr{ width:48px; display:flex; align-items:center; justify-content:center; color:var(--accent); font-family:var(--serif); font-style:italic; font-size:32px; line-height:1; position:relative; }
-  .flow .arr::before, .flow .arr::after{ content:""; position:absolute; left:0; right:0; height:1px; background:var(--rule); }
-  .flow .arr::before{ top:50%; transform:translateY(-12px); }
-  .flow .arr::after{ top:50%; transform:translateY(12px); }
-  .flow .cap{ margin-top:14px; font-family:var(--serif); font-style:italic; font-size:15px; color:var(--ink-2); display:flex; justify-content:space-between; align-items:baseline; gap:24px; }
-  .flow .cap b{ font-style:normal; font-weight:500; color:var(--ink); }
-  .flow .cap .ref{ font-family:var(--mono); font-style:normal; font-size:10.5px; letter-spacing:0.12em; color:var(--mute); text-transform:uppercase; }
-
-  /* ─── LEAD SPREAD ─── */
-  .lead{ padding:48px 0 80px; display:grid; grid-template-columns: 7.5fr 4.5fr; gap:56px; }
-  .lead .col-data{ }
-  .lead .col-edit{ border-left:1px solid var(--rule); padding-left:32px; }
-
-  .leader-tag{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px; }
-  .leader-tag .t{ font-family:var(--serif); font-style:italic; font-size:32px; letter-spacing:-0.01em; color:var(--ink); }
-  .leader-tag .t b{ font-style:normal; font-weight:500; }
-  .leader-tag .meta{ font-family:var(--mono); font-size:11.5px; color:var(--mute); letter-spacing:0.04em; }
-
-  .leader-sub{ font-family:var(--serif); font-style:italic; font-size:15.5px; color:var(--ink-2); margin-bottom:24px; max-width:64ch; }
-
-  .lb{ border-top:2px solid var(--ink); }
-  .lb-row{
-    display:grid; grid-template-columns: 30px 1.1fr 1.4fr 110px 200px 56px;
-    gap:18px; align-items:baseline; padding:18px 0 16px;
-    border-bottom:1px solid var(--rule);
-  }
-  .lb-row.head{
-    border-bottom:1px solid var(--ink); padding:8px 0 8px;
-    font-family:var(--mono); font-size:10.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--mute);
-  }
-  .lb-row .rk{ font-family:var(--mono); font-size:12px; color:var(--mute); }
-  .lb-row.r1 .rk{ color:var(--accent); font-weight:600; }
-  .lb-row .sys{ font-family:var(--serif); font-size:24px; line-height:1.1; letter-spacing:-0.01em; color:var(--ink); }
-  .lb-row .sys .kind{ display:block; font-family:var(--mono); font-size:11px; color:var(--mute); letter-spacing:0.06em; margin-top:4px; font-weight:400; }
-  .lb-row .eval{ font-family:var(--mono); font-size:12px; color:var(--ink-2); line-height:1.5; }
-  .lb-row .eval .judge{ color:var(--mute); display:block; }
-  .lb-row .type{ font-family:var(--mono); font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-2); }
-  .lb-row .type.prod{ color:var(--accent); }
-  .lb-row .bar{ display:flex; align-items:center; gap:10px; }
-  .lb-row .bar .track{ flex:1; height:4px; background:var(--rule); position:relative; }
-  .lb-row .bar .track i{ position:absolute; left:0; top:0; bottom:0; background:var(--ink); }
-  .lb-row.r1 .bar .track i{ background:var(--accent); }
-  .lb-row .pct{ font-family:var(--mono); font-size:22px; font-weight:500; font-variant-numeric:tabular-nums; text-align:right; color:var(--ink); letter-spacing:-0.01em; }
-  .lb-row.r1 .pct{ color:var(--accent); }
-  .lb-row.zero .pct{ color:var(--mute); }
-  .lb-row.zero .sys{ color:var(--ink-2); }
-
-  .lb-row.submit{ background:transparent; }
-  .lb-row.submit .sys{ font-style:italic; color:var(--accent); font-size:20px; }
-  .lb-row.submit .submit-btn{
-    grid-column: 5 / span 2;
-    display:inline-flex; align-items:center; gap:10px;
-    font-family:var(--mono); font-size:11.5px; letter-spacing:0.04em;
-    padding:8px 12px; border:1px solid var(--ink); color:var(--ink); justify-self:end;
-  }
-  .lb-row.submit .submit-btn:hover{ background:var(--ink); color:var(--paper); }
-
-  .lb-foot{ padding:18px 0 0; font-family:var(--serif); font-style:italic; font-size:14.5px; color:var(--ink-2); line-height:1.55; max-width:74ch; }
-  .lb-foot b{ font-style:normal; font-weight:500; color:var(--ink); }
-  .lb-foot sup{ font-family:var(--mono); font-style:normal; font-size:10px; color:var(--accent); margin:0 2px 0 1px; }
-
-  /* editorial column */
-  .col-edit .kicker{ font-family:var(--mono); font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--accent); margin-bottom:14px; }
-  .col-edit h2.abs{ font-family:var(--serif); font-weight:400; font-size:34px; line-height:1.05; letter-spacing:-0.015em; margin-bottom:14px; color:var(--ink); }
-  .col-edit h2.abs em{ color:var(--ink-2); }
-  .col-edit .body{ font-family:var(--serif); font-size:15.5px; line-height:1.6; color:var(--ink-2); }
-  .col-edit .body p + p{ margin-top:12px; text-indent:1.4em; }
-  .col-edit .body .dropcap{ float:left; font-family:var(--serif); font-weight:500; font-size:74px; line-height:0.85; padding:6px 8px 0 0; color:var(--ink); }
-  .col-edit .body b{ font-weight:500; color:var(--ink); font-style:normal; }
-  .col-edit .body sup{ font-family:var(--mono); font-size:10px; color:var(--accent); vertical-align:super; margin:0 1px; }
-
-  .col-edit .fn{ margin-top:24px; padding-top:14px; border-top:1px solid var(--rule); font-family:var(--mono); font-size:11px; line-height:1.55; color:var(--mute); display:flex; flex-direction:column; gap:5px; }
-  .col-edit .fn span sup{ color:var(--accent); margin-right:6px; }
-
-  .col-edit .stats-line{ margin-top:28px; padding:14px 0; border-top:1px solid var(--ink); border-bottom:1px solid var(--ink); display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
-  .col-edit .stats-line .s{ display:flex; flex-direction:column; gap:4px; }
-  .col-edit .stats-line .v{ font-family:var(--serif); font-size:30px; line-height:1; letter-spacing:-0.02em; color:var(--ink); }
-  .col-edit .stats-line .v.small{ font-size:17px; letter-spacing:-0.005em; font-style:italic; }
-  .col-edit .stats-line .k{ font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--mute); }
-
-  /* ─── SECTION CHROME ─── */
-  section{ padding:88px 0 96px; }
-  section + section{ border-top:1px solid var(--rule); }
-  .sec-title{ display:grid; grid-template-columns: 200px 1fr 280px; gap:32px; align-items:end; margin-bottom:64px; padding-bottom:18px; border-bottom:1px solid var(--ink); }
-  .sec-title .id{ font-family:var(--mono); font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:var(--accent); }
-  .sec-title .id b{ color:var(--ink); }
-  .sec-title h2{ font-family:var(--serif); font-weight:400; font-size:64px; line-height:0.98; letter-spacing:-0.03em; color:var(--ink); }
-  .sec-title h2 em{ color:var(--ink-2); }
-  .sec-title .sub{ font-family:var(--serif); font-style:italic; font-size:15px; line-height:1.5; color:var(--ink-2); text-align:right; }
-
-  /* ─── II. METHOD (editorial) ─── */
-  .method{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:48px; }
-  .method .col{ position:relative; }
-  .method .col + .col{ padding-left:32px; border-left:1px solid var(--rule); }
-  .method .col .roman{ font-family:var(--serif); font-style:italic; font-size:18px; color:var(--accent); margin-bottom:14px; letter-spacing:-0.01em; }
-  .method .col h3{ font-family:var(--serif); font-weight:400; font-size:32px; line-height:1.05; letter-spacing:-0.015em; margin-bottom:14px; color:var(--ink); }
-  .method .col h3 em{ color:var(--ink-2); }
-  .method .col p{ font-size:15.5px; line-height:1.6; color:var(--ink-2); }
-  .method .col p b{ font-weight:500; color:var(--ink); }
-  .method .col .swatch{
-    margin-top:24px; padding:12px 14px; border:1px solid var(--ink);
-    background:transparent; font-family:var(--mono); font-size:11px; color:var(--ink-2);
-    display:flex; flex-direction:column; gap:6px;
-  }
-  .method .col .swatch b{ color:var(--ink); }
-
-  /* ─── III. DIMENSIONS (typographic ladder) ─── */
-  .dims-grid{ display:grid; grid-template-columns: 5fr 7fr; gap:64px; align-items:start; }
-  .dims-left .pull{
-    font-family:var(--serif); font-size:30px; line-height:1.15; letter-spacing:-0.01em; color:var(--ink);
-    border-top:2px solid var(--ink); padding:18px 0 22px; max-width:34ch;
-  }
-  .dims-left .pull em{ color:var(--ink-2); font-style:italic; }
-  .dims-left .note{
-    margin-top:22px; padding:14px 0 14px; border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
-    font-family:var(--mono); font-size:12px; line-height:1.6; color:var(--ink-2);
-  }
-  .dims-left .note b{ color:var(--ink); }
-  .dims-left .note .row{ display:flex; justify-content:space-between; }
-
-  .dims-left .weight-ladder{ margin-top:28px; }
-  .dims-left .weight-ladder .label{ font-family:var(--mono); font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--mute); margin-bottom:8px; }
-  .wladder{ display:flex; flex-direction:column; gap:6px; }
-  .wladder .w{ display:grid; grid-template-columns: 60px 1fr 40px; gap:14px; align-items:center; }
-  .wladder .w .k{ font-family:var(--mono); font-size:13px; font-weight:500; color:var(--ink); }
-  .wladder .w .bar{ height:14px; background:var(--ink); }
-  .wladder .w.w1 .bar{ width:100%; }
-  .wladder .w.w2 .bar{ width:83.3%; }
-  .wladder .w.w3 .bar{ width:66.6%; }
-  .wladder .w.w4 .bar{ width:50%;  background:var(--ink-2); }
-  .wladder .w.w5 .bar{ width:33.3%; background:var(--mute); }
-  .wladder .w .v{ font-family:var(--mono); font-size:13px; text-align:right; color:var(--ink); font-variant-numeric:tabular-nums; }
-
-  .dims-right{ display:flex; flex-direction:column; }
-  .dim{ display:grid; grid-template-columns: 64px 1fr 96px; gap:24px; padding:26px 0; border-top:1px solid var(--rule); align-items:baseline; }
-  .dim:first-child{ border-top:1px solid var(--ink); }
-  .dim:last-child{ border-bottom:1px solid var(--ink); }
-  .dim .code{ font-family:var(--mono); font-size:13px; letter-spacing:0.08em; color:var(--accent); padding-top:8px; }
-  .dim .b h4{ font-family:var(--serif); font-weight:400; font-size:30px; line-height:1.05; letter-spacing:-0.015em; color:var(--ink); margin-bottom:8px; }
-  .dim .b h4 em{ color:var(--ink-2); }
-  .dim .b p{ font-size:15px; line-height:1.55; color:var(--ink-2); max-width:60ch; }
-  .dim .b .chips{ display:flex; flex-wrap:wrap; gap:4px 14px; margin-top:12px; font-family:var(--mono); font-size:11.5px; color:var(--mute); }
-  .dim .b .chips span::before{ content:"·"; margin-right:8px; color:var(--rule-2); }
-  .dim .b .chips span:first-child::before{ content:""; margin:0; }
-  .dim .pct{ font-family:var(--serif); font-size:64px; line-height:0.9; letter-spacing:-0.04em; text-align:right; color:var(--ink); }
-  .dim .pct sup{ font-family:var(--mono); font-size:14px; color:var(--mute); vertical-align:super; margin-left:2px; font-weight:400; }
-
-  /* ─── IV. VALIDATION (editorial, marginal) ─── */
-  .val{ display:grid; grid-template-columns: repeat(12, 1fr); gap:24px; }
-  .val .lead-q{
-    grid-column: 1 / span 4;
-    font-family:var(--serif); font-style:italic; font-size:26px; line-height:1.25; color:var(--ink); letter-spacing:-0.005em;
-    border-top:2px solid var(--ink); padding-top:18px;
-  }
-  .val .lead-q b{ font-style:normal; font-weight:500; }
-  .val .items{ grid-column: 5 / span 8; columns: 2; column-gap:48px; column-rule:1px solid var(--rule); }
-  .val .item{ break-inside:avoid; padding:0 0 20px; margin-bottom:20px; border-bottom:1px dashed var(--rule-2); display:grid; grid-template-columns: 30px 1fr; gap:14px; }
-  .val .item:last-child{ border-bottom:0; }
-  .val .item .n{ font-family:var(--mono); font-size:12px; font-weight:500; color:var(--accent); padding-top:4px; }
-  .val .item h5{ font-family:var(--serif); font-weight:500; font-size:18px; line-height:1.2; letter-spacing:-0.005em; color:var(--ink); margin-bottom:6px; }
-  .val .item p{ font-size:14.5px; line-height:1.55; color:var(--ink-2); }
-
-  /* ─── V. SUBMIT (manual) ─── */
-  .manual{ display:grid; grid-template-columns: 1fr 1fr; gap:0; border-top:2px solid var(--ink); }
-  .manual .step{
-    display:grid; grid-template-columns: 90px 1fr; gap:24px;
-    padding:32px 32px 32px 0; border-bottom:1px solid var(--rule);
-  }
-  .manual .step:nth-child(odd){ border-right:1px solid var(--rule); }
-  .manual .step:nth-child(even){ padding-left:32px; padding-right:0; }
-  .manual .step:nth-last-child(-n+2){ border-bottom:1px solid var(--ink); }
-  .manual .step .n{
-    font-family:var(--serif); font-size:80px; line-height:0.85; letter-spacing:-0.04em; color:var(--ink);
-  }
-  .manual .step .n .dot{ color:var(--accent); }
-  .manual .step h4{ font-family:var(--serif); font-weight:400; font-size:28px; line-height:1.05; letter-spacing:-0.015em; margin-bottom:10px; color:var(--ink); }
-  .manual .step h4 em{ color:var(--ink-2); }
-  .manual .step p{ font-size:15px; line-height:1.55; color:var(--ink-2); margin-bottom:14px; }
-  .manual .step .term{ font-family:var(--mono); font-size:11.5px; color:var(--ink-2); line-height:1.7; }
-  .manual .step .term .row{ display:grid; grid-template-columns: 90px 1fr; gap:14px; padding:2px 0; }
-  .manual .step .term .k{ color:var(--mute); }
-  .manual .step .term .v{ color:var(--ink); }
-  .manual .step .term .v.url{ color:var(--accent); }
-
-  .submit-cta{ margin-top:48px; display:flex; justify-content:space-between; align-items:end; gap:32px; padding-top:24px; border-top:1px solid var(--ink); }
-  .submit-cta .ask{ font-family:var(--serif); font-style:italic; font-size:30px; line-height:1.15; max-width:30ch; letter-spacing:-0.005em; }
-  .submit-cta .ask b{ font-weight:500; font-style:normal; }
-  .submit-cta .links{ display:flex; gap:12px; }
-  .btn{
-    font-family:var(--mono); font-size:12px; letter-spacing:0.04em;
-    padding:12px 16px; border:1px solid var(--ink); display:inline-flex; align-items:center; gap:10px;
-    white-space:nowrap; transition:background .15s, color .15s;
-  }
-  .btn.solid{ background:var(--ink); color:var(--paper); }
-  .btn.solid:hover{ background:var(--accent); border-color:var(--accent); }
-  .btn.ghost:hover{ background:var(--ink); color:var(--paper); }
-  .btn.warn{ background:var(--accent); color:var(--paper); border-color:var(--accent); }
-
-  /* ─── VI. PAPER (inverted) ─── */
-  .paper-sec{ background:var(--ink); color:var(--paper); padding:96px 0 96px; border-top:0; }
-  .paper-sec .wrap{ }
-  .paper-sec .sec-title{ border-bottom:1px solid #3A332A; }
-  .paper-sec .sec-title h2{ color:var(--paper); }
-  .paper-sec .sec-title h2 em{ color:#9C8E78; }
-  .paper-sec .sec-title .id{ color:var(--accent-soft); }
-  .paper-sec .sec-title .id b{ color:var(--paper); }
-  .paper-sec .sec-title .sub{ color:#A99B85; }
-
-  .paper-card{ display:grid; grid-template-columns: 7fr 5fr; gap:64px; }
-  .paper-card .ttl{
-    font-family:var(--serif); font-weight:400; font-size:46px; line-height:1.05; letter-spacing:-0.02em; color:var(--paper);
-    border-bottom:1px solid #3A332A; padding-bottom:18px; margin-bottom:18px;
-  }
-  .paper-card .ttl em{ color:#B0A28C; }
-  .paper-card .auth{ font-family:var(--mono); font-size:12px; color:#B0A28C; line-height:1.7; letter-spacing:0.02em; margin-bottom:24px; }
-  .paper-card .auth b{ color:var(--paper); font-weight:500; }
-  .paper-card .abstract{ font-family:var(--serif); font-size:16px; line-height:1.65; color:#D6CCB6; }
-  .paper-card .abstract p + p{ margin-top:12px; text-indent:1.4em; }
-  .paper-card .abstract b{ color:var(--paper); font-weight:500; }
-  .paper-card .abstract em{ color:#E5DDC9; }
-
-  .paper-card .col-r{ display:flex; flex-direction:column; gap:0; }
-  .paper-card .col-r .fact{
-    padding:14px 0; border-top:1px solid #3A332A; display:grid; grid-template-columns: 90px 1fr; gap:18px; align-items:baseline;
-  }
-  .paper-card .col-r .fact:last-child{ border-bottom:1px solid #3A332A; }
-  .paper-card .col-r .fact .k{ font-family:var(--mono); font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#9C8E78; }
-  .paper-card .col-r .fact .v{ font-family:var(--serif); font-size:19px; line-height:1.25; color:var(--paper); letter-spacing:-0.005em; }
-  .paper-card .col-r .fact .v small{ font-family:var(--mono); font-size:11px; color:#9C8E78; display:block; margin-top:4px; letter-spacing:0; line-height:1.5; }
-
-  .paper-cta{ margin-top:36px; display:flex; gap:10px; flex-wrap:wrap; }
-  .paper-sec .btn.solid{ background:var(--paper); color:var(--ink); border-color:var(--paper); }
-  .paper-sec .btn.solid:hover{ background:var(--accent); color:var(--paper); border-color:var(--accent); }
-  .paper-sec .btn.ghost{ color:var(--paper); border-color:#5A4F40; }
-  .paper-sec .btn.ghost:hover{ background:var(--paper); color:var(--ink); border-color:var(--paper); }
-
-  /* ─── COLOPHON / FOOTER ─── */
-  .colo{ padding:72px 0 56px; background:var(--paper); }
-  .colo .top{ display:grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap:32px; padding-bottom:36px; border-bottom:1px solid var(--ink); }
-  .colo .top .imp{ font-family:var(--serif); font-style:italic; font-size:20px; line-height:1.35; color:var(--ink-2); max-width:42ch; }
-  .colo .top .imp b{ font-style:normal; font-weight:500; color:var(--ink); }
-  .colo .col h5{ font-family:var(--mono); font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--mute); margin-bottom:12px; }
-  .colo .col a{ display:block; font-family:var(--serif); font-size:16px; padding:3px 0; color:var(--ink-2); }
-  .colo .col a:hover{ color:var(--accent); }
-
-  .colo .sig{ padding:48px 0 12px; text-align:center; }
-  .colo .sig .wm{
-    font-family:var(--serif); font-weight:400; font-size:200px; line-height:0.85; letter-spacing:-0.05em; color:var(--ink);
-  }
-  .colo .sig .wm em{ font-weight:500; color:var(--accent); font-style:italic; }
-  .colo .bot{ display:flex; justify-content:space-between; padding:14px 0 0; border-top:1px solid var(--rule); font-family:var(--mono); font-size:11px; color:var(--mute); letter-spacing:0.04em; }
-  .colo .bot b{ color:var(--ink); font-weight:500; }
-
-  /* ─── MOBILE ─── */
-  @media (max-width: 880px){
-    body{ font-size:15px; }
-    .wrap{ padding:0 18px; }
-    .gutter{ display:none; }
-    .mast{ padding-top:14px; }
-    .mast .strip{ flex-wrap:wrap; gap:6px 14px; font-size:10px; padding:6px 0; }
-    .mast .name{ grid-template-columns:1fr; gap:14px; text-align:left; padding:14px 0 10px; }
-    .mast .name h1{ font-size:clamp(44px, 16vw, 64px); letter-spacing:-0.04em; white-space:nowrap; text-align:center; line-height:0.9; }
-    .mast .name .l, .mast .name .r{ font-size:11px; text-align:left; }
-    .mast .name .r{ text-align:left; }
-    .mast .tagline{ grid-template-columns:1fr; gap:8px; }
-    .mast .tagline .line{ display:none; }
-    .mast .tagline .text{ white-space:normal; font-size:15px; line-height:1.45; }
-    .mast .meta{ flex-direction:column; gap:6px; font-size:10.5px; padding:10px 0; }
-    .flow{ padding:24px 0 4px; }
-    .flow .frame{ grid-template-columns:1fr; gap:18px; padding:20px; }
-    .flow .arr{ width:auto; height:36px; transform:rotate(90deg); margin:-6px auto; }
-    .flow .col{ padding:6px 0; }
-    .flow .cap{ flex-direction:column; gap:6px; }
-    .lead{ grid-template-columns:1fr; gap:36px; padding:28px 0 48px; }
-    .lead .col-edit{ border-left:0; padding-left:0; border-top:1px solid var(--rule); padding-top:28px; }
-    .leader-tag{ flex-direction:column; align-items:flex-start; gap:4px; }
-    .leader-tag .t{ font-size:24px; }
-    .lb-row{ grid-template-columns: 24px 1fr 86px; gap:8px 10px; padding:14px 0; }
-    .lb-row.head > div:nth-child(3), .lb-row.head > div:nth-child(4), .lb-row.head > div:nth-child(6){ display:none; }
-    .lb-row.head > div:nth-child(5){ grid-column: 3; text-align:right; }
-    .lb-row > .eval, .lb-row > .type{ grid-column: 2 / span 2; font-size:11px; }
-    .lb-row > .bar{ display:none; }
-    .lb-row .sys{ font-size:17px; }
-    .lb-row .pct{ font-size:18px; }
-    .lb-row.submit .submit-btn{ grid-column: 1 / -1; justify-self:start; }
-    .col-edit h2.abs{ font-size:26px; }
-    .col-edit .stats-line{ grid-template-columns:repeat(2,1fr); gap:10px; }
-    .col-edit .stats-line .v{ font-size:22px; }
-    section{ padding:48px 0 56px; }
-    .sec-title{ grid-template-columns:1fr; gap:14px; margin-bottom:32px; }
-    .sec-title h2{ font-size:34px; line-height:1; }
-    .sec-title .sub{ text-align:left; font-size:14px; }
-    .method{ grid-template-columns:1fr; gap:32px; }
-    .method .col + .col{ padding-left:0; border-left:0; border-top:1px solid var(--rule); padding-top:28px; }
-    .method .col h3{ font-size:24px; }
-    .dims-grid{ grid-template-columns:1fr; gap:36px; }
-    .dims-left .pull{ font-size:22px; }
-    .dim{ grid-template-columns: 48px 1fr; gap:8px 14px; padding:18px 0; }
-    .dim .pct{ grid-column: 1 / -1; text-align:left; font-size:40px; }
-    .dim .b h4{ font-size:22px; }
-    .val{ grid-template-columns:1fr; gap:18px; }
-    .val .lead-q{ grid-column:1; font-size:20px; }
-    .val .items{ grid-column:1; columns:1; }
-    .manual{ grid-template-columns:1fr; }
-    .manual .step{ grid-template-columns: 60px 1fr; padding:24px 0 !important; border-right:0 !important; }
-    .manual .step .n{ font-size:54px; }
-    .manual .step h4{ font-size:22px; }
-    .submit-cta{ flex-direction:column; align-items:flex-start; gap:18px; }
-    .submit-cta .ask{ font-size:22px; }
-    .submit-cta .links{ flex-wrap:wrap; }
-    .paper-sec{ padding:56px 0; }
-    .paper-card{ grid-template-columns:1fr; gap:36px; }
-    .paper-card .ttl{ font-size:28px; }
-    .paper-card .col-r .fact{ grid-template-columns: 1fr; gap:4px; }
-    .colo .top{ grid-template-columns:1fr; gap:24px; }
-    .colo .sig .wm{ font-size:96px; }
-    .colo .bot{ flex-direction:column; gap:6px; font-size:10px; }
+  body.dark{
+    background:
+      radial-gradient(120% 90% at 18% 8%, #23201d 0%, rgba(35,32,29,0) 46%),
+      linear-gradient(150deg, #191613 0%, #211e1b 60%, #181512 100%);
   }
 
-  .gutter{
-    position:fixed; left:14px; top:50%; transform:translateY(-50%); z-index:30;
-    display:flex; flex-direction:column; gap:10px; align-items:center;
-    font-family:var(--mono); font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--mute);
+  /* ---------- window ---------- */
+  .frame{
+    position:relative;
+    width:min(1260px,94vw);
+    height:min(820px,92vh);
+    background:var(--frame);
+    border:1px solid var(--frame-edge);
+    border-radius:30px;
+    padding:11px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.5) inset,
+      0 40px 80px -30px rgba(40,60,100,.45),
+      0 8px 24px -12px rgba(40,60,100,.30);
+    transition:background .45s ease, border-color .45s ease;
   }
-  @media (max-width:1320px){ .gutter{ display:none; } }
-  .gutter a{ writing-mode:vertical-rl; transform:rotate(180deg); padding:6px 4px; color:var(--ink-2); }
-  .gutter a:hover{ color:var(--accent); }
-  .gutter .tick{ width:1px; height:18px; background:var(--rule-2); }
+  .screen{
+    position:relative;
+    width:100%;height:100%;
+    background:var(--screen);
+    border-radius:21px;
+    overflow:hidden;
+    transition:background .45s ease;
+  }
+  .grid-bg{
+    position:absolute;inset:0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:46px 46px;
+    pointer-events:none;
+    transition:background-image .45s ease;
+  }
 
+  /* ---------- pages ---------- */
+  .page{
+    position:absolute;inset:0;
+    padding:34px 46px 34px 86px;
+    overflow:hidden;
+  }
+  .page[hidden]{display:none;}
+  .page.scroll{overflow-y:auto;}
+  .page.scroll::-webkit-scrollbar{width:8px;}
+  .page.scroll::-webkit-scrollbar-thumb{background:var(--hair);border-radius:8px;}
+  .page.scroll::-webkit-scrollbar-track{background:transparent;}
+
+  /* logo */
+  .brand{display:flex;align-items:center;gap:11px;color:var(--ink);}
+  .brand svg{display:block;}
+  .brand .word{font-size:25px;letter-spacing:-.01em;color:var(--ink);}
+  .brand .word b{font-weight:700;}
+  .smiley{width:38px;height:38px;}
+
+  /* home */
+  #home{
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  #home::-webkit-scrollbar{width:8px;}
+  #home::-webkit-scrollbar-thumb{background:var(--hair);border-radius:8px;}
+  #home::-webkit-scrollbar-track{background:transparent;}
+  #home .content{
+    max-width:560px;
+    margin-left:34%;
+    margin-top:78px;
+  }
+  #home h1{
+    font-size:46px;line-height:1.04;letter-spacing:-.02em;
+    font-weight:700;color:var(--ink);margin:0 0 30px;
+    text-wrap:balance;
+  }
+  #home p{
+    font-size:21px;line-height:1.5;color:var(--muted);
+    margin:0 0 22px;max-width:520px;
+  }
+  #home a{color:var(--link);text-decoration:none;}
+  #home a:hover{text-decoration:underline;}
+  .home-actions{
+    display:flex;flex-wrap:wrap;gap:10px;margin:26px 0 4px;
+  }
+  .audit-link{
+    position:relative;display:inline-flex;align-items:center;justify-content:center;
+    min-height:36px;padding:9px 14px;border-radius:999px;
+    border:1px solid var(--card-edge);background:var(--card);
+    color:var(--ink);font-size:12px;font-weight:600;letter-spacing:.08em;
+    text-transform:uppercase;text-decoration:none;
+    transition:transform .2s ease,border-color .2s ease,background .2s ease;
+  }
+  .audit-link:hover{transform:translateY(-2px);border-color:var(--hair);text-decoration:none!important;}
+  .audit-link.primary{background:var(--blue-deep);border-color:#075646;color:#fff;}
+  #home .audit-link.primary,
+  #home .audit-link.primary:visited,
+  #home .audit-link.primary:hover{color:#fff;}
+  .homestats{
+    display:flex;gap:26px;margin-top:30px;
+    font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  }
+  .homestats b{display:block;font-size:23px;letter-spacing:-.01em;color:var(--ink);font-weight:600;margin-bottom:4px;}
+
+  /* ---------- MENU tab ---------- */
+  .panel{
+    position:absolute;top:0;left:0;bottom:0;
+    width:46%;
+    background:var(--blue);
+    transform:translateX(-100%);
+    transition:transform .58s cubic-bezier(.7,0,.18,1);
+    z-index:30;
+    will-change:transform;
+  }
+  .panel.open{transform:translateX(0);}
+
+  .tab{
+    position:absolute;left:100%;top:64px;
+    display:flex;align-items:center;justify-content:center;
+    width:46px;height:118px;
+    background:var(--tab-bg);
+    color:var(--tab-ink);
+    border:1px solid var(--frame-edge);
+    border-left:none;
+    border-radius:0 14px 14px 0;
+    cursor:pointer;
+    transition:background .35s ease,color .35s ease;
+  }
+  .tab span{
+    writing-mode:vertical-rl;transform:rotate(180deg);
+    font-size:13px;letter-spacing:.32em;font-weight:500;
+    padding-right:1px;
+  }
+  .panel.open .tab{
+    background:var(--lavender);
+    color:var(--blue);
+    border-color:rgba(255,255,255,.0);
+  }
+
+  /* panel inner */
+  .panel-inner{
+    position:absolute;inset:0;
+    padding:30px 0 30px 76px;
+    display:flex;flex-direction:column;
+    opacity:0;transition:opacity .3s ease .12s;
+  }
+  .panel.open .panel-inner{opacity:1;}
+
+  .pill{
+    display:inline-flex;align-items:center;gap:2px;
+    background:#fff;border-radius:999px;padding:6px;width:max-content;
+    box-shadow:0 4px 14px rgba(10,30,80,.18);
+  }
+  .pill button,.pill a{
+    width:34px;height:34px;border:none;background:transparent;
+    border-radius:999px;cursor:pointer;color:#1b3a8a;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .2s ease,color .2s ease;
+  }
+  .pill button:hover,.pill a:hover{background:#eef3ff;}
+  .pill button.active{background:var(--blue);color:#fff;}
+
+  nav.menu{
+    margin-top:auto;margin-bottom:8px;
+    display:flex;flex-direction:column;gap:0;
+  }
+  .mitem{
+    position:relative;display:flex;align-items:center;
+    background:none;border:none;cursor:pointer;
+    padding:9px 0;color:#fff;text-align:left;
+    font-family:inherit;text-decoration:none;
+  }
+  /* fixed-width track: the dash grows INSIDE it, so the label never shifts */
+  .mitem .lead{
+    position:relative;
+    height:2px;width:62px;margin-right:20px;flex:none;
+    background:transparent;
+  }
+  .mitem .lead::after{
+    content:"";position:absolute;top:0;left:0;
+    height:2px;width:30px;background:rgba(255,255,255,.55);
+    border-radius:2px;
+    transition:width .3s cubic-bezier(.6,0,.2,1),background .25s ease;
+  }
+  .mitem .label{
+    font-size:34px;letter-spacing:-.01em;line-height:1;
+    color:rgba(255,255,255,.92);transition:color .25s ease;
+  }
+  .mitem:hover .lead::after{width:62px;background:#fff;}
+  .mitem.current .label{color:rgba(255,255,255,.42);}
+  .mitem.current .lead::after{background:rgba(255,255,255,.3);}
+
+  /* ruler */
+  .ruler{
+    position:absolute;left:30px;top:40px;bottom:40px;
+    display:flex;flex-direction:column;justify-content:space-between;
+  }
+  .ruler i{display:block;height:1.5px;background:rgba(255,255,255,.5);border-radius:2px;}
+
+  /* ---------- inner pages (crumb + content) ---------- */
+  .crumb{
+    display:flex;align-items:center;gap:11px;color:var(--ink);
+    font-size:22px;
+  }
+  .crumb .sep{color:var(--muted);font-size:18px;}
+  .crumb .here{color:var(--ink);}
+  .crumb .close{
+    width:26px;height:26px;border:none;background:none;cursor:pointer;
+    color:var(--muted);display:flex;align-items:center;justify-content:center;
+    border-radius:6px;margin-left:2px;
+  }
+  .crumb .close:hover{color:var(--ink);background:var(--hair);}
+  .crumb .smiley{width:34px;height:34px;}
+
+  .cards{
+    margin-top:30px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    grid-auto-rows:300px;
+    gap:18px;
+    padding-bottom:6px;
+  }
+  .cards.stats{grid-auto-rows:170px;margin-top:26px;}
+  #methods .cards{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    grid-auto-rows:minmax(172px,auto) !important;
+  }
+  .card{
+    position:relative;
+    background:var(--card);
+    border:1px solid var(--card-edge);
+    border-radius:16px;
+    padding:24px;
+    display:flex;flex-direction:column;justify-content:space-between;
+    overflow:visible;
+    transition:transform .28s cubic-bezier(.5,0,.2,1), border-color .28s ease, box-shadow .28s ease;
+  }
+  .card::before{
+    content:"";position:absolute;inset:0;
+    border-radius:inherit;
+    background-image:
+      linear-gradient(var(--grid) 1px,transparent 1px),
+      linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:30px 30px;opacity:.6;pointer-events:none;
+  }
+  .card:hover{
+    transform:translateY(-6px);
+    border-color:var(--hair);
+    box-shadow:0 22px 40px -22px rgba(0,0,0,.5);
+  }
+  button.card{
+    width:100%;
+    border:1px solid var(--card-edge);
+    appearance:none;
+    -webkit-appearance:none;
+    font:inherit;
+    text-align:left;
+    cursor:pointer;
+    color:inherit;
+  }
+  button.card:focus-visible{
+    outline:3px solid color-mix(in srgb, var(--blue) 45%, transparent);
+    outline-offset:3px;
+  }
+  .card-cue{
+    position:absolute;right:18px;top:16px;
+    width:24px;height:24px;border-radius:999px;
+    border:1px solid currentColor;
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;line-height:1;color:var(--muted);
+    opacity:.58;
+  }
+  .card.blue .card-cue{color:rgba(255,255,255,.82);}
+  .card h3{
+    position:relative;margin:0;font-size:23px;font-weight:600;
+    letter-spacing:-.01em;color:var(--ink);
+  }
+  .card .big{
+    position:relative;font-size:38px;font-weight:700;letter-spacing:-.02em;color:var(--ink);
+  }
+  .card .big small{font-size:16px;font-weight:500;color:var(--muted);margin-left:6px;letter-spacing:0;}
+  .card p{position:relative;margin:10px 0 0;font-size:15px;line-height:1.45;color:var(--muted);}
+  .card .tags{
+    position:relative;align-self:flex-end;display:flex;gap:16px;
+    font-size:12px;letter-spacing:.08em;color:var(--muted);
+    text-transform:uppercase;
+  }
+  .cards.stats{grid-auto-rows:minmax(202px,auto);}
+  .cards.stats .card{padding:24px 24px 20px;gap:10px;justify-content:flex-start;min-height:202px;}
+  .cards.stats .card h3{font-size:22px;line-height:1.12;}
+  .cards.stats .card .big{font-size:38px;line-height:1;}
+  .cards.stats .card .big small{font-size:15px;}
+  .cards.stats .card p{margin:0;font-size:14px;line-height:1.42;}
+  .cards.stats .card .tags{align-self:flex-start;gap:10px;flex-wrap:wrap;font-size:11px;line-height:1.25;margin-top:auto;}
+  .card.blue{background:var(--blue);border-color:var(--blue-deep);}
+  .card.blue::before{background-image:
+      linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);}
+  .card.blue h3,.card.blue .big,.card.blue .big small{color:#fff;}
+  .card.blue p,.card.blue .tags{color:rgba(255,255,255,.75);}
+
+  /* ---------- leaderboard table ---------- */
+  .lb-tools{
+    margin-top:26px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  }
+  .seg{
+    display:inline-flex;background:var(--card);border:1px solid var(--card-edge);
+    border-radius:999px;padding:4px;gap:2px;
+  }
+  .seg button{
+    border:none;background:transparent;cursor:pointer;
+    font-family:inherit;font-size:13px;letter-spacing:.03em;color:var(--muted);
+    padding:7px 16px;border-radius:999px;
+    transition:background .2s ease,color .2s ease;
+  }
+  .seg button.active{background:var(--blue);color:#fff;}
+  .lb-meta{
+    min-width:0;flex:1 1 420px;
+    font-size:12px;line-height:1.45;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+    overflow-wrap:anywhere;
+  }
+
+  .lb-wrap{
+    width:100%;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    margin-top:20px;
+    padding-bottom:10px;
+  }
+  .lb-wrap::-webkit-scrollbar{height:8px;}
+  .lb-wrap::-webkit-scrollbar-thumb{background:var(--hair);border-radius:8px;}
+  .lb-wrap::-webkit-scrollbar-track{background:transparent;}
+
+  table.lb{
+    width:100%;min-width:0;margin-top:0;border-collapse:collapse;
+    font-size:14px;color:var(--ink);
+  }
+  table.lb th{
+    text-align:left;font-size:11px;font-weight:500;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted);
+    padding:9px 9px;border-bottom:1px solid var(--hair);
+    white-space:nowrap;
+  }
+  table.lb th.num,table.lb td.num{text-align:right;}
+  table.lb td{
+    padding:12px 9px;border-bottom:1px solid var(--hair);
+    vertical-align:middle;white-space:nowrap;
+  }
+  table.lb td.system-cell{white-space:normal;min-width:132px;}
+  table.lb td.metric{white-space:nowrap;}
+  table.lb tr.top td{background:linear-gradient(90deg, rgba(24,96,237,.10), rgba(24,96,237,.02));}
+  table.lb tr.divider td{
+    padding:9px 14px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);background:var(--card);border-bottom:1px solid var(--hair);
+  }
+  table.lb tr.fixture td{opacity:.62;}
+  table.lb tr.fixture td .sys{font-weight:500;}
+  table.lb tr.model-row td{
+    background:color-mix(in srgb, var(--card) 58%, transparent);
+  }
+  table.lb tr.model-row td .rank{
+    width:auto;min-width:30px;padding:0 7px;border-radius:999px;
+  }
+  table.lb td .rank{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:26px;height:26px;border-radius:999px;
+    background:var(--card);border:1px solid var(--card-edge);
+    font-size:13px;color:var(--muted);
+  }
+  table.lb tr.top td .rank{background:var(--blue);border-color:var(--blue);color:#fff;}
+  table.lb td .sys{font-weight:600;letter-spacing:-.01em;}
+  table.lb td .sub{display:block;font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-top:2px;}
+  .bar{
+    position:relative;display:inline-block;vertical-align:middle;
+    width:68px;height:6px;border-radius:6px;background:var(--hair);
+    margin-right:8px;
+  }
+  .bar i{position:absolute;inset:0 auto 0 0;border-radius:6px;background:var(--blue);}
+  table.lb .pct{font-variant-numeric:tabular-nums;font-weight:600;}
+  table.lb .dim{font-variant-numeric:tabular-nums;color:var(--muted);}
+  .pass{color:var(--good);font-weight:600;}
+  .fail{color:var(--bad);font-weight:600;}
+  .note{
+    margin-top:18px;font-size:13px;line-height:1.55;color:var(--muted);max-width:760px;
+  }
+  .note a{color:var(--link);text-decoration:none;}
+  .note a:hover{text-decoration:underline;}
+
+  /* methods + api prose */
+  .prose{margin-top:26px;max-width:740px;color:var(--muted);font-size:16px;line-height:1.6;}
+  .prose h2{font-size:23px;font-weight:600;letter-spacing:-.01em;color:var(--ink);margin:30px 0 10px;}
+  .prose a{color:var(--link);text-decoration:none;}
+  .prose a:hover{text-decoration:underline;}
+  .prose code{
+    font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13.5px;
+    background:var(--card);border:1px solid var(--card-edge);
+    border-radius:6px;padding:2px 6px;color:var(--ink);
+  }
+  pre.code{
+    position:relative;
+    background:var(--card);border:1px solid var(--card-edge);
+    border-radius:16px;padding:20px 22px;overflow-x:auto;
+    font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13px;line-height:1.6;
+    color:var(--ink);
+  }
+  pre.code::before{
+    content:"";position:absolute;inset:0;
+    background-image:
+      linear-gradient(var(--grid) 1px,transparent 1px),
+      linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:30px 30px;opacity:.6;pointer-events:none;
+  }
+  pre.code code{position:relative;background:none;border:none;padding:0;}
+
+  /* table scroll wrapper */
+
+  /* methods detail dialog */
+  .method-modal{
+    position:fixed;inset:0;z-index:9;
+    display:flex;align-items:center;justify-content:center;
+    padding:36px 44px 36px 84px;
+  }
+  .method-modal[hidden]{display:none;}
+  .method-backdrop{
+    position:absolute;inset:0;
+    background:color-mix(in srgb, var(--screen) 72%, transparent);
+    backdrop-filter:blur(8px);
+  }
+  .method-sheet{
+    position:relative;width:min(760px,100%);max-height:min(620px,82vh);
+    overflow:auto;-webkit-overflow-scrolling:touch;
+    background:var(--card);border:1px solid var(--card-edge);
+    border-radius:16px;padding:28px 30px 30px;
+    box-shadow:0 34px 80px -36px rgba(0,0,0,.55);
+  }
+  .method-sheet::before{
+    content:"";position:absolute;inset:0;
+    background-image:
+      linear-gradient(var(--grid) 1px,transparent 1px),
+      linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:30px 30px;opacity:.55;pointer-events:none;
+  }
+  .method-sheet > *{position:relative;}
+  .method-top{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:14px;}
+  .method-kicker{
+    margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);
+    font-weight:700;
+  }
+  .method-title{margin:0;font-size:36px;line-height:1;letter-spacing:-.03em;color:var(--ink);}
+  .method-summary{margin:0 0 22px;font-size:18px;line-height:1.45;color:var(--muted);max-width:640px;}
+  .method-close{
+    flex:0 0 auto;width:34px;height:34px;border:1px solid var(--card-edge);
+    background:var(--screen);color:var(--muted);border-radius:999px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .method-close:hover{color:var(--ink);border-color:var(--hair);}
+  .method-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
+  .method-block{border-top:1px solid var(--hair);padding-top:13px;}
+  .method-block h4{
+    margin:0 0 8px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);
+  }
+  .method-block p,.method-block li{font-size:15px;line-height:1.52;color:var(--muted);}
+  .method-block p{margin:0;}
+  .method-block ul{margin:0;padding-left:18px;}
+  .method-foot{margin-top:18px;padding-top:14px;border-top:1px solid var(--hair);font-size:13px;line-height:1.5;color:var(--muted);}
+  .method-foot a{color:var(--link);text-decoration:none;}
+  .method-foot a:hover{text-decoration:underline;}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:920px){
+    .cards{grid-template-columns:repeat(2,1fr);grid-auto-rows:220px;}
+    #methods .cards{grid-template-columns:repeat(2,1fr);}
+    .cards.stats{grid-auto-rows:160px;}
+    #home .content{margin-left:20%;}
+    .panel{width:62%;}
+  }
+
+  @media (min-width:721px) and (max-width:1100px){
+    .cards.stats{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      grid-auto-rows:minmax(190px,auto);
+    }
+    .cards.stats .card{min-height:190px;}
+    .lb-wrap{
+      overflow-x:visible;
+      margin-top:16px;
+      padding-bottom:0;
+    }
+    table.lb{
+      min-width:0;
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      font-size:14px;
+    }
+    table.lb thead{display:none;}
+    table.lb tbody{display:grid;gap:12px;}
+    table.lb tr{
+      display:grid;
+      grid-template-columns:34px minmax(0,1fr) minmax(150px,.7fr);
+      gap:10px 14px;
+      padding:14px;
+      border:1px solid var(--card-edge);
+      border-radius:8px;
+      background:var(--card);
+    }
+    table.lb tr.top td{background:transparent;}
+    table.lb td{
+      border-bottom:0;
+      padding:0;
+      white-space:normal;
+    }
+    table.lb td.rank-cell{grid-column:1;grid-row:1;align-self:start;}
+    table.lb td.system-cell{grid-column:2;grid-row:1;min-width:0;}
+    table.lb td.metric{
+      display:grid;
+      grid-template-columns:82px minmax(0,1fr);
+      align-items:center;
+      gap:10px;
+      min-height:24px;
+      text-align:left;
+    }
+    table.lb td.metric::before{
+      content:attr(data-label);
+      color:var(--muted);
+      font-size:10px;
+      font-weight:600;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+    table.lb td.score-cell{
+      grid-column:3;
+      grid-row:1;
+      grid-template-columns:64px minmax(0,1fr);
+    }
+    table.lb td.score-cell > .score-inline{
+      display:flex;
+      justify-content:flex-end;
+      align-items:center;
+      min-width:0;
+    }
+    table.lb td.metric:not(.score-cell){
+      grid-column:1 / -1;
+      grid-template-columns:110px minmax(0,1fr);
+    }
+    .bar{width:64px;margin-right:8px;}
+  }
+
+  @media (max-width:720px){
+    body{
+      display:block;
+      overflow:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+    .frame{
+      width:100%;
+      height:100dvh;
+      min-height:100dvh;
+      border-radius:0;
+      border:none;
+      padding:0;
+      box-shadow:none;
+    }
+    .screen{border-radius:0;}
+
+    .page{padding:20px 18px 28px 56px;}
+    .page.scroll{overflow-y:auto;}
+
+    .brand .word{font-size:21px;}
+    .smiley{width:32px;height:32px;}
+
+    /* home */
+    #home{overflow-y:auto;}
+    #home .content{
+      max-width:100%;
+      margin-left:0;
+      margin-top:40px;
+    }
+    #home h1{font-size:32px;margin-bottom:20px;}
+    #home p{font-size:17px;line-height:1.55;margin-bottom:16px;}
+    .homestats{
+      flex-wrap:wrap;
+      gap:18px 24px;
+      margin-top:24px;
+    }
+    .home-actions{margin-top:22px;}
+    .audit-link{min-height:34px;padding:8px 12px;font-size:11px;}
+    .homestats b{font-size:20px;}
+
+    /* menu panel: near full-width drawer */
+    .panel{width:calc(100% - 46px);}
+    .tab{
+      top:50%;
+      transform:translateY(-50%);
+      width:40px;height:104px;
+    }
+    .tab span{font-size:12px;letter-spacing:.26em;}
+    .panel-inner{padding:24px 0 28px 28px;}
+    .ruler{display:none;}
+    .mitem .lead{width:38px;margin-right:14px;}
+    .mitem .lead::after{width:20px;}
+    .mitem:hover .lead::after{width:38px;}
+    .mitem .label{font-size:27px;}
+    .mitem{padding:11px 0;}
+
+    /* crumb */
+    .crumb{font-size:17px;flex-wrap:wrap;gap:8px;}
+    .crumb .smiley{width:28px;height:28px;}
+    .crumb .sep{font-size:15px;}
+
+    /* cards */
+    .cards{
+      grid-template-columns:1fr;
+      grid-auto-rows:auto;
+      gap:14px;
+      margin-top:22px;
+    }
+    .cards.stats{grid-auto-rows:auto;margin-top:20px;}
+    .card{padding:18px;min-height:120px;gap:14px;}
+    .card h3{font-size:19px;}
+    .card .big{font-size:30px;}
+    .card p{font-size:14px;}
+    .card-cue{right:14px;top:14px;width:22px;height:22px;font-size:16px;}
+
+    /* methods cards override inline grid-auto-rows */
+    #methods .cards{grid-auto-rows:auto !important;}
+    .method-modal{padding:18px 14px 18px 50px;align-items:flex-start;}
+    .method-sheet{max-height:calc(100dvh - 36px);padding:22px 20px 24px;border-radius:14px;}
+    .method-title{font-size:29px;}
+    .method-summary{font-size:16px;}
+    .method-grid{grid-template-columns:1fr;gap:12px;}
+
+    /* leaderboard tools */
+    .lb-tools{margin-top:20px;gap:10px;}
+    .seg button{padding:6px 13px;font-size:12px;}
+    .lb-meta{font-size:11px;line-height:1.5;}
+
+    /* leaderboard table: compact readable cards */
+    .lb-wrap{
+      overflow-x:visible;
+      margin-top:16px;
+      margin-right:0;
+      padding-right:0;
+    }
+    table.lb{
+      min-width:0;
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      font-size:14px;
+    }
+    table.lb thead{display:none;}
+    table.lb tbody{display:grid;gap:12px;}
+    table.lb tr{
+      display:grid;
+      grid-template-columns:34px minmax(0,1fr);
+      gap:10px 12px;
+      padding:14px;
+      border:1px solid var(--card-edge);
+      border-radius:8px;
+      background:var(--card);
+    }
+    table.lb tr.top td{background:transparent;}
+    table.lb td{
+      border-bottom:0;
+      padding:0;
+      white-space:normal;
+    }
+    table.lb td.rank-cell{grid-column:1;grid-row:1;align-self:start;}
+    table.lb td.system-cell{grid-column:2;grid-row:1;min-width:0;}
+    table.lb td.metric{
+      grid-column:1 / -1;
+      display:grid;
+      grid-template-columns:88px minmax(0,1fr);
+      align-items:center;
+      gap:10px;
+      min-height:24px;
+      text-align:left;
+    }
+    table.lb td.metric::before{
+      content:attr(data-label);
+      color:var(--muted);
+      font-size:10px;
+      font-weight:600;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+    table.lb td.score-cell{
+      grid-template-columns:88px minmax(0,1fr);
+    }
+    table.lb td.score-cell > .score-inline{
+      display:flex;
+      justify-content:flex-end;
+      align-items:center;
+      min-width:0;
+    }
+    .bar{width:64px;margin-right:8px;}
+
+    .note{font-size:12.5px;}
+
+    /* prose / code */
+    .prose{font-size:15px;margin-top:22px;}
+    .prose h2{font-size:20px;margin:24px 0 8px;}
+    pre.code{padding:14px 16px;font-size:12px;border-radius:12px;}
+  }
+
+  @media (max-width:400px){
+    .page{padding:16px 14px 24px 50px;}
+    #home h1{font-size:27px;}
+    #home p{font-size:16px;}
+    .panel{width:calc(100% - 42px);}
+    .tab{width:36px;height:96px;}
+    .mitem .label{font-size:24px;}
+  }
 </style>
 </head>
 <body>
+  <div class="frame" id="frame">
+    <div class="screen">
+      <div class="grid-bg"></div>
 
-<div id="canvas-bg"><canvas id="map"></canvas></div>
-
-<!-- ─── vertical gutter nav ─── -->
-<aside class="gutter" aria-label="Sections">
-  <a href="#top">§ Capa</a>
-  <span class="tick"></span>
-  <a href="#leaderboard">§ Standing</a>
-  <span class="tick"></span>
-  <a href="#method">§ Método</a>
-  <span class="tick"></span>
-  <a href="#dimensions">§ Dimensões</a>
-  <span class="tick"></span>
-  <a href="#validation">§ Integridade</a>
-  <span class="tick"></span>
-  <a href="#submit">§ Submissão</a>
-  <span class="tick"></span>
-  <a href="#paper">§ Preprint</a>
-</aside>
-
-<!-- ─── I. MASTHEAD ─── -->
-<header class="mast" id="top">
-  <div class="wrap">
-    <div class="strip">
-      <span>VOL II · EDIÇÃO 1 · MAIO 2026 · SÃO PAULO</span>
-      <span>FUNDADO EM 2025 · POR LAUDOS.AI</span>
-      <span class="strip-toggles">
-        <button data-theme="light" class="on">CLARO</button><button data-theme="dark">ESCURO</button>
-      </span>
-    </div>
-    <div class="hr"></div>
-
-    <div class="name">
-      <div class="l">
-        <span class="blk">UM REGISTRO</span>
-        <span class="blk">TRIMESTRAL DE</span>
-        <span class="blk accent">MODOS DE FALHA.</span>
-      </div>
-      <h1>l<span class="b">ai</span>bench</h1>
-      <div class="r">
-        <span class="blk">Preview técnico —</span>
-        <span class="blk">avaliação achado ⤳</span>
-        <span class="blk">laudo em radiologia.</span>
-      </div>
-    </div>
-
-    <div class="hr"></div>
-    <div class="tagline">
-      <div class="line"></div>
-      <div class="text">“Na avaliação oficial, o veredito primário é <b>Strict PASS</b>: um caso passa apenas quando todo portão clinicamente decisivo se sustenta.”</div>
-      <div class="line"></div>
-    </div>
-    <div class="hr"></div>
-
-    <div class="meta">
-      <span data-i18n="meta_public"><b>PÚBLICO</b> · apenas demo sintética</span>
-      <span data-i18n="meta_suite"><b>SUITE LOCAL</b> · lite-public.pt-BR</span>
-      <span data-i18n="meta_oficial"><b>OFICIAL</b> · avaliação controlada / hospedada</span>
-      <span data-i18n="meta_data"><b>DADOS</b> · corpus clínico controlado</span>
-      <span data-i18n="meta_hidden"><b>TESTE OCULTO</b> · não distribuído</span>
-      <span data-i18n="meta_updated"><b>ATUALIZADO</b> · 11.v.2026</span>
-    </div>
-    <div class="hr"></div>
-  </div>
-</header>
-
-<!-- ─── I·b. HERO FLOW ─── -->
-<section class="flow wrap" aria-label="LAIBench flow">
-  <div class="frame">
-    <div class="col">
-      <div class="kk" data-i18n="fl_c1_k">Entrada visível da tarefa</div>
-      <h4 data-i18n="fl_c1_h">O que o sistema <em>pode ver.</em></h4>
-      <ul>
-        <li data-i18n="fl_c1_l1">Descritor do exame</li>
-        <li data-i18n="fl_c1_l2">Achados fornecidos</li>
-        <li data-i18n="fl_c1_l3">Locale</li>
-        <li data-i18n="fl_c1_l4">Contexto público permitido</li>
-      </ul>
-      <div class="ft" data-i18n="fl_c1_ft">Sem gold labels. Sem critérios ocultos.</div>
-    </div>
-    <div class="arr" aria-hidden="true">⤳</div>
-    <div class="col">
-      <div class="kk" data-i18n="fl_c2_k">Harness LAIBench</div>
-      <h4 data-i18n="fl_c2_h">Como o laudo <em>é lido.</em></h4>
-      <ul>
-        <li data-i18n="fl_c2_l1">Contrato de saída</li>
-        <li data-i18n="fl_c2_l2">CRIT / QUAL / TERM / GUIDE / RAG</li>
-        <li data-i18n="fl_c2_l3">Checks de negação</li>
-        <li data-i18n="fl_c2_l4">Checks de estrutura</li>
-        <li data-i18n="fl_c2_l5">Metadados de divulgação</li>
-      </ul>
-      <div class="ft" data-i18n="fl_c2_ft">A demo pública roda localmente. A avaliação oficial é controlada.</div>
-    </div>
-    <div class="arr" aria-hidden="true">→</div>
-    <div class="col">
-      <div class="kk" data-i18n="fl_c3_k">Veredito + auditoria</div>
-      <h4 data-i18n="fl_c3_h">O que é <em>publicado.</em></h4>
-      <ul>
-        <li data-i18n="fl_c3_l1">Strict PASS / FAIL</li>
-        <li data-i18n="fl_c3_l2">Diagnóstico por dimensão</li>
-        <li data-i18n="fl_c3_l3">Hash da suite</li>
-        <li data-i18n="fl_c3_l4">Saídas congeladas</li>
-        <li data-i18n="fl_c3_l5">Revisão de elegibilidade</li>
-      </ul>
-      <div class="ft" data-i18n="fl_c3_ft">O método é público. O teste oficial permanece controlado.</div>
-    </div>
-  </div>
-  <div class="cap">
-    <span data-i18n="fl_cap">Método público. Demo sintética. Avaliação clínica controlada.</span>
-    <span class="ref" data-i18n="fl_ref">FIG. 1 · fluxo LAIBench</span>
-  </div>
-</section>
-
-<!-- ─── II. LEAD SPREAD (data + editorial) ─── -->
-<main class="wrap" id="leaderboard">
-  <div class="lead">
-
-    <!-- left: leaderboard, data-first -->
-    <div class="col-data">
-      <div class="leader-tag">
-        <div class="t" data-i18n="stand"><b>Standing</b> — <span class="it">preview técnico público</span></div>
-        <div class="meta" data-i18n="stand_meta">demo sintética do harness · não é o benchmark oficial</div>
-      </div>
-      <p class="leader-sub" data-i18n="lb_sub">O pacote público atual expõe o harness, o contrato de pontuação, a suite de demo sintética, os materiais do preprint e as regras de submissão.<br/><br/>A demo sintética não é usada para julgar performance clínica de modelos. Nenhum leaderboard clínico oficial é publicado neste preview técnico.<br/><br/>Linhas oficiais exigem avaliação controlada ou hospedada, com saídas congeladas, hash da suite, metadados de divulgação e revisão de elegibilidade.</p>
-
-      <div class="lb" role="table">
-        <div class="lb-row head">
-          <div>№</div>
-          <div data-i18n="lb_h_sys">Sistema</div>
-          <div data-i18n="lb_h_suite">Avaliação</div>
-          <div data-i18n="lb_h_type">Tipo</div>
-          <div data-i18n="lb_h_score">Strict PASS</div>
-          <div></div>
+      <!-- ============ HOME ============ -->
+      <section class="page" id="home" data-screen-label="Home">
+        <div class="brand">
+          <svg class="smiley" viewBox="0 0 40 40" fill="none">
+            <circle cx="20" cy="14" r="5.2" stroke="currentColor" stroke-width="2.2"/>
+            <circle cx="10.5" cy="24" r="4.4" stroke="currentColor" stroke-width="2.2"/>
+            <circle cx="29.5" cy="24" r="4.4" stroke="currentColor" stroke-width="2.2"/>
+            <path d="M14.2 21.6l3.3-3.1M25.8 21.6l-3.3-3.1M15 28.2h10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+          <span class="word">laibench <b>pro</b></span>
         </div>
-
-        <div class="lb-row zero">
-          <div class="rk">—</div>
-          <div class="sys" data-i18n="lb_empty_sys">Ainda não há leaderboard clínico público oficial. <span class="kind">A pontuação oficial exige avaliação controlada ou hospedada.</span></div>
-          <div class="eval" data-i18n="lb_empty_eval">—</div>
-          <div class="type" data-i18n="lb_empty_type">oficial</div>
-          <div class="bar"><div class="track"></div></div>
-          <div class="pct" data-i18n="lb_empty_pct">—</div>
-        </div>
-
-        <div class="lb-row zero">
-          <div class="rk">—</div>
-          <div class="sys" data-i18n="lb_demo_sys">Demo sintética do harness</div>
-          <div class="eval" data-i18n="lb_demo_eval">lite-public.pt-BR<span class="judge">4 casos sintéticos · smoke test e inspeção do contrato</span></div>
-          <div class="type" data-i18n="lb_demo_type">demo</div>
-          <div class="bar"><div class="track"></div></div>
-          <div class="pct" data-i18n="lb_demo_pct">não ranqueado</div>
-        </div>
-
-        <div class="lb-row submit">
-          <div class="rk">—</div>
-          <div class="sys" data-i18n="lb_your">Seu agente aqui</div>
-          <div class="eval" data-i18n="lb_your_eval">avaliação controlada / hospedada<span class="judge">saídas congeladas · hash da suite · divulgação</span></div>
-          <a class="submit-btn" href="mailto:natan@laudos.ai?subject=LAIBench%20controlled%20evaluation" data-i18n="lb_btn">Solicitar avaliação &nbsp;→</a>
-        </div>
-      </div>
-
-      <p class="lb-foot" data-i18n="lb_foot">
-        <b>Strict PASS</b><sup>†</sup> é binário por caso: um caso passa apenas quando todo portão clinicamente decisivo se sustenta, com achados críticos preservados, lateralidade correta, ausência de negação insegura, integridade estrutural e conformidade terminológica.<br/><br/>A suite pública de demo sintética serve para reprodutibilidade, onboarding e inspeção do harness<sup>‡</sup>. Não é validação clínica, não é o teste oculto oficial, não é uma suite oficial de leaderboard e não representa o corpus completo do benchmark.
-      </p>
-    </div>
-
-    <!-- right: editorial column with drop cap, footnotes -->
-    <aside class="col-edit">
-      <div class="kicker">Nota do editor · fólio i</div>
-      <h2 class="abs" data-i18n="ed_h">Sobre <em>publicar</em> apenas o que sobrevive a cada portão.</h2>
-      <div class="body">
-        <p data-i18n="ed_p1">
-          <span class="dropcap">O</span> LAIBench é construído sobre uma premissa deliberadamente conservadora: em laudos de radiologia, <b>médias podem esconder falhas clinicamente decisivas</b>. Um laudo que preserva a maioria dos achados, mas perde uma anormalidade crítica, troca lateralidade, inventa diagnóstico sem suporte ou quebra a estrutura exigida, não é um quase-acerto seguro: é um artefato de laudo falho<sup>1</sup>.
-        </p>
-        <p data-i18n="ed_p2">
-          O benchmark separa dimensões diagnósticas do veredito público. Pontuações por dimensão explicam<sup>2</sup> por que um caso falhou. O <em>Strict PASS</em> determina se o caso sobrevive.
-        </p>
-      </div>
-
-      <div class="fn">
-        <span data-i18n="ed_f1"><sup>†</sup> Strict PASS é binário por caso.</span>
-        <span data-i18n="ed_f2"><sup>‡</sup> Resultados do preview técnico público são apenas sintéticos / demo.</span>
-        <span data-i18n="ed_f3"><sup>1</sup> A avaliação oficial exige avaliação controlada ou hospedada.</span>
-        <span data-i18n="ed_f4"><sup>2</sup> O método é público. O corpus clínico é controlado. A avaliação oficial é restrita.</span>
-      </div>
-
-      <div class="stats-line">
-        <div class="s"><span class="v">4</span><span class="k" data-i18n="stat_synth">Casos sintéticos públicos de demo</span></div>
-        <div class="s"><span class="v">1</span><span class="k" data-i18n="stat_demo">Suite de smoke test</span></div>
-        <div class="s"><span class="v small">Controlada</span><span class="k" data-i18n="stat_oficial">Avaliação oficial</span></div>
-        <div class="s"><span class="v small">Oculto</span><span class="k" data-i18n="stat_hidden">Teste oficial não distribuído</span></div>
-        <div class="s"><span class="v">5</span><span class="k" data-i18n="stat_dims">Dimensões</span></div>
-        <div class="s"><span class="v">211</span><span class="k" data-i18n="stat_tests">Testes</span></div>
-      </div>
-    </aside>
-
-  </div>
-</main>
-
-<!-- ─── III. METHOD ─── -->
-<section id="method">
-  <div class="wrap">
-    <div class="sec-title">
-      <div class="id"><b>§ II</b> · Método — lendo o harness</div>
-      <h2 data-i18n="sec2_h">De achados visíveis a um veredito auditável, em três movimentos.</h2>
-      <div class="sub" data-i18n="sec2_sub">Um protocolo travado de achado-para-laudo. A demo pública verifica o harness; a avaliação controlada pontua o modelo.</div>
-    </div>
-
-    <div class="method">
-      <div class="col">
-        <div class="roman" data-i18n="m1_roman">Primeiro.</div>
-        <h3 data-i18n="m1_h">O sistema recebe apenas entrada visível da tarefa.</h3>
-        <p data-i18n="m1_p">O sistema avaliado recebe apenas entrada visível: descritor do exame, achados fornecidos, locale e contexto público permitido. Deve emitir um laudo completo sob o contrato de saída.<br/><br/>Ele nunca recebe gold labels, critérios ocultos, respostas de referência, prompts do judge, regras privadas de pontuação, canary tokens ou metadados do teste oculto.</p>
-        <div class="swatch">
-          <span data-i18n="m1_s1"><b>entrada</b> · exame + achados visíveis</span>
-          <span data-i18n="m1_s2"><b>locale</b> · demo pública pt-BR</span>
-          <span data-i18n="m1_s3"><b>oculto</b> · gold labels nunca enviados</span>
-        </div>
-      </div>
-
-      <div class="col">
-        <div class="roman" data-i18n="m2_roman">Segundo.</div>
-        <h3 data-i18n="m2_h">Cinco avaliadores leem o laudo como <em>cinco detectores de falha.</em></h3>
-        <p data-i18n="m2_p">O harness verifica preservação de achados críticos, qualidade clínica, terminologia, aplicabilidade de diretrizes e fidelidade de evidência. Camadas opcionais de adjudicação podem ser usadas na avaliação controlada; rodadas da demo pública permanecem separadas da avaliação oficial hospedada.</p>
-        <div class="swatch">
-          <span data-i18n="m2_s1"><b>avaliadores</b> · CRIT · QUAL · TERM · GUIDE · RAG</span>
-          <span data-i18n="m2_s2"><b>negação</b> · escopo + incerteza</span>
-          <span data-i18n="m2_s3"><b>judge</b> · apenas controlado / hospedado</span>
-        </div>
-      </div>
-
-      <div class="col">
-        <div class="roman" data-i18n="m3_roman">Terceiro.</div>
-        <h3 data-i18n="m3_h">Um veredito binário: <em>todos os portões, ou nenhum.</em></h3>
-        <p data-i18n="m3_p">Strict PASS é binário por caso. Qualquer falha em portão clinicamente decisivo, como achado crítico perdido, lateralidade trocada, negação insegura, estrutura malformada, linguagem normalizante sem suporte ou termo proibido, derruba o caso para <b>FAIL</b>. Pontuações por dimensão sobrevivem como diagnóstico; elas não substituem o veredito.</p>
-        <div class="swatch">
-          <span data-i18n="m3_s1"><b>veredito</b> · pass / fail</span>
-          <span data-i18n="m3_s2"><b>publicação</b> · linha + hash da suite + divulgação</span>
-          <span data-i18n="m3_s3"><b>oficial</b> · apenas avaliação controlada</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ─── IV. DIMENSIONS ─── -->
-<section id="dimensions">
-  <div class="wrap">
-    <div class="sec-title">
-      <div class="id"><b>§ III</b> · Dimensões &nbsp;—&nbsp; cinco eixos independentes</div>
-      <h2 data-i18n="sec3_h">Pontuadas separadamente, <em>somadas apenas no papel.</em></h2>
-      <div class="sub" data-i18n="sec3_sub">Cada eixo captura um modo de falha distinto. A mistura clínica é diagnóstico apenas; nunca substitui o veredito.</div>
-    </div>
-
-    <div class="dims-grid">
-      <aside class="dims-left">
-        <p class="pull">A mistura clínica abaixo é <em>diagnóstico apenas</em>. O veredito público continua subindo ou caindo pelo Strict PASS.</p>
-
-        <div class="note">
-          <div class="row"><span>Strict PASS</span><b>binário · por caso</b></div>
-          <div class="row"><span>Média por dimensão</span><b>diagnóstico apenas</b></div>
-          <div class="row"><span>Intervalo de confiança</span><b>oficial apenas · quando aplicável</b></div>
-          <div class="row"><span>Agregação</span><b>nunca substitui o veredito</b></div>
-        </div>
-
-        <div class="weight-ladder">
-          <div class="label">Mistura clínica · diagnóstico apenas</div>
-          <div class="wladder">
-            <div class="w w1"><div class="k">CRIT</div><div class="bar"></div><div class="v">30%</div></div>
-            <div class="w w2"><div class="k">QUAL</div><div class="bar"></div><div class="v">25%</div></div>
-            <div class="w w3"><div class="k">TERM</div><div class="bar"></div><div class="v">20%</div></div>
-            <div class="w w4"><div class="k">GUIDE</div><div class="bar"></div><div class="v">15%</div></div>
-            <div class="w w5"><div class="k">RAG</div><div class="bar"></div><div class="v">10%</div></div>
+        <div class="content">
+          <h1>The controlled radiology report benchmark.</h1>
+          <p>LAIBench Pro tests a narrow, auditable task: given an exam descriptor and text findings, can a system produce a faithful radiology report without losing clinically important facts?</p>
+          <p>The pt-BR controlled suite is gated. The public page shows methodology and aggregate diagnostics only; case JSON, answer keys, frozen predictions and corpus provenance stay outside the public repository.</p>
+          <p>Built by <a href="https://laudos.ai" target="_blank" rel="noopener">Laudos.AI</a>. Reproducibility is available to authorized reviewers inside the private audit environment.</p>
+          <div class="home-actions">
+            <a class="audit-link primary" href="#methods">Methods</a>
+            <a class="audit-link" href="#leaderboard">Leaderboard</a>
           </div>
+          <div class="homestats" id="homestats"></div>
+        </div>
+      </section>
+
+      <!-- ============ LEADERBOARD ============ -->
+      <section class="page scroll" id="leaderboard" hidden>
+        <div class="crumb">
+          <svg class="smiley" viewBox="0 0 40 40" fill="none">
+            <circle cx="20" cy="14" r="5.2" stroke="currentColor" stroke-width="2.2"/>
+            <circle cx="10.5" cy="24" r="4.4" stroke="currentColor" stroke-width="2.2"/>
+            <circle cx="29.5" cy="24" r="4.4" stroke="currentColor" stroke-width="2.2"/>
+            <path d="M14.2 21.6l3.3-3.1M25.8 21.6l-3.3-3.1M15 28.2h10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+          <span>laibench pro</span>
+          <span class="sep">/</span>
+          <span class="here">Leaderboard</span>
+          <button class="close" data-go="home" aria-label="Back home">
+            <svg width="15" height="15" viewBox="0 0 15 15"><path d="M2 2l11 11M13 2L2 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+
+        <div class="cards stats" id="lb-stats"></div>
+
+        <div class="lb-tools">
+          <div class="seg" id="locale-seg"></div>
+          <span class="lb-meta" id="lb-meta"></span>
+          <a class="audit-link" href="#methods">Methods</a>
+        </div>
+
+        <div class="lb-wrap">
+          <table class="lb">
+            <thead>
+              <tr>
+                <th>#</th><th>System</th>
+                <th class="num">Score</th>
+                <th class="num">Latency</th>
+                <th class="num">All-pass</th>
+                <th class="num">Criteria</th>
+                <th class="num">CRIT</th><th class="num">QUAL</th><th class="num">TERM</th><th class="num">GUIDE</th><th class="num">RAG</th>
+              </tr>
+            </thead>
+            <tbody id="lb-body"></tbody>
+          </table>
+        </div>
+
+        <p class="note" id="lb-note"></p>
+      </section>
+
+      <!-- ============ METHODS ============ -->
+      <section class="page scroll" id="methods" hidden>
+        <div class="crumb">
+          <svg class="smiley" viewBox="0 0 40 40" fill="none">
+            <circle cx="20" cy="14" r="5.2" stroke="currentColor" stroke-width="2.2"/>
+            <circle cx="10.5" cy="24" r="4.4" stroke="currentColor" stroke-width="2.2"/>
+            <circle cx="29.5" cy="24" r="4.4" stroke="currentColor" stroke-width="2.2"/>
+            <path d="M14.2 21.6l3.3-3.1M25.8 21.6l-3.3-3.1M15 28.2h10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+          <span>laibench pro</span>
+          <span class="sep">/</span>
+          <span class="here">Methods</span>
+          <button class="close" data-go="home" aria-label="Back home">
+            <svg width="15" height="15" viewBox="0 0 15 15"><path d="M2 2l11 11M13 2L2 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+
+        <div class="cards" id="method-cards" style="grid-auto-rows:210px;">
+          <button type="button" class="card blue" data-method="clinical" aria-label="Open clinical score method details"><span class="card-cue" aria-hidden="true">+</span><div><h3>Clinical score</h3><p>Weighted score across safety, quality, terminology, guideline and evidence-fidelity dimensions.</p></div><div class="tags"><span>Headline</span><span>Weighted</span></div></button>
+          <button type="button" class="card" data-method="crit" aria-label="Open CRIT method details"><span class="card-cue" aria-hidden="true">+</span><div><h3>CRIT</h3><p>Critical-finding preservation and unsafe-negation checks. Critical misses gate the case.</p></div><div class="tags"><span>30%</span><span>Gated</span></div></button>
+          <button type="button" class="card" data-method="qual" aria-label="Open QUAL method details"><span class="card-cue" aria-hidden="true">+</span><div><h3>QUAL</h3><p>Finding preservation, contradiction control and hallucination resistance.</p></div><div class="tags"><span>25%</span><span>Gated</span></div></button>
+          <button type="button" class="card" data-method="term" aria-label="Open TERM method details"><span class="card-cue" aria-hidden="true">+</span><div><h3>TERM</h3><p>Locale, modality, section structure and report terminology under the public contract.</p></div><div class="tags"><span>20%</span></div></button>
+          <button type="button" class="card" data-method="guide" aria-label="Open GUIDE method details"><span class="card-cue" aria-hidden="true">+</span><div><h3>GUIDE</h3><p>Guideline expectations and source-scoped anatomical coverage for the exam type.</p></div><div class="tags"><span>15%</span></div></button>
+          <button type="button" class="card" data-method="rag" aria-label="Open RAG method details"><span class="card-cue" aria-hidden="true">+</span><div><h3>RAG</h3><p>Evidence fidelity for ordering, laterality, levels, measurements and unsupported technique.</p></div><div class="tags"><span>10%</span></div></button>
+          <button type="button" class="card" data-method="diagnostics" aria-label="Open diagnostics method details"><span class="card-cue" aria-hidden="true">+</span><div><h3>Diagnostics</h3><p>All-pass and criterion pass rate are strict diagnostics beside the clinical score.</p></div><div class="tags"><span>Audit</span></div></button>
+          <button type="button" class="card" data-method="reliability" aria-label="Open reliability method details"><span class="card-cue" aria-hidden="true">+</span><div><h3>Reliability</h3><p>pass^k consistency across repeated runs of the same system on the same suite.</p></div><div class="tags"><span>3 runs</span></div></button>
+          <button type="button" class="card" data-method="provenance" aria-label="Open provenance method details"><span class="card-cue" aria-hidden="true">+</span><div><h3>Provenance</h3><p>Suite hash, track, scaffold, scoring mode and frozen predictions for reproducibility.</p></div><div class="tags"><span>Audit</span></div></button>
+        </div>
+
+        <div class="prose">
+          <h2>Scope</h2>
+          <p>LAIBench Pro is a controlled technical benchmark framework — not a medical device, not regulatory approval, not clinical validation. The harness evaluates report generation from provided text evidence; it is not primary image interpretation. The pt-BR controlled suite, corpus provenance, frozen predictions and answer keys remain gated outside the public repository. Authorized reviewers can reproduce runs inside the controlled adjudication environment.</p>
+        </div>
+
+        <div class="method-modal" id="method-modal" role="dialog" aria-modal="true" aria-labelledby="method-title" hidden>
+          <div class="method-backdrop" data-method-close></div>
+          <article class="method-sheet">
+            <div class="method-top">
+              <div>
+                <p class="method-kicker" id="method-kicker"></p>
+                <h2 class="method-title" id="method-title"></h2>
+              </div>
+              <button type="button" class="method-close" data-method-close aria-label="Close method details">
+                <svg width="15" height="15" viewBox="0 0 15 15"><path d="M2 2l11 11M13 2L2 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+            <p class="method-summary" id="method-summary"></p>
+            <div class="method-grid" id="method-grid"></div>
+            <p class="method-foot" id="method-foot"></p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ============ API ============ -->
+      <section class="page scroll" id="api" hidden>
+        <div class="crumb">
+          <svg class="smiley" viewBox="0 0 40 40" fill="none">
+            <circle cx="20" cy="14" r="5.2" stroke="currentColor" stroke-width="2.2"/>
+            <circle cx="10.5" cy="24" r="4.4" stroke="currentColor" stroke-width="2.2"/>
+            <circle cx="29.5" cy="24" r="4.4" stroke="currentColor" stroke-width="2.2"/>
+            <path d="M14.2 21.6l3.3-3.1M25.8 21.6l-3.3-3.1M15 28.2h10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+          <span>laibench pro</span>
+          <span class="sep">/</span>
+          <span class="here">API</span>
+          <button class="close" data-go="home" aria-label="Back home">
+            <svg width="15" height="15" viewBox="0 0 15 15"><path d="M2 2l11 11M13 2L2 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+
+        <div class="prose">
+          <h2>Laudos.AI evaluation access</h2>
+          <p>This public page is not a generic harness tutorial and does not publish private API routes, keys, prompts, frozen predictions, or command-line recipes for third-party systems.</p>
+
+          <h2>What the benchmark represents</h2>
+          <p>The controlled pt-BR suite now contains 120 staged cases, including critical-safety and negative-control strata. The displayed Laudos.AI row is the validated 120-case production-agent run. Runs are locked to a suite hash, scoring mode, track, scaffold class, and provenance chain before they are shown here.</p>
+
+          <h2>Reviewer workflow</h2>
+          <p>Authorized reviewers can reproduce the evaluation inside the controlled benchmark environment. Public visitors should read this page as a methodology and leaderboard surface for Laudos.AI, not as integration documentation for unrelated models or endpoints.</p>
+
+          <h2>Product API</h2>
+          <p>Operational access to Laudos.AI is handled through the product onboarding and permissioning flow. Benchmark artifacts and product credentials are intentionally separated.</p>
+        </div>
+      </section>
+
+      <!-- ============ MENU PANEL ============ -->
+      <aside class="panel" id="panel">
+        <div class="tab" id="tab"><span>MENU</span></div>
+        <div class="ruler" id="ruler"></div>
+        <div class="panel-inner">
+          <div class="pill">
+            <a id="btn-gh" href="https://github.com/Vajbratya/laibench-pro" target="_blank" rel="noopener" aria-label="Private GitHub" title="Private GitHub">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </a>
+            <button id="btn-theme" aria-label="Toggle theme" title="Toggle theme">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.4" stroke="currentColor" stroke-width="1.8"/><path d="M9 2.6a6.4 6.4 0 0 0 0 12.8z" fill="currentColor"/></svg>
+            </button>
+          </div>
+          <nav class="menu" id="menu">
+            <button class="mitem current" data-page="home"><span class="lead"></span><span class="label">Home</span></button>
+            <button class="mitem" data-page="leaderboard"><span class="lead"></span><span class="label">Leaderboard</span></button>
+            <button class="mitem" data-page="methods"><span class="lead"></span><span class="label">Methods</span></button>
+            <button class="mitem" data-page="api"><span class="lead"></span><span class="label">API</span></button>
+          </nav>
         </div>
       </aside>
 
-      <div class="dims-right">
-        <div class="dim">
-          <div class="code">CRIT</div>
-          <div class="b">
-            <h4>Achados críticos — <em>o que não pode desaparecer.</em></h4>
-            <p>Achados de imagem clinicamente decisivos são checados com tratamento de negação quando implementado. Em avaliação controlada, labels ocultos podem ser usados para verificar preservação de achados urgentes ou clinicamente decisivos. O espelho público não distribui o conjunto clínico completo de categorias.</p>
-            <div class="chips"><span>negação</span><span>labels controlados</span><span>falha dura</span></div>
-          </div>
-          <div class="pct">30<sup>%</sup></div>
-        </div>
-
-        <div class="dim">
-          <div class="code">QUAL</div>
-          <div class="b">
-            <h4>Qualidade clínica — <em>e as alucinações que parecem qualidade.</em></h4>
-            <p>Matching sensível à gravidade verifica se achados clinicamente relevantes foram preservados sem recompensar normalidade não suportada. Em avaliação controlada, a comparação pode usar labels ocultos, referências adjudicadas ou laudos de referência controlados, nunca apenas sobreposição literal de string.</p>
-            <div class="chips"><span>sinônimos</span><span>gravidade</span><span>alucinação</span></div>
-          </div>
-          <div class="pct">25<sup>%</sup></div>
-        </div>
-
-        <div class="dim">
-          <div class="code">TERM</div>
-          <div class="b">
-            <h4>Terminologia — <em>as palavras que mantêm o laudo no domínio correto.</em></h4>
-            <p>Checks terminológicos detectam drift de modalidade, drift de seção, aberturas proibidas, violações de estilo local e erros de vocabulário específico de modalidade quando implementados. Sistemas de classificação — BI-RADS, TI-RADS, PI-RADS, Bosniak, Fleischner e Lung-RADS — podem ser checados estruturalmente quando aplicáveis.</p>
-            <div class="chips"><span>BI-RADS</span><span>TI-RADS</span><span>PI-RADS</span><span>Bosniak</span><span>Fleischner</span><span>Lung-RADS</span></div>
-          </div>
-          <div class="pct">20<sup>%</sup></div>
-        </div>
-
-        <div class="dim">
-          <div class="code">GUIDE</div>
-          <div class="b">
-            <h4>Guideline — <em>aplicabilidade antes de correção.</em></h4>
-            <p>Módulos plugáveis de aplicabilidade. A detecção de aplicabilidade roda primeiro, para que um sistema não seja penalizado por omitir uma regra que não se aplica. Quando uma regra dispara, a avaliação verifica classificação, faixa válida, recomendação e consistência.</p>
-            <div class="chips"><span>aplicabilidade primeiro</span><span>faixas válidas</span><span>recomendações</span></div>
-          </div>
-          <div class="pct">15<sup>%</sup></div>
-        </div>
-
-        <div class="dim">
-          <div class="code">RAG</div>
-          <div class="b">
-            <h4>Fidelidade de evidência — <em>apenas quando há recuperação.</em></h4>
-            <p>Para agentes com retrieval, métricas de recuperação como Precision@k, Recall@k, MRR e nDCG podem ser usadas. Detectores de troca de lateralidade e preservação de medidas ficam acima disso, porque erros de recuperação são mais perigosos quando parecem sintaticamente corretos.</p>
-            <div class="chips"><span>Precision@k</span><span>Recall@k</span><span>MRR</span><span>nDCG</span><span>lateralidade</span><span>medidas</span></div>
-          </div>
-          <div class="pct">10<sup>%</sup></div>
-        </div>
-      </div>
     </div>
   </div>
-</section>
 
-<!-- ─── V. VALIDATION ─── -->
-<section id="validation">
-  <div class="wrap">
-    <div class="sec-title">
-      <div class="id"><b>§ IV</b> · Integridade &nbsp;—&nbsp; o que sustenta a linha</div>
-      <h2 data-i18n="sec4_h">Integridade do método e controle do teste oficial.</h2>
-      <div class="sub" data-i18n="sec4_sub">Tarefas travadas, pontuações recomputadas, suites com hash fixado e metadados de divulgação governam o que entra no leaderboard e o que fica de fora.</div>
-    </div>
-
-    <div class="val">
-      <p class="lead-q">
-        “O <b>método</b> pode ser público enquanto o <b>teste oficial</b> permanece controlado. O que é publicado precisa ser reproduzível; o que protege privacidade, anti-contaminação e integridade do benchmark permanece restrito.”
-      </p>
-
-      <div class="items">
-        <div class="item">
-          <div class="n">01</div>
-          <div><h5>Checks determinísticos.</h5><p>Mesma entrada, mesma pontuação. Os artefatos da demo pública expõem método suficiente para inspecionar o harness sem liberar corpus controlado, teste oculto ou implementação proprietária.</p></div>
-        </div>
-        <div class="item">
-          <div class="n">02</div>
-          <div><h5>Recomputação de pontuação.</h5><p>Vereditos por caso, resumos de suite, diagnósticos por dimensão, chaves comparáveis e hashes de suite são recomputados antes de qualquer publicação oficial.</p></div>
-        </div>
-        <div class="item">
-          <div class="n">03</div>
-          <div><h5>Leaderboards agrupados.</h5><p>Runs só competem quando compartilham suite, locale, trilha, scaffold e judge. Runs incompatíveis são arquivados, mas não ranqueados entre si.</p></div>
-        </div>
-        <div class="item">
-          <div class="n">04</div>
-          <div><h5>Validação de submissão.</h5><p>IDs ausentes, duplicatas, saídas vazias ou JSONL malformado tornam a submissão inelegível. Artefatos públicos mostram contagens e razões sanitizadas, não listas brutas de casos.</p></div>
-        </div>
-        <div class="item">
-          <div class="n">05</div>
-          <div><h5>Comparações agrupadas.</h5><p>Agentes de produto, agentes customizados e baselines abertos não se misturam em um único ranking. Cada linha compete apenas contra seu próprio coorte comparável.</p></div>
-        </div>
-        <div class="item">
-          <div class="n">06</div>
-          <div><h5>Integridade de hash.</h5><p>Cada suite carrega um hash criptográfico dos casos. Qualquer alteração nos dados subjacentes invalida runs anteriores que dependiam deles.</p></div>
-        </div>
-        <div class="item">
-          <div class="n">07</div>
-          <div><h5>Controles de contaminação.</h5><p>Suites controladas podem incluir marcadores de vazamento para detectar contaminação do benchmark. Um sistema que reproduz conteúdo protegido é marcado para revisão.</p></div>
-        </div>
-        <div class="item">
-          <div class="n">08</div>
-          <div><h5>Intervalos de incerteza.</h5><p>Linhas oficiais podem incluir intervalos de confiança por bootstrap quando a quantidade de tarefas comporta esse cálculo. Se a incerteza for alta demais, linhas são relatadas como exploratórias ou empatadas, não super-ranqueadas.</p></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ─── VI. SUBMIT ─── -->
-<section id="submit">
-  <div class="wrap">
-    <div class="sec-title">
-      <div class="id"><b>§ V</b> · Submissão &nbsp;—&nbsp; o contrato em quatro passos</div>
-      <h2 data-i18n="sec5_h">Use a demo sintética pública <em>para inspecionar o contrato.</em></h2>
-      <div class="sub" data-i18n="sec5_sub">Ou solicite avaliação controlada para pontuação oficial. A suite sintética pública serve para onboarding e inspeção do harness, não para ranquear performance clínica de modelos.</div>
-    </div>
-
-    <div class="manual">
-
-      <div class="step">
-        <div class="n">i<span class="dot">.</span></div>
-        <div>
-          <h4 data-i18n="s1_h">Escolha a suite sintética pública.</h4>
-          <p data-i18n="s1_p">O repositório público contém uma suite sintética pequena para onboarding, testes locais e verificação do harness. Ela não inclui o corpus clínico nem o teste oculto oficial.</p>
-          <div class="term">
-            <div class="row"><span class="k">fonte</span><span class="v" data-i18n="s1_t1">Laudos-AI/laibench-public</span></div>
-            <div class="row"><span class="k">suite</span><span class="v">lite-public.pt-BR</span></div>
-            <div class="row"><span class="k">contrato</span><span class="v" data-i18n="s1_t3">case-id + laudo + rótulo público</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="n">ii<span class="dot">.</span></div>
-        <div>
-          <h4 data-i18n="s2_h">Gere os laudos.</h4>
-          <p data-i18n="s2_p">Rode cada caso sintético público no seu produto, agente, wrapper local ou modelo de referência. O contrato de saída é o mesmo usado na avaliação controlada.</p>
-          <div class="term">
-            <div class="row"><span class="k">entrada</span><span class="v" data-i18n="s2_t1">exame visível + achados</span></div>
-            <div class="row"><span class="k">sistema</span><span class="v" data-i18n="s2_t2">seu gerador de laudo</span></div>
-            <div class="row"><span class="k">saída</span><span class="v">reports.jsonl</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="n">iii<span class="dot">.</span></div>
-        <div>
-          <h4 data-i18n="s3_h">Pontue a submissão.</h4>
-          <p data-i18n="s3_p">Pontue os laudos gerados com o harness público. Resultados locais da demo são úteis para desenvolvimento, mas não são linhas oficiais de leaderboard.</p>
-          <div class="term">
-            <div class="row"><span class="k">suite</span><span class="v">lite-public.pt-BR</span></div>
-            <div class="row"><span class="k">rótulo</span><span class="v" data-i18n="s3_t2">nome público do sistema</span></div>
-            <div class="row"><span class="k">saída</span><span class="v">score-report.json</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="n">iv<span class="dot">.</span></div>
-        <div>
-          <h4 data-i18n="s4_h">Solicite avaliação oficial.</h4>
-          <p data-i18n="s4_p">Linhas oficiais de leaderboard exigem avaliação controlada ou hospedada, com saídas congeladas, hashes de suite, divulgação do modelo e revisão de elegibilidade.</p>
-          <div class="term">
-            <div class="row"><span class="k">artefato</span><span class="v" data-i18n="s4_t1">saída congelada</span></div>
-            <div class="row"><span class="k">hash</span><span class="v" data-i18n="s4_t2">suite hash</span></div>
-            <div class="row"><span class="k">acesso</span><span class="v" data-i18n="s4_t3">controlado / hospedado</span></div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="submit-cta">
-      <p class="ask" data-i18n="cta_ask">Tem um agente de laudo? <b>Traga para avaliação controlada.</b><br/>Se sobreviver a cada portão oficial, ganha uma linha elegível.</p>
-      <div class="links">
-        <a class="btn solid" href="https://github.com/Laudos-AI/laibench-public" rel="noopener noreferrer" target="_blank"><span data-i18n="cta_b1">Rodar demo sintética</span><span>↗</span></a>
-        <a class="btn ghost" href="mailto:natan@laudos.ai?subject=LAIBench%20controlled%20evaluation"><span data-i18n="cta_b2">Solicitar avaliação controlada</span><span>→</span></a>
-        <a class="btn ghost" href="https://github.com/Laudos-AI/laibench-public" rel="noopener noreferrer" target="_blank"><span data-i18n="cta_b3">Laudos-AI/laibench-public</span><span>↗</span></a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ─── VII. PREPRINT ─── -->
-<div class="paper-sec" id="paper">
-  <div class="wrap">
-    <div class="sec-title">
-      <div class="id"><b>§ VI</b> · Preprint &nbsp;—&nbsp; 2026</div>
-      <h2 data-i18n="sec6_h">O paper — <em>por que templates não são a unidade correta de escala.</em></h2>
-      <div class="sub" data-i18n="sec6_sub">Uma contribuição formal e arquitetural para laudos radiológicos. Não é alegação de prontidão clínica.</div>
-    </div>
-
-    <div class="paper-card">
-      <div class="col-l">
-        <h3 class="ttl" data-i18n="pp_ttl">Beyond Templates: <em>Um Modelo Composicional e Limite Inferior para a Variabilidade de Laudos Radiológicos</em></h3>
-        <div class="auth">
-          <b>Natan Paraiso Ribeiro · Petrus Paraiso Ribeiro · Stephanie Alba Herrera</b><br/>
-          Francisco Akira · Raquel Moreno<br/>
-          <span data-i18n="pp_aff">Laudos.AI &nbsp;·&nbsp; São Paulo, Brasil &nbsp;·&nbsp; preprint preliminar · maio de 2026</span>
-        </div>
-        <div class="abstract">
-          <p data-i18n="pp_a1">Este preprint argumenta que laudos de radiologia são melhor modelados como <em>geração composicional restrita</em> a partir do estado clínico relevante para o laudo, não como enumeração estática de templates.</p>
-          <p data-i18n="pp_a2">Ele introduz o <b>Report Space Lower Bound</b> e o <b>Radiology Report Variability Index</b> para descrever por que a cobertura ampla de laudos cresce combinatoriamente e por que sistemas escaláveis devem representar protocolo, anatomia, achados, atributos, restrições, lógica de impressão e renderização como componentes separados.</p>
-          <p data-i18n="pp_a3">O preprint é uma contribuição formal e arquitetural. Não reivindica validação clínica, aprovação regulatória, diagnóstico autônomo ou substituição da supervisão do radiologista.</p>
-        </div>
-
-        <div class="paper-cta">
-          <a class="btn solid" href="https://laibench.laudos.ai/laibench-preprint.pdf"><span data-i18n="pp_b1">Baixar PDF</span><span>↓</span></a>
-          <a class="btn ghost" href="https://laibench.laudos.ai/arxiv-laibench-source.zip"><span data-i18n="pp_b2">Pacote-fonte</span><span>↗</span></a>
-          <a class="btn ghost" href="https://laibench.laudos.ai/arxiv-laibench-metadata.json"><span data-i18n="pp_b3">Metadados de submissão</span><span>↗</span></a>
-        </div>
-      </div>
-
-      <div class="col-r">
-        <div class="fact">
-          <span class="k" data-i18n="pf1_k">Modelo formal</span>
-          <span class="v" data-i18n="pf1_v">Espaço de estado do laudo<small>Geração composicional sob restrições de renderização.</small></span>
-        </div>
-        <div class="fact">
-          <span class="k" data-i18n="pf2_k">Limite inferior</span>
-          <span class="v" data-i18n="pf2_v">RSLB · RRVI<small>Quantificação conservadora da variabilidade do laudo.</small></span>
-        </div>
-        <div class="fact">
-          <span class="k" data-i18n="pf3_k">Arquitetura</span>
-          <span class="v" data-i18n="pf3_v">Componentes modulares<small>Protocolo, anatomia, achados, atributos, restrições, impressão, renderer.</small></span>
-        </div>
-        <div class="fact">
-          <span class="k" data-i18n="pf4_k">Fronteira clínica</span>
-          <span class="v" data-i18n="pf4_v">Sem reivindicação de uso autônomo<small>Sem substituição do julgamento médico.</small></span>
-        </div>
-        <div class="fact">
-          <span class="k" data-i18n="pf5_k">Status</span>
-          <span class="v" data-i18n="pf5_v">Preprint preliminar<small>Não revisado por pares na publicação.</small></span>
-        </div>
-        <div class="fact">
-          <span class="k" data-i18n="pf6_k">Licença</span>
-          <span class="v" data-i18n="pf6_v">OPENSOURCE<small>© MMXXVI Laudos.AI — MIT License.</small></span>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ─── COLOPHON ─── -->
-<footer class="colo">
-  <div class="wrap">
-    <div class="top">
-      <p class="imp" data-i18n="imp">
-        <b>Expediente.</b> O LAIBench é publicado por Laudos.AI em São Paulo. O site público contém o método, materiais do paper, demo sintética segura para publicação pública e contrato de submissão. O corpus clínico, laudos brutos, conjunto de teste oculto, gabaritos e critérios privados de pontuação não são distribuídos.<br/><br/><em>LAIBench é um framework técnico de benchmark. Não é validação clínica, aprovação regulatória ou autorização de deploy.</em>
-      </p>
-      <div class="col">
-        <h5>Benchmark</h5>
-        <a href="#leaderboard">Standing</a>
-        <a href="#method">Método</a>
-        <a href="#dimensions">Dimensões</a>
-        <a href="#validation">Integridade</a>
-      </div>
-      <div class="col">
-        <h5>Pesquisa</h5>
-        <a href="https://laibench.laudos.ai/laibench-preprint.pdf">Preprint · PDF</a>
-        <a href="https://laibench.laudos.ai/source-package">Pacote-fonte</a>
-        <a href="https://laibench.laudos.ai/arxiv-laibench-metadata.json">Metadados de submissão</a>
-        <a href="https://github.com/Laudos-AI/laibench-public/blob/main/CHANGELOG.md" rel="noopener noreferrer" target="_blank">Changelog</a>
-      </div>
-      <div class="col">
-        <h5 data-i18n="fc1">Contato</h5>
-        <a href="https://github.com/Laudos-AI/laibench-public" rel="noopener noreferrer" target="_blank" data-i18n="fl_gh">Laudos-AI/laibench-public</a>
-        <a href="mailto:natan@laudos.ai?subject=LAIBench%20controlled%20evaluation" data-i18n="fl_req">Solicitar avaliação controlada</a>
-        <a href="mailto:oi@laudos.ai?subject=LAIBench" data-i18n="fl_contact">Contate a equipe</a>
-        <a href="https://laudos.ai" rel="noopener noreferrer" target="_blank">laudos.ai</a>
-      </div>
-    </div>
-
-    <div class="sig">
-      <div class="wm">l<em>ai</em>bench<em>.</em></div>
-    </div>
-
-    <div class="bot">
-      <span data-i18n="copy">© <b>MMXXVI</b> Laudos.AI — OPENSOURCE · MIT License.</span>
-      <span data-i18n="techprev">Preview técnico · apenas demo sintética · corpus clínico controlado</span>
-    </div>
-  </div>
-</footer>
-
+<script src="data.js"></script>
 <script>
 (function(){
-  var I18N = {
-    en: {
-      "vol":"VOL II · ISSUE 1 · MAY 2026 · SÃO PAULO",
-      "est":"ESTABLISHED 2025 · BY LAUDOS.AI",
-      "tag1":"A QUARTERLY","tag2":"REGISTER OF","tag3":"FAILURE MODES.",
-      "tagR1":"Public technical preview —","tagR2":"radiology finding ⤳","tagR3":"report evaluation.",
-      "tagline":"“Na avaliação oficial, o veredito primário é <b>Strict PASS</b>: um caso passa apenas quando todo portão clinicamente decisivo se sustenta.”",
-      "meta_public":"<b>PÚBLICO</b> · apenas demo sintética",
-      "meta_suite":"<b>SUITE LOCAL</b> · lite-public.pt-BR",
-      "meta_oficial":"<b>OFICIAL</b> · avaliação controlada / hospedada",
-      "meta_status":"<b>STATUS</b> · technical preview",
-      "meta_data":"<b>DADOS</b> · corpus clínico controlado",
-      "meta_hidden":"<b>TESTE OCULTO</b> · não distribuído",
-      "meta_updated":"<b>ATUALIZADO</b> · 11.v.2026",
-      "stand":"<b>Standing</b> — <span class=\"it\">public technical preview</span>",
-      "stand_meta":"demo sintética do harness · não é o benchmark oficial",
-      "lb_sub":"O pacote público atual expõe o harness, o contrato de pontuação, a suite de demo sintética, os materiais do preprint e as regras de submissão.<br/><br/>A demo sintética não é usada para julgar performance clínica de modelos. Nenhum leaderboard clínico oficial é publicado neste preview técnico.<br/><br/>Linhas oficiais exigem avaliação controlada ou hospedada, com saídas congeladas, hash da suite, metadados de divulgação e revisão de elegibilidade.",
-      "lb_h_sys":"Sistema","lb_h_suite":"Avaliação","lb_h_type":"Tipo","lb_h_score":"Strict PASS",
-      "lb_empty_sys":"No oficial public leaderboard yet. <span class=\"kind\">Official scoring requires controlled or hosted evaluation.</span>",
-      "lb_empty_eval":"—<span class=\"judge\">oficial rows reserved for hosted assessment</span>",
-      "lb_empty_type":"oficial","lb_empty_pct":"—",
-      "lb_demo_sys":"Synthetic harness demo <span class=\"kind\">smoke test and contract inspection · not a clinical leaderboard</span>",
-      "lb_demo_eval":"lite-public.pt-BR<span class=\"judge\">4 synthetic cases · onboarding only</span>",
-      "lb_demo_type":"demo","lb_demo_pct":"não ranqueado",
-      "lb_your":"Seu agente aqui",
-      "lb_your_eval":"controlled / hosted evaluation<span class=\"judge\">frozen outputs · suite hash · disclosure</span>",
-      "lb_btn":"Solicitar avaliação &nbsp;→",
-      "lb_foot":"<b>Strict PASS</b><sup>†</sup> is binary per case — a case passes only when every clinically decisive gate holds: critical findings preserved, laterality correct, no unsafe negation, structural integrity, and terminology compliance.<br/><br/>The public synthetic demo suite is provided for reproducibility, onboarding, and harness inspection<sup>‡</sup>. It is not a clinical validation set, not the hidden test set, not an oficial leaderboard suite, and not the full benchmark corpus.",
-      "editor":"Editor’s note · folio i",
-      "ed_h":"On <em>publishing</em> only the things that survive every gate.",
-      "ed_p1":"<span class=\"dropcap\">L</span>AIBench is built on a deliberately conservative premise: in radiology reporting, <b>average scores can hide clinically decisive failures</b>. A report that preserves most findings but misses a critical abnormality, swaps laterality, invents an unsupported diagnosis, or breaks the required structure is not a safe near-miss — it is a failed reporting artifact<sup>1</sup>.",
-      "ed_p2":"The benchmark therefore separates diagnostic dimensions from the public verdict. Per-dimension scores explain<sup>2</sup> why a case failed. <em>Strict PASS</em> determines whether the case survives.",
-      "ed_f1":"<sup>†</sup> Strict PASS is binary per case.",
-      "ed_f2":"<sup>‡</sup> Public technical-preview results are synthetic / demo only.",
-      "ed_f3":"<sup>1</sup> Avaliação oficial requires controlled or hosted assessment.",
-      "ed_f4":"<sup>2</sup> The method is public. The clinical corpus is controlled. Avaliação oficial is gated.",
-      "stat_synth":"Casos sintéticos públicos de demo","stat_demo":"Suite de smoke test","stat_oficial":"Avaliação oficial","stat_hidden":"Teste oficial não distribuído","stat_dims":"Dimensões","stat_tests":"Testes",
-      "sec2_id":"<b>§ II</b> · Method — reading the harness",
-      "sec2_h":"De achados visíveis a um veredito auditável, em três movimentos.",
-      "sec2_sub":"Um protocolo travado de achado-para-laudo. A demo pública verifica o harness; a avaliação controlada pontua o modelo.",
-      "m1_roman":"Primeiro.","m1_h":"O sistema recebe apenas entrada visível da tarefa.",
-      "m1_p":"O sistema avaliado recebe apenas entrada visível: descritor do exame, achados fornecidos, locale e contexto público permitido. Deve emitir um laudo completo sob o contrato de saída.<br/><br/>Ele nunca recebe gold labels, critérios ocultos, respostas de referência, prompts do judge, regras privadas de pontuação, canary tokens ou metadados do teste oculto.",
-      "m1_s1":"<b>entrada</b> · exame + achados visíveis","m1_s2":"<b>locale</b> · demo pública pt-BR","m1_s3":"<b>oculto</b> · gold labels nunca enviados",
-      "m2_roman":"second.","m2_h":"Five evaluators read it as <em>five different failure detectors.</em>",
-      "m2_p":"The harness checks critical-finding preservation, clinical quality, terminology, guideline applicability, and evidence fidelity. Optional adjudication layers may be used in controlled evaluation; public demo runs remain explicitly separated from oficial hosted assessment.",
-      "m2_s1":"<b>evaluators</b> · CRIT · QUAL · TERM · GUIDE · RAG","m2_s2":"<b>negation</b> · scope + uncertainty","m2_s3":"<b>judge</b> · controlled / hosted only",
-      "m3_roman":"third.","m3_h":"A binary verdict — <em>every gate, or none.</em>",
-      "m3_p":"Strict PASS is binary per case. Any clinically decisive gate failure — missed critical finding, swapped laterality, unsafe negation, malformed structure, unsupported normalizing language, or forbidden term — drops the case to <b>FAIL</b>. Per-dimension scores survive as diagnostics; they do not override the verdict.",
-      "m3_s1":"<b>verdict</b> · pass / fail","m3_s2":"<b>publish</b> · row + suite hash + disclosure","m3_s3":"<b>oficial</b> · controlled evaluation only",
-      "sec3_id":"<b>§ III</b> · Dimensões — five independent axes",
-      "sec3_h":"Pontuadas separadamente, <em>somadas apenas no papel.</em>",
-      "sec3_sub":"Cada eixo captura um modo de falha distinto. A mistura clínica é diagnóstico apenas; nunca substitui o veredito.",
-      "sec4_id":"<b>§ IV</b> · Integrity — the things behind the row",
-      "sec4_h":"Public rows are only worth <em>as much as their guarantees.</em>",
-      "sec4_sub":"Locked tasks, recomputed scores, hash-pinned suites, and disclosure metadata govern what gets onto the leaderboard and what stays off.",
-      "sec5_id":"<b>§ V</b> · Submission — the four-step contract",
-      "sec5_h":"Use the public synthetic demo <em>to inspect the contract.</em>",
-      "sec5_sub":"Or request controlled evaluation for oficial scoring. The public synthetic suite is for onboarding and harness inspection — not for ranking model performance.",
-      "s1_h":"Pick the public synthetic suite.","s1_p":"The public repository contains a small synthetic suite for onboarding, local testing, and harness verification. It does not include the clinical corpus or the oficial hidden test set.",
-      "s1_t1":"Laudos-AI/laibench-public","s1_t3":"case-id + laudo + rótulo público",
-      "s2_h":"Generate reports.","s2_p":"Run each public synthetic case through your product, agent, local wrapper, or baseline model. The output contract is the same one used for controlled evaluation.",
-      "s2_t1":"visible exam + findings","s2_t2":"your report generator",
-      "s3_h":"Score the submission.","s3_p":"Score generated reports with the public harness. Local demo results are useful for development, but they are not oficial leaderboard rows.",
-      "s3_t2":"public system name",
-      "s4_h":"Request oficial evaluation.","s4_p":"Official leaderboard rows require controlled or hosted evaluation with frozen outputs, suite hashes, model disclosure, and review for eligibility.",
-      "s4_t1":"frozen output","s4_t2":"suite hash","s4_t3":"controlled / hosted",
-      "cta_ask":"Got a reporting agent? <b>Bring it to controlled evaluation.</b><br/>If it survives every oficial gate, it earns an eligible row.",
-      "cta_b1":"Rodar demo sintética","cta_b2":"Solicitar avaliação controlada","cta_b3":"Laudos-AI/laibench-public",
-      "sec6_id":"<b>§ VI</b> · Preprint — 2026",
-      "sec6_h":"The paper — <em>why templates are not the right unit of scale.</em>",
-      "sec6_sub":"A formal and architectural contribution to radiology reporting. Not a claim of clinical readiness.",
-      "pp_ttl":"Beyond Templates: <em>Um Modelo Composicional e Limite Inferior para a Variabilidade de Laudos Radiológicos</em>",
-      "pp_aff":"Laudos.AI &nbsp;·&nbsp; São Paulo, Brazil &nbsp;·&nbsp; draft preprint · May 2026",
-      "pp_a1":"This preprint argues that radiology reporting is better modeled as <em>constrained compositional generation</em> from report-relevant clinical state, rather than static template enumeration.",
-      "pp_a2":"It introduces the <b>Report Space Lower Bound</b> and the <b>Radiology Report Variability Index</b> to describe why broad reporting coverage grows combinatorially — and why scalable reporting systems should represent protocol, anatomy, findings, attributes, constraints, impression logic, and rendering as separate components.",
-      "pp_a3":"O preprint é uma contribuição formal e arquitetural. Não reivindica validação clínica, aprovação regulatória, diagnóstico autônomo ou substituição da supervisão do radiologista.",
-      "pp_b1":"Download PDF","pp_b2":"Source package","pp_b3":"Submission metadata",
-      "pf1_k":"Formal model","pf1_v":"Report-state space<small>Compositional generation under rendering constraints.</small>",
-      "pf2_k":"Lower bound","pf2_v":"RSLB · RRVI<small>Conservative quantification of report variability.</small>",
-      "pf3_k":"Architecture","pf3_v":"Modular components<small>Protocol, anatomy, findings, attributes, constraints, impression, renderer.</small>",
-      "pf4_k":"Clinical boundary","pf4_v":"No autonomous-use claim<small>No replacement of physician judgment.</small>",
-      "pf5_k":"Status","pf5_v":"Draft preprint<small>Not peer-reviewed at time of publication.</small>",
-      "pf6_k":"License","pf6_v":"OPENSOURCE<small>© MMXXVI Laudos.AI — MIT License.</small>",
-      "imp":"<b>Expediente.</b> O LAIBench é publicado por Laudos.AI em São Paulo. O site público contém o método, materiais do paper, demo sintética segura para publicação pública e contrato de submissão. O corpus clínico, laudos brutos, conjunto de teste oculto, gabaritos e critérios privados de pontuação não são distribuídos.<br/><br/><em>LAIBench é um framework técnico de benchmark. Não é validação clínica, aprovação regulatória ou autorização de deploy.</em>",
-      "fc1":"Connect","fl_gh":"Laudos-AI/laibench-public","fl_req":"Solicitar avaliação controlada","fl_contact":"Contact the team",
-      "copy":"© <b>MMXXVI</b> Laudos.AI — OPENSOURCE · MIT License.",
-      "techprev":"Preview técnico · apenas demo sintética · corpus clínico controlado"
+  var frame   = document.getElementById('frame');
+  var panel   = document.getElementById('panel');
+  var tab     = document.getElementById('tab');
+  var menu    = document.getElementById('menu');
+  var ruler   = document.getElementById('ruler');
+  var btnTheme= document.getElementById('btn-theme');
+
+  // build ruler ticks
+  for(var i=0;i<26;i++){
+    var t=document.createElement('i');
+    t.style.width = (i%5===0? 26 : 14)+'px';
+    ruler.appendChild(t);
+  }
+
+  // ---- theme ----
+  function applyTheme(dark){
+    frame.classList.toggle('dark', dark);
+    document.body.classList.toggle('dark', dark);
+    btnTheme.classList.toggle('active', dark);
+    try{ localStorage.setItem('laibench-dark', dark?'1':'0'); }catch(e){}
+  }
+  var savedDark=false;
+  try{ savedDark = localStorage.getItem('laibench-dark')==='1'; }catch(e){}
+  document.documentElement.classList.remove('dark');
+  applyTheme(savedDark);
+  btnTheme.addEventListener('click', function(){
+    applyTheme(!frame.classList.contains('dark'));
+  });
+
+  // ---- menu open/close ----
+  function setOpen(o){ panel.classList.toggle('open', o); }
+  tab.addEventListener('click', function(e){
+    e.stopPropagation();
+    setOpen(!panel.classList.contains('open'));
+  });
+
+  // ---- navigation ----
+  function showPage(id){
+    closeMethod();
+    document.querySelectorAll('.page').forEach(function(p){ p.hidden = (p.id!==id); });
+    document.querySelectorAll('.mitem').forEach(function(m){
+      m.classList.toggle('current', m.dataset.page===id);
+    });
+    setOpen(false);
+  }
+  menu.addEventListener('click', function(e){
+    var it = e.target.closest('.mitem');
+    if(!it) return;
+    if(!it.dataset.page) return;
+    showPage(it.dataset.page);
+  });
+  document.addEventListener('click', function(e){
+    var go = e.target.closest('[data-go]');
+    if(!go) return;
+    e.preventDefault();
+    showPage(go.dataset.go);
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key!=='Escape') return;
+    if(closeMethod()) return;
+    setOpen(false);
+  });
+
+  // ---- leaderboard rendering ----
+  var DATA = window.LAIBENCH_DATA || { locales:{}, generatedAt:null };
+  var localeKeys = Object.keys(DATA.locales);
+  var current = localeKeys.indexOf('pt-BR') >= 0 ? 'pt-BR' : localeKeys[0];
+
+  function pct(x){ return (x==null||isNaN(x)) ? '—' : (Math.round(x*1000)/10).toFixed(1)+'%'; }
+  function ms(x){ return x==null ? '—' : (x>=1000 ? (x/1000).toFixed(1)+'s' : Math.round(x)+'ms'); }
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  // ---- methods detail dialog ----
+  var methodModal = document.getElementById('method-modal');
+  var methodCards = document.getElementById('method-cards');
+  var methodKicker = document.getElementById('method-kicker');
+  var methodTitle = document.getElementById('method-title');
+  var methodSummary = document.getElementById('method-summary');
+  var methodGrid = document.getElementById('method-grid');
+  var methodFoot = document.getElementById('method-foot');
+  var lastMethodTrigger = null;
+  var METHOD_DETAILS = {
+    clinical: {
+      kicker: 'Headline score',
+      title: 'Clinical score',
+      summary: 'The leaderboard score is a weighted clinical score. It summarizes whether the generated report preserves the source findings and stays clinically safe.',
+      blocks: [
+        { title: 'What it combines', text: 'CRIT 30%, QUAL 25%, TERM 20%, GUIDE 15% and RAG 10%. The dimensions are weighted because a critical miss should matter more than a minor wording issue.' },
+        { title: 'How it gates', text: 'Some failures are not just deductions. Missing an affirmative critical finding, unsafe negation, invalid output structure, language-contract failures and unfilled placeholders can cap or fail the case.' },
+        { title: 'How to read it', items: ['Use this as the visible ranking score.', 'Use all-pass and criterion pass rate as stricter diagnostics, not as the headline grade.', 'Compare systems only on the same suite hash, locale, track and scoring mode.'] },
+        { title: 'Public scope', text: 'The public page explains methodology and aggregate calibration diagnostics. Case data, answer keys and frozen predictions are gated.' },
+      ],
+      foot: 'Current public page: gated pt-BR controlled suite with public methodology only.'
     },
-    pt: {
-      "vol":"VOL II · EDIÇÃO 1 · MAIO 2026 · SÃO PAULO",
-      "est":"FUNDADO EM 2025 · POR LAUDOS.AI",
-      "tag1":"UM REGISTRO","tag2":"TRIMESTRAL DE","tag3":"MODOS DE FALHA.",
-      "tagR1":"Preview técnico —","tagR2":"avaliação achado ⤳","tagR3":"laudo em radiologia.",
-      "tagline":"“Na <b>avaliação oficial</b>, o veredito primário é o <b>Strict PASS</b> — um caso passa apenas quando todo portão clinicamente decisivo se sustenta.”",
-      "meta_public":"<b>PÚBLICO</b> · apenas demo sintética",
-      "meta_suite":"<b>SUITE LOCAL</b> · lite-public.pt-BR",
-      "meta_oficial":"<b>OFICIAL</b> · avaliação controlada / hospedada",
-      "meta_status":"<b>STATUS</b> · preview técnico",
-      "meta_data":"<b>DADOS</b> · corpus clínico controlado",
-      "meta_hidden":"<b>TESTE OCULTO</b> · não distribuído",
-      "meta_updated":"<b>ATUALIZADO</b> · 11.v.2026",
-      "stand":"<b>Standing</b> — <span class=\"it\">preview técnico público</span>",
-      "stand_meta":"demo sintética do harness · não é o benchmark oficial",
-      "lb_sub":"O pacote público atual expõe o harness, o contrato de pontuação, a suite de demo sintética, os materiais do preprint e as regras de submissão.<br/><br/>O demo sintético não é usado para julgar performance clínica de modelos. Nenhum leaderboard clínico oficial é publicado neste preview técnico.<br/><br/>Linhas oficiais exigem avaliação controlada ou hospedada, com saídas congeladas, hashes de suite, metadados de divulgação e revisão de elegibilidade.",
-      "lb_h_sys":"Sistema","lb_h_suite":"Avaliação","lb_h_type":"Tipo","lb_h_score":"Strict PASS",
-      "lb_empty_sys":"Ainda não há leaderboard clínico público oficial. <span class=\"kind\">A pontuação oficial exige avaliação controlada ou hospedada.</span>",
-      "lb_empty_eval":"—",
-      "lb_empty_type":"oficial","lb_empty_pct":"—",
-      "lb_demo_sys":"Demo sintética do harness",
-      "lb_demo_eval":"lite-public.pt-BR<span class=\"judge\">4 casos sintéticos · smoke test e inspeção do contrato</span>",
-      "lb_demo_type":"demo","lb_demo_pct":"não ranqueado",
-      "lb_your":"Seu agente aqui",
-      "lb_your_eval":"avaliação controlada / hospedada<span class=\"judge\">saídas congeladas · hash da suite · divulgação</span>",
-      "lb_btn":"Solicitar avaliação &nbsp;→",
-      "lb_foot":"<b>Strict PASS</b><sup>†</sup> é binário por caso — um caso passa apenas quando todo portão clinicamente decisivo se sustenta: achados críticos preservados, lateralidade correta, sem negação insegura, integridade estrutural, e conformidade terminológica.<br/><br/>A suite de demo sintética pública serve para reprodutibilidade, onboarding e inspeção do harness<sup>‡</sup>. Não é um conjunto de validação clínica, nem o conjunto de teste oculto, nem suite oficial de leaderboard, nem o corpus completo do benchmark.",
-      "editor":"Nota do editor · fólio i",
-      "ed_h":"Sobre <em>publicar</em> apenas o que sobrevive a cada portão.",
-      "ed_p1":"<span class=\"dropcap\">O</span> LAIBench é construído sobre uma premissa deliberadamente conservadora: em laudos de radiologia, <b>médias podem esconder falhas clinicamente decisivas</b>. Um laudo que preserva a maioria dos achados mas perde uma anormalidade crítica, troca lateralidade, inventa um diagnóstico sem suporte ou rompe a estrutura exigida não é um quase-acerto seguro — é um artefato de relatório falho<sup>1</sup>.",
-      "ed_p2":"O benchmark, portanto, separa dimensões diagnósticas do veredito público. Pontuações por dimensão explicam<sup>2</sup> por que um caso falhou. <em>Strict PASS</em> determina se o caso sobrevive.",
-      "ed_f1":"<sup>†</sup> Strict PASS é binário por caso.",
-      "ed_f2":"<sup>‡</sup> Resultados públicos do preview técnico são apenas sintéticos / demo.",
-      "ed_f3":"<sup>1</sup> A avaliação oficial exige avaliação controlada ou hospedada.",
-      "ed_f4":"<sup>2</sup> O método é público. O corpus clínico é controlado. A avaliação oficial é restrita.",
-      "stat_synth":"Casos sintéticos públicos do demo","stat_demo":"Suite de smoke test","stat_oficial":"Avaliação oficial","stat_hidden":"Teste oficial não distribuído","stat_dims":"Dimensões","stat_tests":"Testes",
-      "sec2_id":"<b>§ II</b> · Método — lendo o harness",
-      "sec2_h":"De achados visíveis a um veredito auditável, em três movimentos.",
-      "sec2_sub":"Um protocolo travado de achado-para-laudo. A demo pública verifica o harness; a avaliação controlada pontua o modelo.",
-      "m1_roman":"Primeiro.","m1_h":"O sistema recebe <em>apenas entrada visível da tarefa.</em>",
-      "m1_p":"O sistema avaliado recebe apenas entrada visível: descritor do exame, achados fornecidos, locale e contexto público permitido. Deve emitir um laudo completo sob o contrato de saída.<br/><br/>Ele nunca recebe gold labels, critérios ocultos, respostas de referência, prompts do judge, regras privadas de pontuação, canary tokens ou metadados do teste oculto.",
-      "m1_s1":"<b>entrada</b> · exame + achados visíveis","m1_s2":"<b>locale</b> · demo público pt-BR","m1_s3":"<b>oculto</b> · gold labels nunca enviados",
-      "m2_roman":"segundo.","m2_h":"Cinco avaliadores leem como <em>cinco detectores de falha distintos.</em>",
-      "m2_p":"O harness verifica preservação de achados críticos, qualidade clínica, terminologia, aplicabilidade de diretrizes e fidelidade de evidência. Camadas opcionais de adjudicação podem ser usadas em avaliação controlada; rodadas de demo público permanecem explicitamente separadas da avaliação oficial hospedada.",
-      "m2_s1":"<b>avaliadores</b> · CRIT · QUAL · TERM · GUIDE · RAG","m2_s2":"<b>negação</b> · escopo + incerteza","m2_s3":"<b>judge</b> · apenas controlado / hospedado",
-      "m3_roman":"terceiro.","m3_h":"Um veredito binário — <em>todo portão, ou nenhum.</em>",
-      "m3_p":"Strict PASS é binário por caso. Qualquer falha em portão clinicamente decisivo — achado crítico perdido, lateralidade trocada, negação insegura, estrutura malformada, linguagem de normalização sem suporte ou termo proibido — derruba o caso para <b>FAIL</b>. Pontuações por dimensão sobrevivem como diagnóstico; não sobrescrevem o veredito.",
-      "m3_s1":"<b>veredito</b> · pass / fail","m3_s2":"<b>publicar</b> · linha + hash de suite + divulgação","m3_s3":"<b>oficial</b> · apenas avaliação controlada",
-      "sec3_id":"<b>§ III</b> · Dimensões — cinco eixos independentes",
-      "sec3_h":"Pontuadas separadamente, <em>somadas apenas no papel.</em>",
-      "sec3_sub":"Cada eixo captura um modo de falha distinto. A mistura ponderada existe como referência clínica; o veredito público a ignora.",
-      "sec4_id":"<b>§ IV</b> · Integridade — o que está por trás da linha",
-      "sec4_h":"Integridade do método e controle do teste oficial.",
-      "sec4_sub":"Tarefas travadas, pontuações recomputadas, suites com hash fixado e metadados de divulgação governam o que entra no leaderboard — e o que fica de fora.",
-      "sec5_id":"<b>§ V</b> · Submissão — o contrato em quatro passos",
-      "sec5_h":"Use o demo sintético público <em>para inspecionar o contrato.</em>",
-      "sec5_sub":"Ou solicite avaliação controlada para pontuação oficial. A suite sintética pública é para onboarding e inspeção do harness — não para ranquear desempenho de modelos.",
-      "s1_h":"Escolha a suite sintética pública.","s1_p":"O repositório público contém uma pequena suite sintética para onboarding, testes locais e verificação do harness. Não inclui o corpus clínico nem o conjunto de teste oculto oficial.",
-      "s1_t1":"Laudos-AI/laibench-public","s1_t3":"case-id + laudo + rótulo público",
-      "s2_h":"Gere os laudos.","s2_p":"Rode cada caso sintético público através do seu produto, agente, wrapper local ou modelo baseline. O contrato de saída é o mesmo usado em avaliação controlada.",
-      "s2_t1":"exame visível + achados","s2_t2":"seu gerador de laudo",
-      "s3_h":"Pontue a submissão.","s3_p":"Pontue os laudos gerados com o harness público. Resultados locais de demo são úteis para desenvolvimento, mas não são linhas oficiais do leaderboard.",
-      "s3_t2":"nome público do sistema",
-      "s4_h":"Solicite avaliação oficial.","s4_p":"Linhas oficiais exigem avaliação controlada ou hospedada com saídas congeladas, hashes de suite, divulgação do modelo e revisão de elegibilidade.",
-      "s4_t1":"saída congelada","s4_t2":"hash da suite","s4_t3":"controlado / hospedado",
-      "cta_ask":"Tem um agente de laudo? <b>Traga para avaliação controlada.</b><br/>Se sobreviver a cada portão oficial, ganha uma linha elegível.",
-      "cta_b1":"Rodar demo sintética","cta_b2":"Solicitar avaliação controlada","cta_b3":"Laudos-AI/laibench-public",
-      "sec6_id":"<b>§ VI</b> · Preprint — 2026",
-      "sec6_h":"O paper — <em>por que templates não são a unidade de escala correta.</em>",
-      "sec6_sub":"Uma contribuição formal e arquitetural para laudos em radiologia. Não é uma alegação de prontidão clínica.",
-      "pp_ttl":"Beyond Templates: <em>Um Modelo Composicional e Limite Inferior para a Variabilidade de Laudos Radiológicos</em>",
-      "pp_aff":"Laudos.AI &nbsp;·&nbsp; São Paulo, Brasil &nbsp;·&nbsp; preprint preliminar · maio 2026",
-      "pp_a1":"Este preprint argumenta que laudos de radiologia são melhor modelados como <em>geração composicional restrita</em> a partir de estado clínico relevante para o laudo, em vez de enumeração estática de templates.",
-      "pp_a2":"Introduz o <b>Report Space Lower Bound</b> e o <b>Radiology Report Variability Index</b> para descrever por que a cobertura ampla de laudos cresce combinatoriamente — e por que sistemas escaláveis de geração de laudo devem representar protocolo, anatomia, achados, atributos, restrições, lógica de impressão e renderização como componentes separados.",
-      "pp_a3":"O preprint é uma contribuição formal e arquitetural. Não reivindica validação clínica, aprovação regulatória, diagnóstico autônomo ou substituição da supervisão do radiologista.",
-      "pp_b1":"Baixar PDF","pp_b2":"Pacote-fonte","pp_b3":"Metadados de submissão",
-      "pf1_k":"Modelo formal","pf1_v":"Espaço de estado do laudo<small>Geração composicional sob restrições de renderização.</small>",
-      "pf2_k":"Limite inferior","pf2_v":"RSLB · RRVI<small>Quantificação conservadora da variabilidade do laudo.</small>",
-      "pf3_k":"Arquitetura","pf3_v":"Componentes modulares<small>Protocolo, anatomia, achados, atributos, restrições, impressão, renderer.</small>",
-      "pf4_k":"Fronteira clínica","pf4_v":"Sem reivindicação de uso autônomo<small>Sem substituição do julgamento médico.</small>",
-      "pf5_k":"Status","pf5_v":"Preprint preliminar<small>Não revisado por pares na publicação.</small>",
-      "pf6_k":"Licença","pf6_v":"OPENSOURCE<small>© MMXXVI Laudos.AI — MIT License.</small>",
-      "imp":"<b>Expediente.</b> O LAIBench é publicado por Laudos.AI em São Paulo. O site público contém o método, materiais do paper, demo sintética segura para publicação pública e contrato de submissão. O corpus clínico, laudos brutos, conjunto de teste oculto, gabaritos e critérios privados de pontuação não são distribuídos.<br/><br/><em>LAIBench é um framework técnico de benchmark. Não é validação clínica, aprovação regulatória ou autorização de deploy.</em>",
-      "fc1":"Contato","fl_gh":"Laudos-AI/laibench-public","fl_req":"Solicitar avaliação controlada","fl_contact":"Contate a equipe",
-      "copy":"© <b>MMXXVI</b> Laudos.AI — OPENSOURCE · MIT License.",
-      "techprev":"Preview técnico · apenas demo sintética · corpus clínico controlado"
+    crit: {
+      kicker: '30% · gated',
+      title: 'CRIT',
+      summary: 'CRIT measures whether critical findings are preserved and whether the report creates unsafe negation around clinically important statements.',
+      blocks: [
+        { title: 'Gold-first rule', text: 'When a case declares critical findings, the evaluator uses those explicit gold labels first. It can also derive critical labels from goldFindings marked severity=critical.' },
+        { title: 'What fails hard', items: ['A critical finding present in the source but absent from the report.', 'A report that negates an expected critical finding.', 'Hard safety or contract failures that remain gate-critical.'] },
+        { title: 'What it is not', text: 'CRIT is not a hidden synonym list deciding the whole score. Locale pattern checks stay diagnostic when richer gold annotations exist.' },
+        { title: 'Why it matters', text: 'A report can look polished and still be unsafe if it loses a critical fact. CRIT prevents that from being averaged away.' },
+      ],
+      foot: 'A critical miss is treated as a gate failure because the clinical risk is asymmetric.'
     },
-    es: {
-      "vol":"VOL II · NÚMERO 1 · MAYO 2026 · SÃO PAULO",
-      "est":"FUNDADO EN 2025 · POR LAUDOS.AI",
-      "tag1":"UN REGISTRO","tag2":"TRIMESTRAL DE","tag3":"MODOS DE FALLO.",
-      "tagR1":"Vista técnica pública —","tagR2":"evaluación hallazgo ⤳","tagR3":"informe en radiología.",
-      "tagline":"“La métrica pública es <b>Strict PASS</b> — un caso pasa solo cuando cada compuerta clínicamente decisiva se mantiene.”",
-      "meta_public":"<b>PÚBLICO</b> · demo sintético lite-public.pt-BR",
-      "meta_status":"<b>ESTADO</b> · vista técnica",
-      "meta_data":"<b>DATOS</b> · corpus clínico controlado",
-      "meta_hidden":"<b>TEST OCULTO</b> · no distribuido",
-      "meta_updated":"<b>ACTUALIZADO</b> · 11.v.2026",
-      "stand":"<b>Clasificación</b> — <span class=\"it\">vista técnica pública</span>",
-      "stand_meta":"demo sintético · pt-BR",
-      "lb_sub":"El paquete público actual expone el harness, el contrato de puntuación, la suite de demo sintética, los materiales del preprint y las reglas de envío. No hay un leaderboard clínico oficial publicado en esta vista técnica — las filas oficiales requieren evaluación controlada u hospedada con salidas congeladas, hashes de suite, metadatos de divulgación y revisión de elegibilidad.",
-      "lb_h_sys":"Sistema","lb_h_suite":"Suite","lb_h_type":"Tipo","lb_h_score":"Strict PASS",
-      "lb_empty_sys":"Aún no hay leaderboard clínico público. <span class=\"kind\">Solo demo sintético · no es leaderboard clínico</span>",
-      "lb_empty_eval":"demo sintético · pt-BR<span class=\"judge\">4 casos sintéticos · onboarding y verificación del harness</span>",
-      "lb_empty_type":"demo","lb_empty_pct":"—",
-      "lb_your":"Tu agente aquí.",
-      "lb_your_eval":"evaluación controlada / hospedada<span class=\"judge\">salidas congeladas · hash de suite · divulgación</span>",
-      "lb_btn":"Solicitar evaluación &nbsp;→",
-      "lb_foot":"<b>Strict PASS</b><sup>†</sup> es binario por caso — un caso pasa solo cuando cada compuerta clínicamente decisiva se mantiene: hallazgos críticos preservados, lateralidad correcta, sin negación insegura, integridad estructural, cumplimiento terminológico. La suite de demo sintética pública se provee para reproducibilidad y onboarding<sup>‡</sup>. No es un set de validación clínica, ni el set de prueba oculto, ni el corpus completo del benchmark.",
-      "editor":"Nota del editor · folio i",
-      "ed_h":"Sobre <em>publicar</em> solo lo que sobrevive a cada compuerta.",
-      "ed_p1":"<span class=\"dropcap\">L</span>AIBench se construye sobre una premisa deliberadamente conservadora: en informes de radiología, <b>los promedios pueden ocultar fallos clínicamente decisivos</b>. Un informe que preserva la mayoría de los hallazgos pero pierde una anormalidad crítica, intercambia lateralidad, inventa un diagnóstico sin soporte o rompe la estructura requerida no es un casi-acierto seguro — es un artefacto de informe fallido<sup>1</sup>.",
-      "ed_p2":"El benchmark, por tanto, separa las dimensiones diagnósticas del veredicto público. Las puntuaciones por dimensión explican<sup>2</sup> por qué falló un caso. <em>Strict PASS</em> determina si el caso sobrevive.",
-      "ed_f1":"<sup>†</sup> Strict PASS es binario por caso.",
-      "ed_f2":"<sup>‡</sup> Los resultados de la vista técnica pública son solo sintéticos / demo.",
-      "ed_f3":"<sup>1</sup> La evaluación oficial requiere assessment controlado u hospedado.",
-      "ed_f4":"<sup>2</sup> El método es público. El corpus clínico es controlado. La evaluación oficial es gated.",
-      "stat_synth":"Casos sintéticos","stat_demo":"Suite pública de demo","stat_dims":"Dimensiones","stat_tracks":"Pistas","stat_tests":"Tests del repo","stat_corpus":"Archivos del corpus clínico",
-      "sec2_id":"<b>§ II</b> · Método — leyendo el harness",
-      "sec2_h":"De una pila de hallazgos visibles <em>a un veredicto, en tres movimientos.</em>",
-      "sec2_sub":"Un protocolo de generación de texto bloqueado. La entrada se fija antes de que cualquier sistema corra; la puntuación es lo único que varía.",
-      "m1_roman":"primero.","m1_h":"El sistema recibe <em>solo entrada visible de la tarea.</em>",
-      "m1_p":"El sistema evaluado recibe un descriptor de examen, hallazgos proporcionados, locale y contexto público permitido. Debe emitir un <b>informe completo</b> bajo el contrato de salida. Nunca recibe gold labels, criterios ocultos, respuestas de referencia, prompts del judge, reglas privadas de puntuación, canary tokens ni metadatos del test oculto.",
-      "m1_s1":"<b>entrada</b> · examen + hallazgos visibles","m1_s2":"<b>locale</b> · demo público pt-BR","m1_s3":"<b>oculto</b> · gold labels nunca enviados",
-      "m2_roman":"segundo.","m2_h":"Cinco evaluadores leen como <em>cinco detectores de fallo distintos.</em>",
-      "m2_p":"El harness verifica preservación de hallazgos críticos, calidad clínica, terminología, aplicabilidad de guidelines y fidelidad de evidencia. Las capas opcionales de adjudicación pueden usarse en evaluación controlada; las corridas de demo público permanecen explícitamente separadas del assessment hospedado oficial.",
-      "m2_s1":"<b>evaluadores</b> · CRIT · QUAL · TERM · GUIDE · RAG","m2_s2":"<b>negación</b> · alcance + incertidumbre","m2_s3":"<b>judge</b> · solo controlado / hospedado",
-      "m3_roman":"tercero.","m3_h":"Un veredicto binario — <em>cada compuerta, o ninguna.</em>",
-      "m3_p":"Strict PASS es binario por caso. Cualquier fallo en compuerta clínicamente decisiva — hallazgo crítico perdido, lateralidad intercambiada, negación insegura, estructura malformada, lenguaje de normalización sin soporte o término prohibido — lleva el caso a <b>FAIL</b>. Las puntuaciones por dimensión sobreviven como diagnóstico; no sobrescriben el veredicto.",
-      "m3_s1":"<b>veredicto</b> · pass / fail","m3_s2":"<b>publicar</b> · fila + hash de suite + divulgación","m3_s3":"<b>oficial</b> · solo evaluación controlada",
-      "sec3_id":"<b>§ III</b> · Dimensiones — cinco ejes independientes",
-      "sec3_h":"Puntuadas por separado, <em>sumadas solo en papel.</em>",
-      "sec3_sub":"Cada eje captura un modo de fallo distinto. La mezcla ponderada existe como referencia clínica; el veredicto público la ignora.",
-      "sec4_id":"<b>§ IV</b> · Integridad — lo que hay detrás de la fila",
-      "sec4_h":"Las filas públicas valen tanto <em>como sus garantías.</em>",
-      "sec4_sub":"Tareas bloqueadas, puntuaciones recomputadas, suites con hash fijado y metadatos de divulgación gobiernan lo que entra al leaderboard — y lo que queda fuera.",
-      "sec5_id":"<b>§ V</b> · Envío — el contrato en cuatro pasos",
-      "sec5_h":"Prueba tu sistema contra <em>el demo sintético público.</em>",
-      "sec5_sub":"O solicita evaluación controlada para puntuación oficial. La suite sintética pública es para onboarding e inspección del harness — no para clasificar rendimiento de modelos.",
-      "s1_h":"Elige la suite sintética pública.","s1_p":"El repositorio público contiene una pequeña suite sintética para onboarding, pruebas locales y verificación del harness. No incluye el corpus clínico ni el set de prueba oculto oficial.",
-      "s1_t1":"Laudos-AI/laibench-public","s1_t3":"case-id + informe + etiqueta pública",
-      "s2_h":"Genera los informes.","s2_p":"Corre cada caso sintético público a través de tu producto, agente, wrapper local o modelo baseline. El contrato de salida es el mismo usado en evaluación controlada.",
-      "s2_t1":"examen visible + hallazgos","s2_t2":"tu generador de informe",
-      "s3_h":"Puntua el envío.","s3_p":"Puntua los informes generados con el harness público. Los resultados locales de demo son útiles para desarrollo, pero no son filas oficiales del leaderboard.",
-      "s3_t2":"nombre público del sistema",
-      "s4_h":"Solicita evaluación oficial.","s4_p":"Las filas oficiales requieren evaluación controlada u hospedada con salidas congeladas, hashes de suite, divulgación del modelo y revisión de elegibilidad.",
-      "s4_t1":"salida congelada","s4_t2":"hash de suite","s4_t3":"controlado / hospedado",
-      "cta_ask":"¿Tienes un agente de informes? <b>Tráelo a evaluación controlada.</b><br/>Si sobrevive a cada compuerta, gana una fila.",
-      "cta_b1":"Correr demo sintético","cta_b2":"Solicitar evaluación controlada","cta_b3":"Laudos-AI/laibench-public",
-      "sec6_id":"<b>§ VI</b> · Preprint — 2026",
-      "sec6_h":"El paper — <em>por qué las plantillas no son la unidad de escala correcta.</em>",
-      "sec6_sub":"Una contribución formal y arquitectural para informes radiológicos. No es una afirmación de preparación clínica.",
-      "pp_ttl":"Beyond Templates: <em>Un modelo composicional y límite inferior para la variabilidad de informes radiológicos.</em>",
-      "pp_aff":"Laudos.AI &nbsp;·&nbsp; São Paulo, Brasil &nbsp;·&nbsp; preprint preliminar · mayo 2026",
-      "pp_a1":"Este preprint argumenta que los informes de radiología se modelan mejor como <em>generación composicional restringida</em> a partir del estado clínico relevante para el informe, en lugar de enumeración estática de plantillas.",
-      "pp_a2":"Introduce el <b>Report Space Lower Bound</b> y el <b>Radiology Report Variability Index</b> para describir por qué la cobertura amplia de informes crece combinatoriamente — y por qué los sistemas escalables de generación de informes deben representar protocolo, anatomía, hallazgos, atributos, restricciones, lógica de impresión y renderizado como componentes separados.",
-      "pp_a3":"El preprint es una contribución formal y arquitectural. No reivindica diagnóstico autónomo, preparación clínica ni reemplazo de la supervisión del radiólogo.",
-      "pp_b1":"Descargar PDF","pp_b2":"Paquete fuente","pp_b3":"Metadatos de envío",
-      "pf1_k":"Modelo formal","pf1_v":"Espacio de estado del informe<small>Generación composicional bajo restricciones de renderizado.</small>",
-      "pf2_k":"Límite inferior","pf2_v":"RSLB · RRVI<small>Cuantificación conservadora de la variabilidad del informe.</small>",
-      "pf3_k":"Arquitectura","pf3_v":"Componentes modulares<small>Protocolo, anatomía, hallazgos, atributos, restricciones, impresión, renderer.</small>",
-      "pf4_k":"Frontera clínica","pf4_v":"Sin reivindicación de uso autónomo<small>Sin reemplazo del juicio médico.</small>",
-      "pf5_k":"Estado","pf5_v":"Preprint preliminar<small>No revisado por pares en publicación.</small>",
-      "pf6_k":"Licencia","pf6_v":"OPENSOURCE<small>© MMXXVI Laudos.AI — MIT License.</small>",
-      "imp":"<b>Imprenta.</b> LAIBench es publicado por Laudos.AI en São Paulo. El sitio público contiene el método, materiales del paper, demo sintético público-safe y contrato de envío. El corpus clínico, informes en bruto, set de prueba oculto, claves de respuesta y criterios privados de puntuación no se distribuyen. <em>LAIBench es un framework técnico de benchmark. No es un dispositivo médico, ni un sistema de diagnóstico, ni un sustituto del juicio médico.</em>",
-      "fc1":"Contacto","fl_gh":"Laudos-AI/laibench-public","fl_req":"Solicitar evaluación controlada","fl_contact":"Contacta al equipo",
-      "copy":"© <b>MMXXVI</b> Laudos.AI — OPENSOURCE · MIT License.",
-      "techprev":"Vista técnica · solo demo sintético · corpus clínico controlado"
+    qual: {
+      kicker: '25% · gated',
+      title: 'QUAL',
+      summary: 'QUAL measures clinical report quality: preserving the right findings, avoiding contradictions, and resisting invented or unsupported claims.',
+      blocks: [
+        { title: 'Gold findings', text: 'When goldFindings are present, the evaluator compares the report against those case-level facts with severity weighting for critical, major, minor and incidental findings.' },
+        { title: 'Failure modes', items: ['Missed source finding.', 'Contradiction against the source finding.', 'Hallucinated finding not supported by source or reference.', 'Conclusion that does not reflect the principal finding.'] },
+        { title: 'Not template worship', text: 'The score does not reward copying a reference report word-for-word. It rewards clinically faithful content in a coherent report.' },
+        { title: 'Adjudication', text: 'Stratified audit separates likely system errors, review-needed items and evaluator limitations so detector noise is visible.' },
+      ],
+      foot: 'QUAL is where the benchmark most directly checks whether the generated report says the clinically right thing.'
+    },
+    term: {
+      kicker: '20%',
+      title: 'TERM',
+      summary: 'TERM checks the report contract: language, modality naming, section names, and terminology expected for public submissions.',
+      blocks: [
+        { title: 'Language contract', text: 'A pt-BR case should produce a Portuguese report; an en-US case should produce an English report. Wrong-language output is a contract failure.' },
+        { title: 'Report form', items: ['Uses allowed HTML rather than markdown dumps.', 'Keeps expected radiology sections and labels.', 'Avoids placeholders and operational failure text.', 'Uses terminology compatible with modality and locale.'] },
+        { title: 'Why it has weight', text: 'A clinically correct finding can still be unusable if the output violates the integration or reporting contract.' },
+        { title: 'Boundary', text: 'TERM should not punish acceptable clinical synonymy. It is for contract and terminology problems, not style preference.' },
+      ],
+      foot: 'TERM protects reproducibility and integration quality across systems.'
+    },
+    guide: {
+      kicker: '15%',
+      title: 'GUIDE',
+      summary: 'GUIDE covers guideline classification and anatomical coverage expectations that are relevant to the exam and source content.',
+      blocks: [
+        { title: 'Guidelines', text: 'When a case declares guidelineExpectations, the evaluator checks for the expected system and classification, such as BI-RADS, TI-RADS, PI-RADS, Bosniak, Fleischner or Lung-RADS.' },
+        { title: 'Coverage fallback', text: 'When no explicit guideline gold exists, anatomical coverage is scoped to the source, gold and reference context. It should not infer unrelated requirements just because a generated report mentions another anatomy.' },
+        { title: 'How to read it', items: ['Low GUIDE can mean a missing declared classification.', 'It can also mean incomplete anatomy coverage for a relevant exam region.', 'It should not dominate over critical safety or evidence fidelity.'] },
+        { title: 'Example boundary', text: 'A rectal pelvis MRI should not be penalized for missing PI-RADS merely because the report mentions prostate incidentally.' },
+      ],
+      foot: 'GUIDE is intentionally narrower than a full radiology guideline engine.'
+    },
+    rag: {
+      kicker: '10%',
+      title: 'RAG',
+      summary: 'RAG is evidence fidelity: the generated report should stay attached to the supplied text evidence and avoid unsupported technical details.',
+      blocks: [
+        { title: 'With retrieval gold', text: 'If retrievalGold is present, LAIBench can compute IR-style metrics such as precision, recall, nDCG and MRR for retrieved evidence IDs.' },
+        { title: 'Controlled text fallback', text: 'In the controlled text-generation suite, RAG falls back to source-derived checks such as laterality, measurements, vertebral levels, section order and unsupported acquisition details.' },
+        { title: 'Anti-hardcode rule', text: 'The broad preservation-pattern check R05 is excluded from structural RAG fallback, so hidden synonym lists do not become the clinical score.' },
+        { title: 'What failures mean', items: ['The report changed side or measurement.', 'The report added unsupported sequence/acquisition detail.', 'The report lost source ordering or evidence alignment.'] },
+      ],
+      foot: 'RAG here means evidence-grounded report generation, not a claim that every public run uses a live retrieval pipeline.'
+    },
+    diagnostics: {
+      kicker: 'Audit metrics',
+      title: 'Diagnostics',
+      summary: 'Diagnostics explain strictness around the headline score. They are useful for debugging, but they are not the public ranking score.',
+      blocks: [
+        { title: 'All-pass', text: 'All-pass is zero-failure case completion: every binary criterion in the case passed simultaneously. With many criteria, it intentionally saturates lower than the clinical score.' },
+        { title: 'Criterion pass rate', text: 'Criterion pass rate pools all binary checks across all cases. It is useful for seeing detector volume, but it does not weight clinical severity like the clinical score does.' },
+        { title: 'Why both stay visible', items: ['All-pass shows strict case cleanliness.', 'Criterion pass rate shows broad harness friction.', 'Clinical score remains the severity-weighted ranking metric.'] },
+        { title: 'Stratified audit', text: 'Private stratified artifacts break failures into critical safety, fidelity, synthesis, guideline, terminology, measurement, anatomy and report-quality strata.' },
+      ],
+      foot: 'If all-pass looks surprisingly low, check the number of criteria per case before interpreting it as the model grade.'
+    },
+    reliability: {
+      kicker: 'Repeated runs',
+      title: 'Reliability',
+      summary: 'Reliability checks whether a system behaves consistently when the same suite is run multiple times.',
+      blocks: [
+        { title: 'pass^k', text: 'pass^k reports the fraction of cases that remain passing across k repeated runs. The board emphasizes critical-safe consistency.' },
+        { title: 'Why it matters', text: 'A one-off good run is less useful than a system that preserves safety across repeated calls. Reliability catches flaky tails.' },
+        { title: 'What k means', text: 'The current display uses repeated runs when compatible artifacts are available. Frozen predictions preserve the evidence for private audit.' },
+        { title: 'Interpretation', items: ['High score plus low reliability means unstable behavior.', 'Moderate score plus high reliability means predictable but limited behavior.', 'Reliability is complementary to clinical score, not a replacement.'] },
+      ],
+      foot: 'Reliability is reported only when compatible repeated runs exist for the same suite and scoring mode.'
+    },
+    provenance: {
+      kicker: 'Reproducibility',
+      title: 'Provenance',
+      summary: 'Provenance makes each leaderboard row auditable instead of just decorative.',
+      blocks: [
+        { title: 'What is disclosed', text: 'Rows include suite hash, track, scaffold class, scoring mode, system type, latency, cost when available, and validation status.' },
+        { title: 'Frozen predictions', text: 'A run can be re-scored from JSONL predictions with instance_id and model_output. This lets the benchmark improve without re-calling a paid or private model.' },
+        { title: 'Controlled boundary', text: 'The public site exposes methodology and aggregate diagnostics only. Controlled cases, frozen predictions, import scripts and corpus provenance stay outside the public repository.' },
+        { title: 'Why calibration fixtures exist', text: 'Reference and degraded harness fixtures verify that the evaluator separates a good report from a negative control. They are calibration evidence, not product claims.' },
+      ],
+      foot: 'Authorized reviewers reproduce artifacts inside the controlled environment; public case-level JSON exports are not distributed.'
     }
   };
-  // tag elements with data-i18n keys on first load
-  var map = [
-    ['.mast .strip span:nth-child(1)','vol'],
-    ['.mast .strip span:nth-child(2)','est'],
-    ['.mast .name .l .blk:nth-child(1)','tag1'],
-    ['.mast .name .l .blk:nth-child(2)','tag2'],
-    ['.mast .name .l .accent','tag3'],
-    ['.mast .name .r .blk:nth-child(1)','tagR1'],
-    ['.mast .name .r .blk:nth-child(2)','tagR2'],
-    ['.mast .name .r .blk:nth-child(3)','tagR3'],
-    ['.mast .tagline .text','tagline'],
-    ['#method .sec-title .id','sec2_id'],
-    ['#dimensions .sec-title .id','sec3_id'],
-    ['#validation .sec-title .id','sec4_id'],
-    ['#submit .sec-title .id','sec5_id'],
-    ['#paper .sec-title .id','sec6_id'],
-    ['.leader-tag .t','stand'],
-    ['.col-edit .kicker','editor']
-  ];
-  map.forEach(function(p){ var el=document.querySelector(p[0]); if(el) el.dataset.i18n=p[1]; });
 
-  function applyLang(lang){
-    var dict = I18N[lang]||I18N.en;
-    document.querySelectorAll('[data-i18n]').forEach(function(el){
-      var k = el.dataset.i18n; if(dict[k]!=null) el.innerHTML = dict[k];
+  function renderMethodBlock(block){
+    var body = block.items
+      ? '<ul>' + block.items.map(function(item){ return '<li>'+esc(item)+'</li>'; }).join('') + '</ul>'
+      : '<p>'+esc(block.text || '')+'</p>';
+    return '<section class="method-block"><h4>'+esc(block.title)+'</h4>'+body+'</section>';
+  }
+
+  function openMethod(key, trigger){
+    var detail = METHOD_DETAILS[key];
+    if(!detail || !methodModal) return;
+    lastMethodTrigger = trigger || null;
+    methodKicker.textContent = detail.kicker;
+    methodTitle.textContent = detail.title;
+    methodSummary.textContent = detail.summary;
+    methodGrid.innerHTML = detail.blocks.map(renderMethodBlock).join('');
+    methodFoot.textContent = detail.foot || '';
+    methodModal.hidden = false;
+    var close = methodModal.querySelector('.method-close');
+    if(close) close.focus();
+  }
+
+  function closeMethod(){
+    if(!methodModal || methodModal.hidden) return false;
+    methodModal.hidden = true;
+    if(lastMethodTrigger && typeof lastMethodTrigger.focus === 'function') lastMethodTrigger.focus();
+    lastMethodTrigger = null;
+    return true;
+  }
+
+  if(methodCards){
+    methodCards.addEventListener('click', function(e){
+      var card = e.target.closest('[data-method]');
+      if(!card) return;
+      openMethod(card.dataset.method, card);
     });
-    document.documentElement.lang = lang==='pt'?'pt-BR':lang;
   }
-  function applyTheme(t){ document.documentElement.dataset.theme = t; }
-
-  document.querySelectorAll('.strip-toggles button').forEach(function(b){
-    b.addEventListener('click', function(){
-      var isLang = !!b.dataset.lang;
-      var group = isLang ? 'lang' : 'theme';
-      b.parentElement.querySelectorAll('button[data-'+group+']').forEach(function(x){ x.classList.remove('on'); });
-      b.classList.add('on');
-      if(isLang){ applyLang(b.dataset.lang); }
-      else{ applyTheme(b.dataset.theme); }
+  if(methodModal){
+    methodModal.addEventListener('click', function(e){
+      if(e.target.closest('[data-method-close]')) closeMethod();
     });
-  });
-  applyLang('pt');
-  applyTheme('light');
-})();
-</script>
-
-<script>
-(function(){
-  var canvas = document.getElementById('map');
-  var ctx = canvas.getContext('2d',{alpha:true});
-  var width, height;
-  var FONT_SIZE=11, LINE_HEIGHT=14, SCAN_STEP=8;
-  var FONT_STR = '500 '+FONT_SIZE+'px "Geist Mono", ui-monospace, monospace';
-
-  var B1_anat=["LOBO SUPERIOR DIREITO","LOBO SUPERIOR ESQUERDO","LOBO INFERIOR DIREITO","LOBO INFERIOR ESQUERDO","LOBO MEDIO","LINGULA","SEGMENTO APICAL DO LSD","SEGMENTO ANTERIOR DO LSD","SEGMENTO LATERAL DO LM","SEGMENTO POSTERIOR BASAL DO LIE","BASES PULMONARES","APICES PULMONARES","REGIAO PERIHILAR DIREITA","FISSURA OBLIQUA DIREITA","REGIAO SUBPLEURAL BILATERAL"];
-  var B1_find=["CONSOLIDACAO PARENQUIMATOSA","OPACIDADE EM VIDRO FOSCO","NODULO SOLIDO","NODULO SUBSOLIDO","MASSA ESPICULADA","ATELECTASIA SUBSEGMENTAR","BRONQUIECTASIAS CILINDRICAS","ENFISEMA CENTROLOBULAR","ESPESSAMENTO SEPTAL INTERLOBULAR","PADRAO ARVORE EM BROTAMENTO","PADRAO CRAZY-PAVING","FAVEOLAMENTO","PADRAO RETICULAR","CAVITACAO DE PAREDES ESPESSAS","AREA DE APRISIONAMENTO AEREO"];
-  var B1_det=["MEDINDO 6MM. LUNG-RADS 2.","MEDINDO 8MM. LUNG-RADS 3.","MEDINDO 12MM. LUNG-RADS 4A.","MEDINDO 22MM. LUNG-RADS 4B.","COM BRONCOGRAMA AEREO.","COM HALO EM VIDRO FOSCO.","SUGESTIVO DE PROCESSO INFECCIOSO.","ESTAVEL EM RELACAO AO EXAME PREVIO.","DE PROVAVEL NATUREZA INFLAMATORIA.","NOVO EM RELACAO AO ESTUDO PREVIO.","INESPECIFICO. CORRELACIONAR CLINICAMENTE.","BILATERAL E SIMETRICO.","ASSIMETRICO COM PREDOMINIO A DIREITA.","DE DISTRIBUICAO PERIFERICA."];
-  var B1_extra=["EXEMPLO SINTETICO DE TEXTO RADIOLOGICO.","DEMO PUBLICA DO HARNESS.","METODO PUBLICO. AVALIACAO OFICIAL CONTROLADA.","CORPUS CLINICO NAO DISTRIBUIDO.","TESTE OCULTO NAO DISTRIBUIDO."]; 
-  var B2_anat=["SEGMENTO VII HEPATICO","SEGMENTO VIII HEPATICO","CABECA DO PANCREAS","CAUDA DO PANCREAS","BACO","GLANDULA ADRENAL DIREITA","POLO SUPERIOR DO RIM DIREITO","CORTEX RENAL DIREITO","HEMISFERIO CEREBELAR DIREITO","SUBSTANCIA BRANCA PERIVENTRICULAR","TALAMO DIREITO","HIPOCAMPO ESQUERDO","PONTE","CORPO CALOSO","CENTRO SEMIOVAL BILATERAL"];
-  var B2_find=["LESAO FOCAL SOLIDA","LESAO FOCAL CISTICA","NODULO HIPOINTENSO EM T1","NODULO HIPERINTENSO EM T2","AREA DE RESTRICAO A DIFUSAO","AREA DE HIPERSINAL EM FLAIR","LESAO COM REALCE ANELAR","LESAO COM REALCE ARTERIAL","CISTO SIMPLES","HEMANGIOMA TIPICO","AREA DE EDEMA CITOTOXICO","MICROHEMORRAGIA","COLECAO LIQUIDA","ESPESSAMENTO PARIETAL CONCENTRICO"];
-  var B2_det=["MEDINDO 15MM. LI-RADS 3.","MEDINDO 22MM. LI-RADS 4.","BOSNIAK I.","BOSNIAK IIF.","BOSNIAK III.","FAZEKAS II.","COM EFEITO EXPANSIVO LOCAL.","COM HALO DE EDEMA.","COM INVASAO VASCULAR.","DE ASPECTO INESPECIFICO.","SUGESTIVO DE PROCESSO NEOPLASICO.","COM RESTRICAO A DIFUSAO. ADC REDUZIDO."];
-  var B2_extra=["STRICT PASS COMO VEREDITO OFICIAL.","DADOS SINTETICOS PARA VISUALIZACAO.","SEM VALIDACAO CLINICA NESTA DEMO.","SEM APROVACAO REGULATORIA.","SEM AUTORIZACAO DE DEPLOY."]; 
-  var B3_anat=["LOBO DIREITO DA TIREOIDE","ISTMO TIREOIDIANO","MAMA DIREITA QSE","MAMA ESQUERDA QSI","AXILA ESQUERDA","FIGADO","VESICULA BILIAR","RIM DIREITO","BEXIGA","OVARIO DIREITO","UTERO","PROSTATA ZONA PERIFERICA ESQUERDA","TESTICULO DIREITO","VEIA POPLITEA ESQUERDA","ARTERIA CAROTIDA INTERNA DIREITA"];
-  var B3_find=["NODULO SOLIDO HIPOECOICO","NODULO MISTO","CISTO SIMPLES","CISTO COMPLEXO","NODULO COM MICROCALCIFICACOES","NODULO COM MARGENS IRREGULARES","LESAO ANECOICA","ESPESSAMENTO PARIETAL","CALCULO HIPERECOGENICO COM SOMBRA ACUSTICA","AREA DE ESTEATOSE FOCAL","PLACA ATEROMATOSA CALCIFICADA","TROMBO ECOGENICO ENDOLUMINAL"];
-  var B3_det=["MEDINDO 11MM. TI-RADS 3.","MEDINDO 22MM. TI-RADS 5.","MEDINDO 14MM. BI-RADS 4A.","MEDINDO 25MM. BI-RADS 4C.","MEDINDO 13MM. PI-RADS 4.","COM VASCULARIZACAO CENTRAL.","AVASCULAR AO DOPPLER.","COM ESTENOSE ESTIMADA EM 60%.","COM SOMBRA ACUSTICA POSTERIOR.","MEDINDO 35X28MM."];
-  var B3_extra=["EXEMPLO SINTETICO DE TEXTO RADIOLOGICO.","DEMO PUBLICA DO HARNESS.","METODO PUBLICO. AVALIACAO OFICIAL CONTROLADA.","CORPUS CLINICO NAO DISTRIBUIDO.","TESTE OCULTO NAO DISTRIBUIDO."]; 
-  var B4_anat=["UMERO PROXIMAL DIREITO","RADIO DISTAL DIREITO","FEMUR PROXIMAL DIREITO","TIBIA PROXIMAL DIREITA","CALCANEO DIREITO","ESCAFOIDE DIREITO","ARCO COSTAL POSTERIOR DIREITO 7","CORPO VERTEBRAL DE L4","ARTICULACAO DO JOELHO DIREITO","ARTICULACAO SACROILIACA BILATERAL","CABECA FEMORAL DIREITA"];
-  var B4_find=["FRATURA TRANSVERSA","FRATURA COMINUTIVA","FRATURA POR ESTRESSE","LUXACAO ANTERIOR","OSTEOARTROSE GRAU III","OSTEONECROSE","LESAO OSTEOLITICA","LESAO OSTEOESCLEROTICA","ENCONDROMA","CONSOLIDACAO VICIOSA","ESPONDILOLISTESE GRAU I","ESCOLIOSE"];
-  var B4_det=["SEM DESVIO.","COM DESVIO LATERAL.","COM ANGULACAO EM VALGO.","CLASSIFICACAO GARDEN III.","CLASSIFICACAO WEBER B.","CLASSIFICACAO COLLES.","ANGULO DE COBB DE 34 GRAUS.","COM RUPTURA DO LCA.","COM EDEMA MEDULAR OSSEO.","COM CALO OSSEO EXUBERANTE."];
-  var B4_extra=["STRICT PASS COMO VEREDITO OFICIAL.","DADOS SINTETICOS PARA VISUALIZACAO.","SEM VALIDACAO CLINICA NESTA DEMO.","SEM APROVACAO REGULATORIA.","SEM AUTORIZACAO DE DEPLOY."]; 
-
-  // ink contours layered on the cream paper
-  var CONTOURS=[
-    {min:0.15,max:0.28,color:'#B3A98D',text:'',ci:0},
-    {min:0.35,max:0.48,color:'#8B7E6A',text:'',ci:0},
-    {min:0.55,max:0.68,color:'#6B5F4F',text:'',ci:0},
-    {min:0.75,max:0.88,color:'#3A332A',text:'',ci:0}
-  ];
-
-  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
-  function pick(a){return a[Math.floor(Math.random()*a.length)];}
-  function buildBand(anats,finds,dets,extras,count){
-    var phrases=[]; for(var i=0;i<count;i++){ phrases.push(pick(anats)+": "+pick(finds)+" "+pick(dets)+" "); }
-    for(var e=0;e<extras.length;e++) phrases.push(extras[e]+" ");
-    shuffle(phrases); return phrases.join('');
   }
-  CONTOURS[0].text=buildBand(B1_anat,B1_find,B1_det,B1_extra,420);
-  CONTOURS[1].text=buildBand(B2_anat,B2_find,B2_det,B2_extra,420);
-  CONTOURS[2].text=buildBand(B3_anat,B3_find,B3_det,B3_extra,420);
-  CONTOURS[3].text=buildBand(B4_anat,B4_find,B4_det,B4_extra,420);
 
-  var cwc={};
-  function charW(ch){ if(cwc[ch]!==undefined) return cwc[ch]; cwc[ch]=ctx.measureText(ch).width; return cwc[ch]; }
+  function renderSeg(){
+    var seg = document.getElementById('locale-seg');
+    if(!seg) return;
+    seg.innerHTML = '';
+    localeKeys.forEach(function(k){
+      var b = document.createElement('button');
+      b.textContent = k;
+      b.classList.toggle('active', k===current);
+      b.addEventListener('click', function(){ current=k; renderBoard(); renderSeg(); });
+      seg.appendChild(b);
+    });
+  }
 
-  function resize(){
-    var sec=document.getElementById('canvas-bg');
-    width=sec.clientWidth; height=sec.clientHeight;
-    var dpr=Math.min(window.devicePixelRatio||1,2);
-    canvas.width=width*dpr; canvas.height=height*dpr;
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-    ctx.font=FONT_STR; ctx.textBaseline='top'; cwc={};
-  }
-  window.addEventListener('resize',resize); resize();
+  function renderBoard(){
+    var board = DATA.locales[current];
+    var body = document.getElementById('lb-body');
+    var meta = document.getElementById('lb-meta');
+    var note = document.getElementById('lb-note');
+    var stats = document.getElementById('lb-stats');
+    if(!board || !body) return;
 
-  function fitText(idx,avail){
-    var c=CONTOURS[idx], t=c.text, si=c.ci, res='', w=0, j=si;
-    while(w<avail && j<t.length){ var ch=t[j], ww=charW(ch); if(w+ww>avail) break; res+=ch; w+=ww; j++; }
-    c.ci = j>=t.length ? 0 : j; return res;
-  }
-  function elev(x,y){
-    var e=0,a=0.8,f=0.0012;
-    for(var i=0;i<4;i++){ e+=Math.sin(x*f+Math.cos(y*f*0.9))*a; e+=Math.cos(y*f+Math.sin(x*f*1.1))*a; a*=0.5; f*=2.2; }
-    return (e+2)/4;
-  }
-  var driftX=0, driftY=0;
-  var lastT=0;
-  function render(now){
-    if(!now) now=0;
-    if(now-lastT < 350){ requestAnimationFrame(render); return; }
-    lastT = now;
-    driftX += 0.6; driftY += 0.3;
-    var ePX=driftX, ePY=driftY;
-    ctx.clearRect(0,0,width,height);
-    for(var c=0;c<4;c++) CONTOURS[c].ci=0;
-    var batches=[[],[],[],[]];
-    for(var y=0;y<height;y+=LINE_HEIGHT){
-      var my=(y-ePY), ai=-1, ss=0;
-      for(var x=0;x<=width;x+=SCAN_STEP){
-        var mx=(x-ePX), ev=elev(mx,my), fi=-1;
-        for(var ci=0;ci<4;ci++){ if(ev>=CONTOURS[ci].min && ev<=CONTOURS[ci].max){ fi=ci; break; } }
-        if(fi!==ai){
-          if(ai!==-1){ var sw=x-ss; if(sw>50){ var t=fitText(ai,sw); if(t) batches[ai].push({t:t,x:ss,y:y}); } }
-          ai=fi; ss=x;
-        }
-      }
-      if(ai!==-1){ var sw2=width-ss; if(sw2>50){ var t2=fitText(ai,sw2); if(t2) batches[ai].push({t:t2,x:ss,y:y}); } }
+    var audit = board.audit || {};
+    var rerunPending = audit.status === 'production-rerun-pending';
+    var lastRunCases = audit.lastValidatedRunCases || null;
+    meta.textContent = board.suite + ' · ' + board.cases + ' cases · track ' + board.track + ' · ' + board.scoring + ' · suite ' + (board.suiteHash||'').slice(0,8) +
+      (rerunPending && lastRunCases ? ' · controlled rerun pending · last validated ' + lastRunCases + '-case run' : '');
+
+    function scoreCell(e){
+      var value = e.score == null ? e.clinicalScore : e.score;
+      return '<span class="bar"><i style="width:'+Math.round((value||0)*100)+'%"></i></span><span class="pct">'+pct(value)+'</span>';
     }
-    for(var bi=0;bi<4;bi++){ if(!batches[bi].length) continue; ctx.fillStyle=CONTOURS[bi].color; for(var di=0;di<batches[bi].length;di++){ ctx.fillText(batches[bi][di].t,batches[bi][di].x,batches[bi][di].y); } }
-    requestAnimationFrame(render);
+
+    function row(e, rank, cls){
+      var rowClass = (rank===1?'top ':'') + (cls || '');
+      return '<tr class="'+rowClass.trim()+'">' +
+        '<td class="rank-cell"><span class="rank">'+(rank||'—')+'</span></td>' +
+        '<td class="system-cell"><span class="sys">'+esc(e.system)+'</span><span class="sub">'+esc(e.kind||'')+'</span></td>' +
+        '<td class="num metric score-cell" data-label="Score"><span class="score-inline">'+scoreCell(e)+'</span></td>' +
+        '<td class="num dim metric" data-label="Latency">'+ms(e.latencyMs)+'</td>' +
+        '<td class="num dim metric" data-label="All-pass">'+pct(e.allPass)+'</td>' +
+        '<td class="num dim metric" data-label="Criteria">'+pct(e.criterionPass)+'</td>' +
+        '<td class="num dim metric" data-label="CRIT">'+pct(e.dims.CRIT)+'</td>' +
+        '<td class="num dim metric" data-label="QUAL">'+pct(e.dims.QUAL)+'</td>' +
+        '<td class="num dim metric" data-label="TERM">'+pct(e.dims.TERM)+'</td>' +
+        '<td class="num dim metric" data-label="GUIDE">'+pct(e.dims.GUIDE)+'</td>' +
+        '<td class="num dim metric" data-label="RAG">'+pct(e.dims.RAG)+'</td>' +
+        '</tr>';
+    }
+
+    var production = board.entries.filter(function(e){ return e.group === 'production'; });
+    var modelRows = board.entries.filter(function(e){ return e.group === 'model'; });
+    var calibration = board.entries.filter(function(e){ return e.group === 'calibration'; });
+    var visible = production.length ? production : board.entries;
+    var html = production.map(function(e, i){ return row(e, i+1); }).join('');
+    if(modelRows.length){
+      html += '<tr class="divider"><td colspan="11">Free/open model comparison</td></tr>';
+      html += modelRows.map(function(e, i){ return row(e, 'M'+(i+1), 'model-row'); }).join('');
+    }
+    if(calibration.length){
+      html += '<tr class="divider"><td colspan="11">Calibration fixtures</td></tr>';
+      html += calibration.map(function(e){ return row(e, '—', 'fixture'); }).join('');
+    }
+    if(!html) html = visible.map(function(e, i){ return row(e, i+1); }).join('');
+    body.innerHTML = html;
+
+    var leader = visible[0];
+    if(stats && leader){
+      var leaderKind = leader.group === 'calibration' ? 'calibration fixture' : 'production agent';
+      if(rerunPending){
+        stats.innerHTML =
+          '<div class="card blue"><h3>#1 '+esc(leader.system)+'</h3><div class="big">'+pct(leader.score)+'<small>clinical</small></div><p>Weighted clinical score on the controlled suite.</p><div class="tags"><span>'+current+'</span><span>'+leaderKind+'</span><span>'+esc(String(lastRunCases || leader.runCases || board.cases))+'-case run</span></div></div>' +
+          '<div class="card"><h3>Suite</h3><div class="big">'+esc(String(board.cases))+'</div><p>Controlled cases are staged outside the public repository.</p><div class="tags"><span>aggregate only</span></div></div>' +
+          '<div class="card"><h3>Critical gate</h3><div class="big">Hard fail</div><p>Any deterministic or adversarial critical failure forces the case to FAIL.</p><div class="tags"><span>no averaging</span></div></div>' +
+          '<div class="card"><h3>Rerun</h3><div class="big">Pending</div><p>Production reruns require authorized benchmark credentials.</p><div class="tags"><span>controlled</span></div></div>';
+      }else{
+        stats.innerHTML =
+          '<div class="card blue"><h3>#1 '+esc(leader.system)+'</h3><div class="big">'+pct(leader.score)+'<small>clinical</small></div><p>Validated '+esc(String(board.cases))+'-case production-agent run.</p><div class="tags"><span>'+current+'</span><span>'+leaderKind+'</span></div></div>' +
+          '<div class="card"><h3>All-pass</h3><div class="big">'+pct(leader.allPass)+'</div><p>Strict case completion: every criterion in the case passed simultaneously.</p><div class="tags"><span>zero failed checks</span></div></div>' +
+          '<div class="card"><h3>Critical gate</h3><div class="big">Hard fail</div><p>If a critical finding is missed or unsafe negation appears, that case cannot pass.</p><div class="tags"><span>blocks PASS</span></div></div>' +
+          '<div class="card"><h3>Criteria</h3><div class="big">'+pct(leader.criterionPass)+'</div><p>Pooled binary checks across CRIT, QUAL, TERM, GUIDE and RAG.</p><div class="tags"><span>diagnostic</span></div></div>';
+      }
+    }
+
+    var disclosureText = board.disclosure ? '<br><br><b>'+esc(board.disclosure)+'</b>' : '';
+    note.innerHTML = (board.note||'') + disclosureText + (DATA.generatedAt ? ' Generated '+esc(DATA.generatedAt)+'.' : '');
   }
-  requestAnimationFrame(render);
+
+  function renderHome(){
+    var hs = document.getElementById('homestats');
+    var board = DATA.locales[current];
+    if(!hs || !board || !board.entries.length) return;
+    var production = board.entries.filter(function(e){ return e.group !== 'calibration'; });
+    var leader = production[0] || board.entries[0];
+    var audit = board.audit || {};
+    var runSuffix = audit.lastValidatedRunCases ? ' · '+audit.lastValidatedRunCases+'-case run' : '';
+    hs.innerHTML =
+      '<span><b>'+pct(leader.score)+'</b>#1 score · '+esc(leader.system)+runSuffix+'</span>' +
+      '<span><b>'+(board.reliability!=null?pct(board.reliability):'—')+'</b>pass^'+(board.reliabilityRuns||3)+' crit-safe</span>' +
+      '<span><b>'+board.cases+'</b>controlled cases</span>' +
+      '<span><b>'+(audit.criticalSafetyCases || '—')+'</b>critical-safety cases</span>';
+  }
+
+  renderSeg(); renderBoard(); renderHome();
 })();
 </script>
-
 </body>
 </html>

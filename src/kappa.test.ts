@@ -135,6 +135,18 @@ describe("pairedBootstrap", () => {
     assert.ok(r.pValue < 0.05);
   });
 
+  it("never reports a p-value of exactly 0 (add-one Monte-Carlo floor)", () => {
+    // All paired diffs equal: every centered resample is 0, so no resample is as
+    // extreme as the observed shift. The naive extreme/N gave p=0 (impossible
+    // certainty); the add-one estimator floors at ~1/(N+1).
+    const a = Array.from({ length: 50 }, () => 90);
+    const b = Array.from({ length: 50 }, () => 70);
+    const r = pairedBootstrap(a, b, 10000, 0.05);
+    assert.ok(r.pValue > 0, `p-value must be > 0, got ${r.pValue}`);
+    assert.ok(r.pValue <= 1 / 10000 + 1e-9, `p-value should be at the add-one floor ~1/(N+1), got ${r.pValue}`);
+    assert.ok(r.pValue < 0.05);
+  });
+
   it("returns CI containing 0 when paired diffs are noisy", () => {
     const a = Array.from({ length: 30 }, (_, i) => 70 + (i % 5));
     const b = Array.from({ length: 30 }, (_, i) => 70 + ((i + 2) % 5));

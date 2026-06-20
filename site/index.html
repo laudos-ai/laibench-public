@@ -108,6 +108,14 @@
   .disc-tiny { font-size:11px; color:var(--faint); margin-top:14px; max-width:80ch; line-height:1.6; }
   [data-reveal]{ opacity:0; transform:translateY(18px); transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1); }
   [data-reveal].in{ opacity:1; transform:none; }
+  @media (prefers-reduced-motion: reduce){ [data-reveal]{ opacity:1; transform:none; transition:none; } html{ scroll-behavior:auto; } }
+
+  /* Lenis smooth scroll (desktop wheel; native scroll on touch) */
+  html.lenis,html.lenis body{ height:auto; }
+  .lenis.lenis-smooth{ scroll-behavior:auto !important; }
+  .lenis.lenis-smooth [data-lenis-prevent]{ overscroll-behavior:contain; }
+  .lenis.lenis-stopped{ overflow:hidden; }
+  .lenis.lenis-smooth iframe{ pointer-events:none; }
 
   /* Leaderboard table: never break the layout — scroll horizontally on narrow screens */
   .t-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain; }
@@ -325,6 +333,32 @@
         html += '</div>';
       });
       document.getElementById('boards').innerHTML = html;
+    })();
+  </script>
+  <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
+  <script>
+    (function(){
+      var L = window.Lenis;
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      // Smooth-scroll anchor jumps work with or without Lenis.
+      function jumpTo(el){
+        if (window.lenis) { window.lenis.scrollTo(el, { offset:-68 }); return; }
+        var y = el.getBoundingClientRect().top + window.pageYOffset - 68;
+        window.scrollTo({ top:y, behavior: reduce ? 'auto' : 'smooth' });
+      }
+      document.querySelectorAll('a[href^="#"]').forEach(function(a){
+        a.addEventListener('click', function(e){
+          var id = a.getAttribute('href'); if (!id || id.length < 2) return;
+          var el = document.querySelector(id); if (!el) return;
+          e.preventDefault(); jumpTo(el);
+          if (history.replaceState) history.replaceState(null, '', id);
+        });
+      });
+      if (typeof L === 'undefined' || reduce) return; // native scroll on touch / reduced-motion
+      var lenis = new L({ duration:1.1, smoothWheel:true, wheelMultiplier:1, touchMultiplier:1.6 });
+      function raf(t){ lenis.raf(t); requestAnimationFrame(raf); }
+      requestAnimationFrame(raf);
+      window.lenis = lenis;
     })();
   </script>
 </body>

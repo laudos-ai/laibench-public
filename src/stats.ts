@@ -4,7 +4,7 @@
  */
 
 /**
- * Seeded pseudo-random number generator (xoshiro128** variant).
+ * Seeded splitmix32 pseudo-random number generator.
  * Produces deterministic sequences given a seed, suitable for reproducible bootstrap resampling.
  */
 function splitmix32(seed: number): () => number {
@@ -73,7 +73,7 @@ export function bootstrapCI(
  *
  * @param a Array of booleans (model A correct per case)
  * @param b Array of booleans (model B correct per case)
- * @returns chi2 statistic and approximate p-value (1 df chi-squared)
+ * @returns chi2 statistic and p-value. Uses exact two-sided binomial p-value for small discordant n.
  */
 export function mcNemarTest(
   a: boolean[],
@@ -95,14 +95,33 @@ export function mcNemarTest(
   const total = aNotB + bNotA;
   if (total === 0) return { chi2: 0, pValue: 1 };
 
-  // McNemar chi-squared with continuity correction
+  // McNemar chi-squared with continuity correction. Kept for reporting even
+  // when the p-value uses the exact small-sample test.
   const chi2 = ((Math.abs(aNotB - bNotA) - 1) ** 2) / total;
-  const pValue = 1 - chi2CDF(chi2, 1);
+  const pValue = total <= 25 ? exactBinomialTwoSided(aNotB, bNotA) : 1 - chi2CDF(chi2, 1);
 
   return {
     chi2: round6(chi2),
     pValue: round6(Math.max(0, Math.min(1, pValue))),
   };
+}
+
+function exactBinomialTwoSided(aNotB: number, bNotA: number): number {
+  const n = aNotB + bNotA;
+  const k = Math.min(aNotB, bNotA);
+  let lowerTail = 0;
+  for (let i = 0; i <= k; i++) {
+    lowerTail += binomialCoefficient(n, i) * 0.5 ** n;
+  }
+  return Math.min(1, 2 * lowerTail);
+}
+
+function binomialCoefficient(n: number, k: number): number {
+  if (k < 0 || k > n) return 0;
+  const kk = Math.min(k, n - k);
+  let c = 1;
+  for (let i = 1; i <= kk; i++) c = (c * (n - kk + i)) / i;
+  return c;
 }
 
 /**
@@ -179,22 +198,39 @@ function regularizedGammaP(a: number, x: number): number {
     return sum * Math.exp(-x + a * Math.log(x) - lnGamma(a));
   }
 
-  // Continued fraction (Lentz's method)
-  let f = 1e-30;
-  let c = 1e-30;
-  let d = 1 / (x + 1 - a);
+  // Continued fraction for the upper incomplete gamma Q(a,x) via the modified
+  // Lentz method (Numerical Recipes gcf), then return P = 1 - Q. The previous
+  // recurrence never reciprocated c and updated d/h against an inconsistent b,
+  // so it diverged (~1e27) for half-integer a (chi-squared df = 1, 3). It was
+  // masked only because the single live caller passes df = 1 and routes through
+  // the erf special-case in chi2CDF; this makes any future df != 1 use correct.
+  const FPMIN = 1e-300;
+  const EPS = 1e-12;
+  let b = x + 1 - a;
+  let c = 1 / FPMIN;
+  let d = 1 / b;
   let h = d;
-  for (let n = 1; n < 200; n++) {
-    const an = -n * (n - a);
-    const bn = x + 2 * n + 1 - a;
-    d = 1 / (bn + an * d);
-    c = bn + an / c;
-    const delta = c * d;
-    h *= delta;
-    if (Math.abs(delta - 1) < 1e-12) break;
+  for (let i = 1; i < 200; i++) {
+    const an = -i * (i - a);
+    b += 2;
+    d = an * d + b;
+    if (Math.abs(d) < FPMIN) d = FPMIN;
+    c = b + an / c;
+    if (Math.abs(c) < FPMIN) c = FPMIN;
+    d = 1 / d;
+    const del = d * c;
+    h *= del;
+    if (Math.abs(del - 1) < EPS) break;
   }
 
-  return 1 - Math.exp(-x + a * Math.log(x) - lnGamma(a)) * h;
+  const q = Math.exp(-x + a * Math.log(x) - lnGamma(a)) * h; // Q(a, x)
+  return 1 - q; // P(a, x)
+}
+
+/** Test-only hook: exercise the private chi-squared CDF, including the df != 1
+ * continued-fraction branch that has no live caller today. */
+export function chi2CDFForTest(x: number, df: number): number {
+  return chi2CDF(x, df);
 }
 
 /**

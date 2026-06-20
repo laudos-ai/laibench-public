@@ -5,15 +5,109 @@
  */
 
 import { getLocale } from "../locales/index.js";
-import { extractLateralityTokens, extractLevelTokens, extractMeasurements, matchAll, normalizeLoose, stripTags } from "../normalize.js";
+import { hasNegationCue, isFindingNegated } from "../extract.js";
+import { escapeRegExp, extractLateralityTokens, extractLevelTokens, extractMeasurements, matchAll, normalizeLoose, stripTags } from "../normalize.js";
 import type { Check, ExamMeta, LocaleKey, Severity } from "../types.js";
 
-function getTitle(html: string): string {
-  return html.replace(/^(?:\s|<br\s*\/?>)*/i, "").match(/<center><b>([^<]+)<\/b><\/center>/i)?.[1]?.trim() ?? "";
+/** Copy a regex without the g flag so .test() never sees stale lastIndex state. */
+function nonGlobal(rx: RegExp): RegExp {
+  return rx.flags.includes("g") ? new RegExp(rx.source, rx.flags.replace("g", "")) : rx;
 }
 
+// Function-word inventories for report-language detection. Radiology pt-BR and
+// en-US share Latin clinical roots, so detection leans on closed-class words
+// (articles, prepositions) plus locale-exclusive section labels, never on
+// clinical vocabulary.
+const PT_FUNCTION_WORDS = /\b(?:de|da|do|das|dos|sem|com|nao|para|em|os|as|uma|seios|analise|conclusao|achados|ausencia|presenca|aspecto|demais)\b/g;
+const EN_FUNCTION_WORDS = /\b(?:the|of|with|without|no|in|is|are|and|there|within|findings|impression|technique|unremarkable|normal limits)\b/g;
+
+function detectReportLanguageMismatch(
+  normalizedText: string,
+  localeKey: LocaleKey,
+): { mismatch: boolean; detected: string; evidence: string } {
+  const ptHits = normalizedText.match(PT_FUNCTION_WORDS)?.length ?? 0;
+  const enHits = normalizedText.match(EN_FUNCTION_WORDS)?.length ?? 0;
+  const expected = localeKey === "pt-BR" ? ptHits : enHits;
+  const other = localeKey === "pt-BR" ? enHits : ptHits;
+  // Mismatch only on strong evidence: the opposite locale dominates clearly.
+  const mismatch = other >= 6 && other >= expected * 2;
+  return {
+    mismatch,
+    detected: ptHits >= enHits ? "pt-BR" : "en-US",
+    evidence: `pt function words: ${ptHits}, en function words: ${enHits}`,
+  };
+}
+
+type CompiledLocaleRegexes = {
+  preservation: Array<{ label: string; input: RegExp; report: RegExp }>;
+  forbiddenOpeners: RegExp[];
+  umbrellaTerms: RegExp;
+  bannedPhrases: RegExp[];
+};
+
+// Precompiled per-locale regex cache. Locale specs expose shared (sometimes
+// g-flagged) regexes; compiling non-g copies once per locale avoids both the
+// per-call new RegExp(...) cost and any lastIndex statefulness.
+const _localeRegexCache = new Map<LocaleKey, CompiledLocaleRegexes>();
+
+function getCompiledLocaleRegexes(localeKey: LocaleKey, locale: ReturnType<typeof getLocale>): CompiledLocaleRegexes {
+  let cached = _localeRegexCache.get(localeKey);
+  if (!cached) {
+    cached = {
+      preservation: locale.preservationPatterns.map((pattern) => ({
+        label: pattern.label,
+        input: nonGlobal(pattern.input),
+        report: nonGlobal(pattern.report),
+      })),
+      forbiddenOpeners: locale.forbiddenOpeners.map((opener) => new RegExp(`(?:<br>|<\\/b>|\\.)\\s*${escapeRegExp(opener)}`, "i")),
+      umbrellaTerms: nonGlobal(locale.umbrellaTerms),
+      bannedPhrases: locale.bannedPhrases.map(nonGlobal),
+    };
+    _localeRegexCache.set(localeKey, cached);
+  }
+  return cached;
+}
+
+const HEDGE_RX = /a esclarecer|nao se pode excluir|nao e possivel excluir|a depender de|a criterio|correlacionar? clinica|nao podemos afastar|sugerir? complementac|avaliar? possibilidade|convem correlacionar/i;
+
+function getTitle(html: string): string {
+  const centered = html.replace(/^(?:\s|<br\s*\/?>)*/i, "").match(/<center><b>([^<]+)<\/b><\/center>/i)?.[1]?.trim();
+  if (centered) return centered;
+
+  const plain = stripTags(html.replace(/<br\s*\/?>/gi, "\n")).replace(/\s+/g, " ").trim();
+  const sectionMatch = /\b(?:T[ée]cnica|An[áa]lise|Achados|Conclus[ãa]o|Impress[ãa]o|Technique|Findings|Analysis|Impression|Conclusion)\s*:?/i.exec(plain);
+  const candidate = (sectionMatch ? plain.slice(0, sectionMatch.index) : plain).trim();
+  return candidate.length <= 180 ? candidate : "";
+}
+
+function normalizeMeasurementValue(value: string): string {
+  return normalizeLoose(value)
+    .replace(/,/g, ".")
+    .replace(/\s+/g, "")
+    .replace(/(\d+)\.0+(?=\D|$)/g, "$1");
+}
+
+function measurementPresent(reportText: string, measurement: string): boolean {
+  const normalizedReport = normalizeMeasurementValue(reportText);
+  const normalizedMeasurement = normalizeMeasurementValue(measurement);
+  if (normalizedMeasurement.length === 0) return true;
+  // Exact-boundary match, NOT naive substring. A digit or decimal point
+  // immediately to the left means a different number: gold "2cm" must not match
+  // inside "12cm", and "1.5cm" must not match inside "11.5cm". A tenfold size
+  // error is a dangerous measurement mistake, not a preserved measurement.
+  return new RegExp(`(?<![\\d.])${escapeRegExp(normalizedMeasurement)}`).test(normalizedReport);
+}
+
+// Section-content extraction patterns keyed by the section regex source (a
+// handful of locale section regexes), so they compile once.
+const _sectionContentRegexCache = new Map<string, RegExp>();
+
 function getSectionContent(html: string, rx: RegExp): string {
-  const pattern = new RegExp(`<b>(?:${rx.source})[^<]*<\\/b>([\\s\\S]*?)(?:<br><br><b>|$)`, "i");
+  let pattern = _sectionContentRegexCache.get(rx.source);
+  if (!pattern) {
+    pattern = new RegExp(`<b>(?:${rx.source})[^<]*<\\/b>([\\s\\S]*?)(?:<br><br><b>|$)`, "i");
+    _sectionContentRegexCache.set(rx.source, pattern);
+  }
   return pattern.exec(html)?.[1] ?? "";
 }
 
@@ -116,14 +210,31 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
 
   // QUAL - Structural quality checks
   ck(checks, "QUAL", "Q01", "Has bold title", "minor", /^(?:\s|<br\s*\/?>)*<center><b>/i.test(html), html.slice(0, 40));
-  ck(checks, "QUAL", "Q02", "Title not abbreviated", "critical", !locale.titleAbbrev.some((rx) => rx.test(title)), title || "missing title");
-  ck(checks, "QUAL", "Q03", "No <br><br> inside analysis", "critical", !analysis.includes("<br><br>"), "ok");
-  ck(checks, "QUAL", "Q04", "No <br><br> inside conclusion", "critical", !conclusion.includes("<br><br>"), "ok");
+  // Title abbreviation is a style preference, not a safety issue: standard
+  // radiology titles routinely begin with the modality abbreviation ("TC DE
+  // CRÂNIO", "CT ANGIOGRAPHY"). Scored as a minor deduction, never a gate.
+  ck(checks, "QUAL", "Q02", "Title spells out modality", "minor", !locale.titleAbbrev.some((rx) => rx.test(title)), title || "missing title");
+  // Whitespace/line-break preferences are not clinical safety failures. Keep
+  // them visible for rendering polish, but never let them become HealthBench-
+  // style arbitrary gates.
+  ck(checks, "QUAL", "Q03", "No <br><br> inside analysis", "minor", !analysis.includes("<br><br>"), "ok");
+  ck(checks, "QUAL", "Q04", "No <br><br> inside conclusion", "minor", !conclusion.includes("<br><br>"), "ok");
   ck(checks, "QUAL", "Q05", "Has section separators", "major", /<br><br><b>/i.test(html), "ok");
   ck(checks, "QUAL", "Q06", "Only allowed tags", "major", hasAllowedTagsOnly(html), "ok");
   ck(checks, "QUAL", "Q07", "No placeholders", "critical", matchAll(/\[[A-Z_]{2,}\]|_{3,}|(?<!\w)XXX(?!\w)|####/g, html).length === 0, "ok");
   ck(checks, "QUAL", "Q08", "Analysis section present", "critical", locale.sections.analysis.test(html), "ok");
-  if (meta.modality === "US") ck(checks, "QUAL", "Q09", "Ultrasound has no technique section", "critical", !locale.sections.technique.test(html), "ok");
+  if (meta.modality === "US") {
+    const hasTechniqueSection = nonGlobal(locale.sections.technique).test(html);
+    ck(
+      checks,
+      "QUAL",
+      "Q09",
+      "Ultrasound technique section is optional and non-gating",
+      "minor",
+      true,
+      hasTechniqueSection ? "technique section present" : "technique section absent",
+    );
+  }
   const analysisLongLines = analysis.split("<br>").map((l) => stripTags(l).trim()).filter((l) => l.length > 25);
   const conclusionText = normalizeLoose(stripTags(conclusion));
   const copiedLines = analysisLongLines.filter((l) => conclusionText.includes(normalizeLoose(l).slice(0, 35)));
@@ -133,6 +244,22 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
 
   const analysisWordCount = stripTags(analysis).trim().split(/\s+/).filter(Boolean).length;
   ck(checks, "QUAL", "Q12", "Analysis has substantive content", "major", analysisWordCount >= 15, `${analysisWordCount} words`);
+
+  // TERM - Report language must match the suite locale. A Portuguese report on the
+  // en-US suite (or vice versa) previously sailed through TERM at 100% while CRIT/QUAL
+  // emitted misleading "finding not found" evidence; this check names the root cause.
+  const languageVerdict = detectReportLanguageMismatch(normalizedHtml, localeKey);
+  ck(
+    checks,
+    "TERM",
+    "T-LANG",
+    "Report language matches suite locale",
+    "critical",
+    !languageVerdict.mismatch,
+    languageVerdict.mismatch
+      ? `report appears to be ${languageVerdict.detected} on a ${localeKey} suite (${languageVerdict.evidence})`
+      : "ok",
+  );
 
   // TERM - Terminology structural checks
   locale.forbiddenTerms.forEach(([rx, label], index) => {
@@ -177,28 +304,6 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
     ck(checks, "QUAL", "Q15", "Report not excessively verbose", "minor", wordsPerFinding <= 200, `${Math.round(wordsPerFinding)} words/finding`);
   }
 
-  // Classification mention checks (structural - check presence, not correctness)
-  const reportText = stripTags(html);
-  const sourceContext = normalizeLoose(`${meta.normalizedExam} ${findingsInput}`);
-  if (/nodulo.*tireoide|tireoide.*nodulo/i.test(sourceContext) && meta.modality === "US") {
-    ck(checks, "TERM", "TC01", "Thyroid nodule should reference TI-RADS", "major", /ti-?rads/i.test(reportText), "TI-RADS not mentioned");
-  }
-  if (/nodulo.*mama|mama.*nodulo|lesao.*mama/i.test(sourceContext) && (meta.modality === "US" || meta.modality === "MRI" || meta.modality === "MG" || meta.modality === "MX")) {
-    ck(checks, "TERM", "TC02", "Breast finding should reference BI-RADS", "major", /bi-?rads/i.test(reportText), "BI-RADS not mentioned");
-  }
-  if (/cisto.*ren|ren.*cisto/i.test(sourceContext) && /complex|sept|solid|irregular/i.test(sourceContext)) {
-    ck(checks, "TERM", "TC03", "Complex renal cyst should reference Bosniak", "major", /bosniak/i.test(reportText), "Bosniak not mentioned");
-  }
-  if (/nodulo.*pulmon|pulmon.*nodulo/i.test(sourceContext) && meta.modality === "CT") {
-    ck(checks, "TERM", "TC04", "Pulmonary nodule should reference Fleischner or Lung-RADS", "major", /fleischner|lung-?rads/i.test(reportText), "Fleischner/Lung-RADS not mentioned");
-  }
-  if (/nodulo.*figado|figado.*nodulo|lesao.*hepat/i.test(sourceContext) && /cirros|hepatopat|cronico/i.test(sourceContext)) {
-    ck(checks, "TERM", "TC05", "Hepatic lesion in chronic liver disease should reference LI-RADS", "major", /li-?rads/i.test(reportText), "LI-RADS not mentioned");
-  }
-  if (/prostata/i.test(sourceContext) && meta.modality === "MRI") {
-    ck(checks, "TERM", "TC06", "Prostate MRI should reference PI-RADS", "major", /pi-?rads/i.test(reportText), "PI-RADS not mentioned");
-  }
-
   // GUIDE - Anatomical coverage checks (structural)
   const coverageKey = `${meta.modality}:${meta.region}`;
   const matrix = locale.coverage[coverageKey];
@@ -237,8 +342,8 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
 
       for (const noun of findingNouns) {
         if (!inputLateralityMap.has(noun)) inputLateralityMap.set(noun, new Set());
-        if (/\b(?:direit|right)\b/.test(sn)) inputLateralityMap.get(noun)!.add("right");
-        if (/\b(?:esquerd|left)\b/.test(sn)) inputLateralityMap.get(noun)!.add("left");
+        if (/\b(?:direit[ao]s?|right)\b/.test(sn)) inputLateralityMap.get(noun)!.add("right");
+        if (/\b(?:esquerd[ao]s?|left)\b/.test(sn)) inputLateralityMap.get(noun)!.add("left");
         if (/\bbilateral\b/.test(sn)) inputLateralityMap.get(noun)!.add("bilateral");
       }
     }
@@ -252,8 +357,14 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
       // Find report sentences containing this noun
       const reportSentences = reportN.split(/[.\n]/).filter((s) => s.includes(noun));
       for (const rs of reportSentences) {
-        const reportHasRight = /\b(?:direit|right)\b/.test(rs);
-        const reportHasLeft = /\b(?:esquerd|left)\b/.test(rs);
+        // A negated contralateral statement ("left lobe without nodules",
+        // "no effusion on the right") documents the normal side — it is not a
+        // laterality swap of the positive finding. Skip only when THIS finding's
+        // clause is negated, so a swap is not hidden by an unrelated negation
+        // elsewhere in the sentence ("nodulo a esquerda, sem realce").
+        if (isFindingNegated(rs, noun, localeKey)) continue;
+        const reportHasRight = /\b(?:direit[ao]s?|right)\b/.test(rs);
+        const reportHasLeft = /\b(?:esquerd[ao]s?|left)\b/.test(rs);
 
         // Detect swap: input says left-only but report says right (without left)
         if (sides.has("left") && !sides.has("right") && !sides.has("bilateral") && reportHasRight && !reportHasLeft) {
@@ -286,7 +397,7 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
   }
   if (measures.length > 0) {
     const reportN = normalizeLoose(stripTags(html));
-    ck(checks, "RAG", "R04", "Measurements preserved in body", "major", measures.every((measure) => reportN.includes(measure)), measures.join(", "));
+    ck(checks, "RAG", "R04", "Measurements preserved in body", "major", measures.every((measure) => measurementPresent(reportN, measure)), measures.join(", "));
   }
   if (preservation.expected.length > 0) {
     ck(checks, "RAG", "R05", "Key findings preserved", "critical", preservation.ratio >= 0.8, preservation.missing.length ? preservation.missing.join(", ") : "ok");

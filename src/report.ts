@@ -16,6 +16,7 @@
  */
 
 import { readJsonFile } from "./io.js";
+import { readSuiteRun } from "./leaderboard.js";
 import { bootstrapCI } from "./stats.js";
 import { discriminate } from "./discriminate.js";
 import { calibrateJudges, scanContamination } from "./calibrate.js";
@@ -33,6 +34,8 @@ export type ConsolidatedReport = {
     mean: number;
     ci95: [number, number];
     perDim: Record<string, number>;
+    allPassRate: number;
+    criterionPassRate: number;
     passRate: number;
     strictPassRate: number;
     cost: number;
@@ -75,7 +78,11 @@ export async function buildConsolidatedReport(args: {
   perturbReportPath?: string;
   provenancePath?: string;
 }): Promise<ConsolidatedReport> {
-  const primary: SuiteRunResult = await readJsonFile(args.primaryPath);
+  // FIX 3 (gap-1): the consolidated report publishes the same public numbers as
+  // the leaderboard, so its inputs MUST pass the same verdict-integrity gate.
+  // Loading via readSuiteRun (not bare readJsonFile) means a tampered run whose
+  // critical gate would veto it can never be published in a consolidated report.
+  const primary: SuiteRunResult = await readSuiteRun(args.primaryPath);
   const overalls = primary.results.map((r) => r.combinedOverall);
   const ci = bootstrapCI(overalls, 10000, 0.05);
 
@@ -83,14 +90,14 @@ export async function buildConsolidatedReport(args: {
 
   let calibration: ConsolidatedReport["calibration"];
   if (args.calibrationInputs && args.calibrationInputs.length > 0) {
-    const runs = await Promise.all(args.calibrationInputs.map((p) => readJsonFile<SuiteRunResult>(p)));
+    const runs = await Promise.all(args.calibrationInputs.map((p) => readSuiteRun(p)));
     const cal = calibrateJudges(runs);
     calibration = { verdict: cal.verdict, notes: cal.notes };
   }
 
   let discrimination: ConsolidatedReport["discrimination"];
   if (args.baselinePath) {
-    const baseline: SuiteRunResult = await readJsonFile(args.baselinePath);
+    const baseline: SuiteRunResult = await readSuiteRun(args.baselinePath);
     const d = discriminate(primary, baseline);
     discrimination = {
       baselineRun: baseline.manifest.runName,
@@ -138,6 +145,8 @@ export async function buildConsolidatedReport(args: {
       mean: ci.mean,
       ci95: [ci.lower, ci.upper],
       perDim: Object.fromEntries(Object.entries(primary.summary.averagePerDim ?? {}).map(([k, v]) => [k, v as number])),
+      allPassRate: primary.summary.allPassRate ?? 0,
+      criterionPassRate: primary.summary.criterionPassRate ?? 0,
       passRate: primary.summary.passRate,
       strictPassRate: primary.summary.strictPassRate,
       cost: primary.summary.totalCostUsd,
@@ -170,6 +179,8 @@ export function reportToMarkdown(r: ConsolidatedReport): string {
   L.push(`| Metric | Value |`);
   L.push(`| --- | --- |`);
   L.push(`| n cases | ${r.primary.n} |`);
+  L.push(`| All-pass completion | ${r.primary.allPassRate.toFixed(2)}% |`);
+  L.push(`| Criterion pass rate | ${r.primary.criterionPassRate.toFixed(2)}% |`);
   L.push(`| Mean overall | ${r.primary.mean.toFixed(2)}% |`);
   L.push(`| 95% CI | [${r.primary.ci95[0].toFixed(2)}, ${r.primary.ci95[1].toFixed(2)}] |`);
   L.push(`| Pass rate | ${r.primary.passRate.toFixed(2)}% |`);

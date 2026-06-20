@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LAIBench Pro - Private Audit</title>
+<meta name="description" content="Private LAIBench Pro stratified audit notice." />
+<style>
+  :root{--bg:#f4f7f8;--ink:#181b1d;--muted:#697174;--line:#d8e0e2;--panel:#fff;--teal:#0d8068}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  main{width:min(760px,calc(100% - 32px));margin:0 auto;padding:56px 0}
+  a{color:var(--teal);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .brand{font-size:21px;letter-spacing:-.01em;margin-bottom:42px}.brand b{font-weight:700}
+  article{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:28px}
+  p.kicker{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:0 0 14px}
+  h1{font-size:42px;line-height:1.05;letter-spacing:-.03em;margin:0 0 16px}
+  p{font-size:17px;line-height:1.55;color:var(--muted);margin:0 0 14px}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+  .button{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:8px;padding:10px 14px;color:var(--ink);background:#fff}
+  .button.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">laibench <b>pro</b></div>
+  <article>
+    <p class="kicker">Private audit artifact</p>
+    <h1>Stratified case-level artifacts are gated.</h1>
+    <p>This public route intentionally does not expose case IDs, report JSON, frozen predictions, answer keys, corpus provenance or per-case audit tables.</p>
+    <p>Authorized reviewers can reproduce the stratified audit inside the controlled adjudication environment.</p>
+    <div class="actions">
+      <a class="button primary" href="/">Back to leaderboard</a>
+      <a class="button" href="/#methods">Methods</a>
+    </div>
+  </article>
+</main>
+</body>
+</html>

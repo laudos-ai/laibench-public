@@ -26,7 +26,7 @@ export type CalibrationReport = {
   verdict: "calibrated" | "weak" | "uncalibrated";
 };
 
-/** Spearman rank correlation. */
+/** Spearman rank correlation using average ranks and Pearson correlation over ranks. */
 function spearman(x: number[], y: number[]): number {
   if (x.length !== y.length || x.length === 0) return 0;
   const ranks = (arr: number[]): number[] => {
@@ -43,12 +43,34 @@ function spearman(x: number[], y: number[]): number {
     }
     return r;
   };
-  const rx = ranks(x);
-  const ry = ranks(y);
+  return pearson(ranks(x), ranks(y));
+}
+
+function pearson(x: number[], y: number[]): number {
   const n = x.length;
-  let sum = 0;
-  for (let i = 0; i < n; i++) sum += (rx[i] - ry[i]) ** 2;
-  return Number((1 - (6 * sum) / (n * (n * n - 1))).toFixed(6));
+  if (n !== y.length || n === 0) return 0;
+  const mx = x.reduce((s, v) => s + v, 0) / n;
+  const my = y.reduce((s, v) => s + v, 0) / n;
+  let cov = 0;
+  let vx = 0;
+  let vy = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = x[i] - mx;
+    const dy = y[i] - my;
+    cov += dx * dy;
+    vx += dx * dx;
+    vy += dy * dy;
+  }
+  if (vx === 0 || vy === 0) return 0;
+  return Number((cov / Math.sqrt(vx * vy)).toFixed(6));
+}
+
+function judgeScoreTo100ForCalibration(value: number | null | undefined): number | null {
+  if (value === null || value === undefined || !Number.isFinite(value)) return null;
+  if (value < 0) return null;
+  if (value <= 5) return value * 20;
+  if (value <= 100) return value;
+  return null;
 }
 
 /**
@@ -141,10 +163,10 @@ export function calibrateJudges(runs: SuiteRunResult[]): CalibrationReport {
   for (const r of runs) {
     for (const c of r.results) {
       if (c.judge && typeof c.detOverall === "number") {
-        const j = c.judge.overall ?? null;
-        if (j !== null && Number.isFinite(j)) {
+        const j = judgeScoreTo100ForCalibration(c.judge.overall ?? null);
+        if (j !== null) {
           detScores.push(c.detOverall);
-          judgeScores.push(j * 20); // judge is 1-5, convert to 0-100
+          judgeScores.push(j);
         }
       }
     }

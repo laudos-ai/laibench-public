@@ -9,7 +9,8 @@
  * derives its seed from a stable hash of those two inputs.
  */
 
-import type { BenchCase, Dim } from "./types.js";
+import { normalizeLoose } from "./normalize.js";
+import type { BenchCase, Dim, GoldFinding } from "./types.js";
 
 /** Seeded PRNG (splitmix32) — deterministic per (caseId, kind). */
 function makeSeededRng(caseId: string, kind: string): () => number {
@@ -57,14 +58,14 @@ export const PERTURBATIONS: Record<PerturbationKind, PerturbationSpec> = {
   },
   negation_drop: {
     kind: "negation_drop",
-    expectedDims: ["CRIT"],
-    expectedSeverity: "critical",
+    expectedDims: ["QUAL", "CRIT"],
+    expectedSeverity: "major",
     description: "Remove a negation token, turning 'no fracture' into 'fracture'.",
   },
   negation_insert: {
     kind: "negation_insert",
-    expectedDims: ["CRIT"],
-    expectedSeverity: "critical",
+    expectedDims: ["QUAL", "CRIT"],
+    expectedSeverity: "major",
     description: "Insert false negation in front of a present finding.",
   },
   measurement_scramble: {
@@ -75,13 +76,13 @@ export const PERTURBATIONS: Record<PerturbationKind, PerturbationSpec> = {
   },
   critical_drop: {
     kind: "critical_drop",
-    expectedDims: ["CRIT"],
+    expectedDims: ["CRIT", "QUAL", "RAG"],
     expectedSeverity: "critical",
     description: "Delete every declared critical finding from the report.",
   },
   critical_invent: {
     kind: "critical_invent",
-    expectedDims: ["CRIT"],
+    expectedDims: ["CRIT", "QUAL"],
     expectedSeverity: "critical",
     description: "Add a fabricated critical finding not present in the source.",
   },
@@ -192,6 +193,12 @@ const EN_NEGATION_TOKENS: RegExp[] = [
   /\bwithout\s+/gi,
 ];
 
+const LOW_INFORMATION_TOKENS = new Set([
+  "sinais", "sinal", "doenca", "doença", "associada", "associado", "formacao", "formação",
+  "trajetos", "trajeto", "complexos", "complexo", "ativa", "ativo", "terminal", "canal",
+  "evidence", "finding", "findings", "associated", "complex", "active", "terminal",
+]);
+
 function pickLocale(c: BenchCase): "pt-BR" | "en-US" {
   return c.locale === "en-US" ? "en-US" : "pt-BR";
 }
@@ -235,19 +242,126 @@ function scrambleMeasurements(text: string, rng: () => number): string {
   });
 }
 
+function scoreRelevantLabels(c: BenchCase): string[] {
+  const labels = [
+    ...(c.criticalFindings ?? []),
+    ...(c.goldFindings ?? []).map((finding) => finding.finding),
+  ];
+  return [...new Set(labels.map((label) => label.trim()).filter(Boolean))];
+}
+
+function affirmativeGoldFindings(c: BenchCase): GoldFinding[] {
+  return (c.goldFindings ?? []).filter((finding) => !finding.negated);
+}
+
+function negatedGoldFindings(c: BenchCase): GoldFinding[] {
+  return (c.goldFindings ?? []).filter((finding) => finding.negated);
+}
+
+function hasScoreRelevantLaterality(c: BenchCase): boolean {
+  if ((c.goldFindings ?? []).some((finding) => finding.laterality)) return true;
+  return scoreRelevantLabels(c).some((label) => /\b(direit[ao]|esquerd[ao]|right|left)\b/i.test(label));
+}
+
+function hasMeasurement(text: string): boolean {
+  return /\d+(?:[.,]\d+)?\s*(mm|cm|ml|mL)\b/i.test(text);
+}
+
+function salientTokens(label: string): string[] {
+  return normalizeLoose(label)
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 5 && !LOW_INFORMATION_TOKENS.has(token));
+}
+
+function normalizedTokenPattern(token: string): string {
+  const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return escaped
+    .replace(/a/gi, "[aáàâã]")
+    .replace(/e/gi, "[eéê]")
+    .replace(/i/gi, "[ií]")
+    .replace(/o/gi, "[oóôõ]")
+    .replace(/u/gi, "[uúü]")
+    .replace(/c/gi, "[cç]")
+    .replace(/\s+/g, "\\s+");
+}
+
+function firstMatchingToken(text: string, labels: string[]): string | null {
+  const normalizedText = normalizeLoose(text);
+  for (const label of labels) {
+    const tokens = salientTokens(label);
+    const phrase = tokens.slice(0, 3).join(" ");
+    if (phrase && normalizedText.includes(phrase)) return phrase;
+    const token = tokens.find((candidate) => normalizedText.includes(candidate));
+    if (token) return token;
+  }
+  return null;
+}
+
+function insertNegationBeforeTarget(text: string, locale: "pt-BR" | "en-US", c: BenchCase): string | null {
+  const labels = [
+    ...(c.criticalFindings ?? []),
+    ...affirmativeGoldFindings(c).map((finding) => finding.finding),
+  ];
+  const token = firstMatchingToken(text, labels);
+  if (!token) return null;
+  const prefix = locale === "pt-BR" ? "não há " : "no evidence of ";
+  const rx = new RegExp(`\\b${normalizedTokenPattern(token)}\\b`, "i");
+  const match = rx.exec(text);
+  if (!match || match.index === undefined) return null;
+  const offset = match.index;
+  const before = text.slice(Math.max(0, offset - 30), offset);
+  if (/\b(sem|nao ha|não há|no evidence of|no|without)\s+$/i.test(normalizeLoose(before))) return text;
+
+  const segmentStartCandidates = [
+    text.lastIndexOf("<br>", offset),
+    text.lastIndexOf("<br/>", offset),
+    text.lastIndexOf("<br />", offset),
+    text.lastIndexOf(".", offset),
+    text.lastIndexOf("!", offset),
+    text.lastIndexOf("?", offset),
+  ].filter((idx) => idx >= 0);
+  const start = segmentStartCandidates.length > 0 ? Math.max(...segmentStartCandidates) : -1;
+  const insertAt = start >= 0
+    ? start + (text.slice(start).match(/^<br\s*\/?>/i)?.[0].length ?? 1)
+    : 0;
+  const leading = text.slice(insertAt).match(/^\s*/)?.[0] ?? "";
+  const insertionPoint = insertAt + leading.length;
+  return text.slice(0, insertionPoint) + prefix + text.slice(insertionPoint);
+}
+
+function removeSegmentsContainingTokens(text: string, tokens: string[]): string {
+  if (tokens.length === 0) return text;
+  return text
+    .split(/(<br\s*\/?>)/i)
+    .filter((segment) => {
+      if (/^<br\s*\/?>$/i.test(segment)) return true;
+      const normalized = normalizeLoose(segment);
+      return !tokens.some((token) => normalized.includes(token));
+    })
+    .join("")
+    .replace(/(<br\s*\/?>\s*){3,}/gi, "<br><br>");
+}
+
+function stripResidualTargetTokens(text: string, tokens: string[]): string {
+  let out = text;
+  for (const token of tokens) {
+    const wordRegex = new RegExp(`\\b${normalizedTokenPattern(token)}\\b`, "gi");
+    out = out.replace(wordRegex, "");
+  }
+  return out;
+}
+
 function dropCritical(text: string, criticalFindings: string[] | undefined): string {
   if (!criticalFindings || criticalFindings.length === 0) return text;
   let out = text;
   for (const target of criticalFindings) {
     const trimmed = target.trim();
     if (!trimmed) continue;
-    const tokens = trimmed.split(/\s+/).slice(0, 3).map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("\\s+");
-    if (!tokens) continue;
-    const sentenceRegex = new RegExp(`[^.!?]*${tokens}[^.!?]*[.!?]`, "i");
-    out = out.replace(sentenceRegex, "");
-    // Also strip residual mentions of the keyword anywhere.
-    const wordRegex = new RegExp(tokens, "gi");
-    out = out.replace(wordRegex, "");
+    const tokens = salientTokens(trimmed);
+    const strongTokens = tokens.length > 0 ? tokens : normalizeLoose(trimmed).split(/\s+/).filter((t) => t.length > 3);
+    out = removeSegmentsContainingTokens(out, strongTokens);
+    out = stripResidualTargetTokens(out, strongTokens);
   }
   return out.replace(/\s{2,}/g, " ").trim();
 }
@@ -265,7 +379,9 @@ function inventCritical(text: string, locale: "pt-BR" | "en-US", rng: () => numb
   ];
   const pool = locale === "pt-BR" ? fabPT : fabEN;
   const fab = pool[Math.floor(rng() * pool.length)];
-  const idx = Math.max(0, Math.floor(text.length / 2));
+  const conclusion = /<br\s*\/?>\s*<br\s*\/?>\s*<b>\s*(Conclus[aã]o|Impress[aã]o|Conclusion|Impression)\s*<\/b>/i.exec(text);
+  const idx = conclusion?.index ?? Math.max(0, text.indexOf(".", Math.floor(text.length / 2)) + 1);
+  if (idx <= 0) return `${text} ${fab}`;
   return text.slice(0, idx) + fab + text.slice(idx);
 }
 
@@ -286,6 +402,28 @@ function breakStructure(text: string): string {
   return out.replace(/\s{2,}/g, " ").trim();
 }
 
+export function isPerturbationApplicable(kind: PerturbationKind, c: BenchCase, sourceText: string, perturbedText: string): boolean {
+  if (sourceText === perturbedText) return false;
+
+  switch (kind) {
+    case "critical_drop":
+      return (c.criticalFindings?.length ?? 0) > 0;
+    case "critical_invent":
+      return true;
+    case "laterality_flip":
+      return hasScoreRelevantLaterality(c);
+    case "measurement_scramble":
+      return hasMeasurement(sourceText);
+    case "negation_drop":
+      return negatedGoldFindings(c).length > 0;
+    case "negation_insert":
+      return affirmativeGoldFindings(c).length > 0 || (c.criticalFindings?.length ?? 0) > 0;
+    case "terminology_corrupt":
+    case "structure_break":
+      return true;
+  }
+}
+
 /**
  * Apply a named perturbation to a gold-reference text.
  * Deterministic per (case.id, kind).
@@ -299,7 +437,7 @@ export function applyPerturbation(kind: PerturbationKind, c: BenchCase, sourceTe
     case "negation_drop":
       return dropNegation(sourceText, locale);
     case "negation_insert":
-      return insertFalseNegation(sourceText, locale);
+      return insertNegationBeforeTarget(sourceText, locale, c) ?? insertFalseNegation(sourceText, locale);
     case "measurement_scramble":
       return scrambleMeasurements(sourceText, rng);
     case "critical_drop":

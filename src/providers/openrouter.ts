@@ -1,33 +1,12 @@
+import { ProviderError } from "../errors.js";
 import { estimateCost, type Pricing } from "../normalize.js";
+import { fetchWithRetry, isRetriableStatus } from "./http.js";
 import type { GenerationInput, GenerationOutput, JudgeAdapter, JudgeOutput, TraceEvent } from "../types.js";
 
-const RETRY_DELAYS = [1000, 3000, 8000];
-const RETRIABLE_CODES = new Set([429, 500, 502, 503, 504]);
 type OpenRouterDataCollection = "allow" | "deny";
 
 function resolveDataCollection(value?: string): OpenRouterDataCollection {
   return value === "allow" ? "allow" : "deny";
-}
-
-async function fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
-  let lastError: Error | null = null;
-  for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
-    try {
-      const response = await fetch(url, init);
-      if (response.ok || !RETRIABLE_CODES.has(response.status) || attempt === RETRY_DELAYS.length) {
-        return response;
-      }
-      const delay = RETRY_DELAYS[attempt] ?? 8000;
-      const retryAfter = response.headers.get("retry-after");
-      const waitMs = retryAfter ? Math.min(Number(retryAfter) * 1000, 30_000) : delay;
-      await new Promise((resolve) => setTimeout(resolve, waitMs));
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      if (attempt === RETRY_DELAYS.length) throw lastError;
-      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS[attempt] ?? 8000));
-    }
-  }
-  throw lastError ?? new Error("Unexpected retry exhaustion");
 }
 
 export async function callOpenRouter(args: {
@@ -62,11 +41,15 @@ export async function callOpenRouter(args: {
         allow_fallbacks: true,
       },
     }),
-  });
+  }, { provider: "openrouter" });
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`OpenRouter ${response.status}: ${text}`);
+    throw new ProviderError(`OpenRouter ${response.status}: ${text}`, {
+      provider: "openrouter",
+      status: response.status,
+      retriable: isRetriableStatus(response.status),
+    });
   }
 
   const data = (await response.json()) as {
@@ -97,7 +80,7 @@ export async function callOpenRouter(args: {
   };
 }
 
-export function buildOpenRouterGenerator(apiKey: string, model: string, pricing?: Pricing, options?: { maxTokens?: number; temperature?: number; noSystemPrompt?: boolean }) {
+export function buildOpenRouterGenerator(apiKey: string, model: string, pricing?: Pricing, options?: { maxTokens?: number; temperature?: number; noSystemPrompt?: boolean; dataCollection?: OpenRouterDataCollection }) {
   return {
     name: `openrouter:${model}`,
     scaffoldId: "mini-laibench-agent-v1",
@@ -108,6 +91,7 @@ export function buildOpenRouterGenerator(apiKey: string, model: string, pricing?
         pricing,
         maxTokens: options?.maxTokens,
         temperature: options?.temperature,
+        dataCollection: options?.dataCollection,
         systemPrompt: options?.noSystemPrompt ? undefined : input.systemPrompt,
         prompt: `Exam: ${input.exam}\nFindings: ${input.findings}\n\nGenerate the complete radiology report. Output only HTML.`,
       });

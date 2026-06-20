@@ -1,0 +1,53 @@
+name: Bug report
+description: A defect in the scoring engine, CLI, or docs
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping harden LAIBench. **Do not paste private clinical data,
+        patient identifiers, or answer keys** — use synthetic examples only.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Clear description of the bug and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Minimal steps or a synthetic case/report that triggers it.
+      placeholder: |
+        1. npm ci
+        2. npm run bench -- ...
+        3. observe ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      description: package.json version or commit SHA.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - scoring engine (CRIT/QUAL/TERM/GUIDE/RAG)
+        - critical-finding gate / integrity
+        - negation / matching
+        - judge / providers
+        - stats / provenance
+        - CLI / docs / site
+        - other
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Confirmation
+      options:
+        - label: This report contains no private clinical data, PII, or answer keys.
+          required: true

@@ -1,0 +1,32 @@
+name: Methodology question / proposal
+description: Question or proposal about scoring design, dimensions, or calibration
+labels: [methodology]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For questions or proposals about how LAIBench scores reports (the five
+        dimensions, the hard critical-finding veto, anti-compensation, judging, or
+        calibration). See `docs/laibench-leaderboard-methods.md` first.
+  - type: textarea
+    id: topic
+    attributes:
+      label: Topic
+      description: What part of the methodology, and what is your question or proposal?
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rationale / evidence
+      description: |
+        Why does this matter? If proposing a scoring change, note that it must keep
+        the prime directive intact — cosmetic quality must never rescue a missed or
+        fabricated critical finding — and explain the safety direction.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: This is about the public, intentionally-open scoring engine (not a request for private criteria or gold labels).
+          required: true

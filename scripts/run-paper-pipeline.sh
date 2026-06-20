@@ -510,7 +510,7 @@ print("  Generating LaTeX table...")
 latex_lines = [
     r"\begin{table}[t]",
     r"\centering",
-    r"\caption{Main results on laibench reference suite (49 cases, pt-BR). Overall score is the weighted clinical score under judge-primary scoring; deterministic clinical checks remain gates. Relaxed pass rate includes PASS and PARTIAL verdicts.}",
+    r"\caption{Main results on the controlled laibench reference suite (120 cases, pt-BR). Overall score is the weighted clinical score under judge-primary scoring; deterministic clinical checks remain gates. Relaxed pass rate includes PASS and PARTIAL verdicts.}",
     r"\label{tab:main-results}",
     r"\small",
     r"\begin{tabular}{lcccccccc}",

@@ -4,9 +4,18 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildConsolidatedReport, reportToMarkdown } from "./report.js";
+import { buildComparableKey } from "./manifests.js";
 import type { CaseRunResult, Dim, SuiteRunResult } from "./types.js";
 
 function makeRun(name: string, mean: number, ci: [number, number] = [mean - 2, mean + 2]): SuiteRunResult {
+  // Keep the fixture internally HONEST: the stored verdict (and the summary rates
+  // derived from it) must match what the gated combiner would produce for a run
+  // whose every dimension scores `mean`. Otherwise the integrity gate that
+  // buildConsolidatedReport now enforces (FIX 3) would (correctly) reject it.
+  const verdict: "PASS" | "PARTIAL" | "FAIL" = mean >= 84 ? "PASS" : mean >= 60 ? "PARTIAL" : "FAIL";
+  const dimVerdict = verdict;
+  const isPass = verdict === "PASS";
+  const isNonFail = verdict !== "FAIL";
   const results: CaseRunResult[] = Array.from({ length: 10 }, (_, i) => ({
     case: { id: `c${i}`, exam: "ct head", findings: "ok", locale: "pt-BR" },
     locale: "pt-BR",
@@ -15,12 +24,12 @@ function makeRun(name: string, mean: number, ci: [number, number] = [mean - 2, m
     sanitizedHtml: "<center>ok</center>",
     meta: { modality: "CT", contrast: false, region: "head", normalizedExam: "", normalizedFindings: "", abnormalStudy: false, expectedTitleTokens: [], expectedRegionTokens: [] },
     checks: [],
-    detDims: { CRIT: { score: mean, pass: 1, total: 1, critFails: 0, verdict: "PASS", appliedWeight: 0 }, QUAL: { score: mean, pass: 1, total: 1, critFails: 0, verdict: "PASS", appliedWeight: 0 }, TERM: { score: mean, pass: 1, total: 1, critFails: 0, verdict: "PASS", appliedWeight: 0 }, GUIDE: { score: mean, pass: 1, total: 1, critFails: 0, verdict: "PASS", appliedWeight: 0 }, RAG: { score: mean, pass: 1, total: 1, critFails: 0, verdict: "PASS", appliedWeight: 0 } },
+    detDims: { CRIT: { score: mean, pass: isPass ? 1 : 0, total: 1, critFails: 0, verdict: dimVerdict, appliedWeight: 0 }, QUAL: { score: mean, pass: isPass ? 1 : 0, total: 1, critFails: 0, verdict: dimVerdict, appliedWeight: 0 }, TERM: { score: mean, pass: isPass ? 1 : 0, total: 1, critFails: 0, verdict: dimVerdict, appliedWeight: 0 }, GUIDE: { score: mean, pass: isPass ? 1 : 0, total: 1, critFails: 0, verdict: dimVerdict, appliedWeight: 0 }, RAG: { score: mean, pass: isPass ? 1 : 0, total: 1, critFails: 0, verdict: dimVerdict, appliedWeight: 0 } },
     detOverall: mean,
     judge: null,
     combined: { CRIT: mean, QUAL: mean, TERM: mean, GUIDE: mean, RAG: mean } as Record<Dim, number | null>,
     combinedOverall: i % 2 === 0 ? ci[0] + (mean - ci[0]) : ci[1] - (ci[1] - mean),
-    verdict: "PASS",
+    verdict,
     confidence: "high",
     phaseStatus: "complete",
     gateReasons: [],
@@ -28,6 +37,7 @@ function makeRun(name: string, mean: number, ci: [number, number] = [mean - 2, m
     latencyMs: 100,
     trace: [],
   }));
+  const caseIds = results.map((r) => r.case.id);
   return {
     manifest: {
       benchmarkName: "laibench",
@@ -51,18 +61,30 @@ function makeRun(name: string, mean: number, ci: [number, number] = [mean - 2, m
       judgeModel: null,
       evaluationMode: "local",
       submissionMode: "generator",
-      validation: { valid: true, expectedIds: [], receivedIds: [], missingIds: [], duplicateIds: [], extraIds: [], emptyOutputs: [], errors: [] },
-      comparableKey: "k",
+      validation: { valid: true, expectedIds: caseIds, receivedIds: caseIds, missingIds: [], duplicateIds: [], extraIds: [], emptyOutputs: [], errors: [] },
+      comparableKey: buildComparableKey({
+        benchmarkVersion: "2.0.0",
+        suiteId: "test",
+        locale: "pt-BR",
+        track: "model",
+        comparisonClass: "test",
+        scaffoldId: null,
+        judgeProvider: null,
+        judgeModel: null,
+        scoreMode: undefined,
+      }),
       canaryToken: "TOKEN",
     },
     summary: {
-      accuracyRate: 50,
+      accuracyRate: isPass ? 100 : 0,
       averageOverall: mean,
-      passRate: 100,
-      strictPassRate: 50,
+      passRate: isNonFail ? 100 : 0,
+      strictPassRate: isPass ? 100 : 0,
       averageLatencyMs: 100,
-      totalCostUsd: 0.5,
-      verdictCounts: { PASS: 10, PARTIAL: 0, FAIL: 0 },
+      // Per-case costUsd is 0 for all 10 cases, so the honest total is 0; the
+      // integrity gate (now enforced via FIX 3) recomputes and compares this.
+      totalCostUsd: 0,
+      verdictCounts: { PASS: isPass ? 10 : 0, PARTIAL: verdict === "PARTIAL" ? 10 : 0, FAIL: verdict === "FAIL" ? 10 : 0 },
       averagePerDim: { CRIT: mean, QUAL: mean, TERM: mean, GUIDE: mean, RAG: mean } as Partial<Record<Dim, number>>,
     },
     results,
@@ -82,6 +104,36 @@ describe("buildConsolidatedReport", () => {
       assert.ok(r.primary.ci95[0] <= r.primary.ci95[1]);
       assert.equal(r.contamination.verdict, "clean");
       assert.equal(r.benchmarkVersion, "2.0.0");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a tampered run whose critical gate would veto it (FIX 3)", async () => {
+    // The consolidated report must route inputs through the same integrity gate
+    // as the leaderboard: a run with a failed critical check but a non-FAIL
+    // verdict can never be published. This FAILS against the old code, which
+    // loaded the primary via bare readJsonFile and never called integrity.
+    const dir = mkdtempSync(join(tmpdir(), "lai-report-tamper-"));
+    try {
+      const tampered = makeRun("tampered", 90); // honest PASS run
+      // Inject a deterministic critical-finding miss into one case but leave the
+      // verdict at PASS — the critical veto must reject the artifact.
+      tampered.results[0].checks = [{
+        dim: "CRIT",
+        id: "crit-missed",
+        name: "no missed critical finding",
+        severity: "critical",
+        passed: false,
+        evidence: "missed acute hemorrhage",
+      }];
+      // verdict stays "PASS" (the tamper); summary untouched.
+      const path = join(dir, "primary.json");
+      writeFileSync(path, JSON.stringify(tampered));
+      await assert.rejects(
+        () => buildConsolidatedReport({ primaryPath: path }),
+        /verdict must be FAIL|verdict mismatch|integrity check failed/,
+      );
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -115,6 +167,8 @@ describe("buildConsolidatedReport", () => {
         mean: 84.5,
         ci95: [81.2, 87.6],
         perDim: { CRIT: 90, QUAL: 80 },
+        allPassRate: 40,
+        criterionPassRate: 92,
         passRate: 90,
         strictPassRate: 70,
         cost: 1.234,
@@ -128,6 +182,8 @@ describe("buildConsolidatedReport", () => {
     };
     const md = reportToMarkdown(r);
     assert.match(md, /Consolidated Report/);
+    assert.match(md, /All-pass completion/);
+    assert.match(md, /Criterion pass rate/);
     assert.match(md, /Mean overall/);
     assert.match(md, /Contamination scan/);
     assert.match(md, /Judge calibration/);

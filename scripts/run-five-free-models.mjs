@@ -1,21 +1,24 @@
 #!/usr/bin/env node
 /**
- * Rate-safe runner for the 5 latest OpenRouter free models against a laibench suite.
+ * Rate-safe runner for 5 text-capable OpenRouter free/open-weight models against a laibench suite.
  *
- * Free model rate limits (May 2026 OpenRouter): 20 req/min, 200 req/day per model.
+ * Free model rate limits vary by model/provider. This runner intentionally stays
+ * well below the common free-tier ceilings by default.
  *
  * Strategy:
  *   - concurrency = 1
- *   - inter-request sleep = 4s (≈15 rpm — safe under 20 rpm)
+ *   - inter-request sleep = 7s (≈8 rpm — safe under common 20 rpm free limits)
  *   - exponential backoff on 429 / 5xx (5 retries, base 2s)
  *   - per-model retry of failed cases at the end
  *   - graceful skip + continue on persistent failure (don't kill the matrix)
  *
  * Usage:
  *   OPENROUTER_API_KEY=sk-... node scripts/run-five-free-models.mjs \
- *     --suite suites/lite-public.pt-BR.json \
- *     --judge anthropic/claude-opus-4.6 \
+ *     --suite suites/lite-public.en-US.json \
  *     --out-dir runs/free-models-2026-05-09
+ *
+ * Note: OpenRouter free endpoints may require OPENROUTER_DATA_COLLECTION=allow.
+ * Keep this runner pointed only at data you are allowed to send to free providers.
  */
 
 import { spawnSync } from "node:child_process";
@@ -23,11 +26,11 @@ import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { resolve, basename } from "node:path";
 
 const FREE_MODELS = [
-  { id: "openrouter/free-model-a", label: "OpenRouter Free Model A" },
-  { id: "nvidia/nemotron-3-super-120b-a12b:free", label: "NVIDIA Nemotron 3 Super 120B" },
+  { id: "poolside/laguna-m.1:free", label: "Poolside Laguna M.1" },
+  { id: "nex-agi/nex-n2-pro:free", label: "Nex AGI Nex-N2-Pro" },
   { id: "google/gemma-4-31b-it:free", label: "Google Gemma 4 31B IT" },
-  { id: "minimax/minimax-m2.5:free", label: "MiniMax M2.5" },
-  { id: "z-ai/glm-4.5-air:free", label: "Z-AI GLM 4.5 Air" },
+  { id: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free", label: "NVIDIA Nemotron 3 Nano Omni" },
+  { id: "nvidia/nemotron-3-super-120b-a12b:free", label: "NVIDIA Nemotron 3 Super 120B" },
 ];
 
 function parseArgs(argv) {
@@ -48,10 +51,9 @@ function parseArgs(argv) {
 }
 
 const args = parseArgs(process.argv.slice(2));
-const suite = args.suite ?? "suites/lite-public.pt-BR.json";
-const judge = args.judge ?? "anthropic/claude-opus-4.6";
+const suite = args.suite ?? "suites/lite-public.en-US.json";
 const outDir = args["out-dir"] ?? `runs/free-models-${new Date().toISOString().slice(0, 10)}`;
-const sleepMs = Number(args.sleep ?? 4000);
+const sleepMs = Number(args.sleep ?? 7000);
 const concurrency = Number(args.concurrency ?? 1);
 const skipExisting = args["skip-existing"] !== undefined;
 
@@ -65,7 +67,7 @@ mkdirSync(outDir, { recursive: true });
 
 console.log(`\n=== laibench five-free-models matrix ===`);
 console.log(`Suite: ${suite}`);
-console.log(`Judge: ${judge}`);
+console.log(`Judge: none (local deterministic scoring)`);
 console.log(`Output dir: ${outDir}`);
 console.log(`Sleep between calls: ${sleepMs}ms (≈${Math.floor(60000 / sleepMs)} rpm)`);
 console.log(`Concurrency: ${concurrency}`);
@@ -96,23 +98,23 @@ for (let i = 0; i < FREE_MODELS.length; i += 1) {
     "--suite", suite,
     "--provider", "openrouter",
     "--model", model.id,
-    "--judge-provider", "openrouter",
-    "--judge-model", judge,
     "--run-name", runName,
-    "--track", "mini-agent",
+    "--track", "model",
     "--entity-name", model.label,
-    "--entity-type", "research",
+    "--entity-type", "model",
     "--system-type", "raw-model",
-    "--comparison-class", "openrouter-free-mini-agent",
-    "--score-mode", "judge-primary",
+    "--comparison-class", "openrouter-free-raw-model",
+    "--score-mode", "conservative-min",
     "--concurrency", String(concurrency),
+    "--max-tokens", String(args["max-tokens"] ?? 2048),
     "--out", outPath,
-    // Free models — no input/output cost (judge cost separate)
+    // Free models — no input/output cost.
     "--price-in", "0",
     "--price-out", "0",
-    "--judge-price-in", "15",
-    "--judge-price-out", "75",
   ];
+  if (args["case-limit"]) {
+    cliArgs.push("--case-limit", String(args["case-limit"]));
+  }
 
   // Wrapper that injects an inter-request delay via env so the harness's per-case
   // calls are throttled. The harness already serializes when concurrency=1.
@@ -141,7 +143,7 @@ writeFileSync(
     {
       generatedAt: new Date().toISOString(),
       suite,
-      judge,
+      judge: null,
       sleepMs,
       models: FREE_MODELS,
       completed,

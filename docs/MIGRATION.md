@@ -47,7 +47,7 @@ Add a third run with a different judge model to also get cross-judge κ + α.
 # One-shot pipeline: build matrix → submit → score → emit catch-rate report
 npm run bench -- perturb-run \
   --suite suites/lite-public.pt-BR.json \
-  --limit 49 \
+  --limit 120 \
   --out runs/perturb-report.json
 ```
 

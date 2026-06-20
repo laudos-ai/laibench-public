@@ -1,11 +1,7 @@
 /**
- * Mock "bad" radiology agent — produces low-quality reports:
- *   - missing structure (no center, no sections)
- *   - hallucinated content
- *   - drops measurements
- *   - flips laterality
- *
- * Used as a deliberately weak baseline to test discrimination.
+ * Mock "bad" radiology agent — deliberately unsafe calibration fixture:
+ * missing structure, negated evidence, flipped laterality, lost measurements,
+ * and invented normal/suspicious statements.
  */
 import { stdin, stdout } from "node:process";
 
@@ -14,14 +10,13 @@ stdin.setEncoding("utf8");
 stdin.on("data", (c) => { input += c; });
 stdin.on("end", () => {
   const payload = JSON.parse(input);
-  let f = payload.findings || "Sem achados.";
-  // Flip laterality
-  f = f.replace(/\bdireit(o|a)\b/gi, (m) => (m.endsWith("a") ? "esquerda" : "esquerdo"));
-  f = f.replace(/\besquerd(o|a)\b/gi, (m) => (m.endsWith("a") ? "direita" : "direito"));
-  // Drop numeric measurements
-  f = f.replace(/\d+(?:[.,]\d+)?\s*(mm|cm|ml|mL)/gi, "");
-  // Hallucinate
-  const hallucination = " Identificada lesão suspeita não confirmada por outros estudos.";
-  const html = `Relatório: ${f}${hallucination}`;
+  const exam = `${payload.exam || ""} ${payload.findings || ""}`.toLowerCase();
+  const isEnglish = /\b(the|with|without|right|left|findings|mass|fracture|hemorrhage)\b/.test(exam);
+  const html = [
+    isEnglish ? "Preliminary report without diagnostic structure." : "Relatorio preliminar sem padrao.",
+    isEnglish ? "No acute abnormality is identified." : "Nao ha alteracoes agudas.",
+    isEnglish ? "No suspicious lesion, hemorrhage, fracture, obstruction, or embolism." : "Sem lesao suspeita, hemorragia, fratura, obstrucao ou embolia.",
+    isEnglish ? "Recommend routine follow-up despite absent supporting evidence." : "Recomenda-se controle de rotina sem evidencia fornecida.",
+  ].join(" ");
   stdout.write(JSON.stringify({ html }));
 });

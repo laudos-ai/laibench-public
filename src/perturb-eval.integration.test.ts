@@ -94,6 +94,26 @@ describe("perturb-eval integration", () => {
     assert.equal(new Set(samples.map((s) => s.kind)).size, Object.keys(PERTURBATIONS).length);
   });
 
+  it("applicableOnly skips no-op and non-score-relevant perturbations", () => {
+    const cases: BenchCase[] = [{
+      id: "NOOP",
+      exam: "tc abdome",
+      findings: "Fígado sem lesões focais. Sem dilatação biliar.",
+      locale: "pt-BR",
+      goldFindings: [{ finding: "fígado sem lesões focais", severity: "minor", negated: true }],
+      criticalFindings: [],
+      referenceReport: "<b>Achados</b><br>Fígado sem lesões focais. Sem dilatação biliar.<br><b>Conclusão</b><br>Sem lesões focais.",
+    }];
+
+    const { samples } = buildPerturbationDataset(cases, { applicableOnly: true });
+    const kinds = new Set(samples.map((sample) => sample.kind));
+
+    assert.equal(kinds.has("critical_drop"), false);
+    assert.equal(kinds.has("laterality_flip"), false);
+    assert.equal(kinds.has("negation_drop"), true);
+    assert.equal(kinds.has("structure_break"), true);
+  });
+
   it("dataset is deterministic across runs", () => {
     const cases = [makeCase("X", ["pneumotórax direito"])];
     const a = buildPerturbationDataset(cases);

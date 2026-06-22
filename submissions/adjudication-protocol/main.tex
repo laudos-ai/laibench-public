@@ -2,6 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb}
+\usepackage{booktabs}
 \usepackage{geometry}
 \usepackage{hyperref}
 \usepackage{enumitem}
@@ -9,38 +10,84 @@
 \geometry{margin=1in}
 \hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
 
-\title{Radiologist Adjudication and Inter-Rater Agreement for Automated Radiology Report Scoring\\[4pt]\large A Study Protocol}
+\title{Radiologist Adjudication and Inter-Rater Agreement for Automated Radiology Report Scoring\\[4pt]\large A Locked Study Protocol}
 \author{
   Natan Paraiso Ribeiro, MD \quad Petrus Paraiso Ribeiro, MD \quad Stephanie Alba Herrera, MD \\
   Francisco Akira, MD \quad Raquel Moreno, MD \\[6pt]
   \normalsize Laudos.AI Research \quad\textbullet\quad \texttt{research@laudos.ai}
 }
-\date{Protocol -- 2026 (pre-registration; no results reported)}
+\date{Protocol v1.0 -- 2026 (pre-registration; no results reported)}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-LAIBench scores finding-text-to-report generation with deterministic clinical checks, a hard critical-finding gate, and an optional frozen judge. To date its labels are an internal data-quality process, not an independent third-party validation. This protocol pre-registers a blinded multi-reader study to estimate (i) inter-rater agreement among board-certified radiologists on the report-faithfulness constructs LAIBench measures, and (ii) the agreement between the LAIBench score and a radiologist consensus. We define the locked subset, blinding, disagreement-resolution procedure, agreement statistics, and acceptance thresholds in advance. \textbf{No results are reported here}; this document fixes the design before any data is collected.
+LAIBench scores finding-text-to-report generation with deterministic clinical checks, a hard critical-finding gate, and an optional frozen judge. To date its labels are an internal data-quality process, not an independent third-party validation. This protocol pre-registers, in full, a blinded multi-reader study to estimate (i) inter-rater agreement among board-certified radiologists on the report-faithfulness constructs LAIBench measures, and (ii) the agreement between the LAIBench score and a radiologist consensus. All design parameters --- sample size, stratification, reader panel, rating rubric, disagreement rule, agreement statistics, and acceptance thresholds --- are fixed here, before any data is read. \textbf{No results are reported.}
 \end{abstract}
 
 \section{Objectives}
 \begin{enumerate}[leftmargin=*]
-\item Estimate inter-rater reliability (Cohen/Fleiss $\kappa$, Krippendorff $\alpha$) among radiologists for: critical-finding preservation, clinically relevant omission, hallucinated/unsupported finding, contradiction, and impression actionability.
-\item Estimate scorer--human agreement: correlation and rank concordance between the LAIBench per-case score (and its CRIT gate) and the radiologist consensus.
-\item Identify systematic scorer failure modes (where the deterministic checks and the human panel disagree) to drive calibration.
+\item Estimate inter-rater reliability (Fleiss $\kappa$, Krippendorff $\alpha$) among radiologists for five constructs: critical-finding preservation, clinically relevant omission, hallucinated/unsupported finding, factual contradiction, and impression actionability.
+\item Estimate scorer--human agreement: correlation and rank concordance between the LAIBench per-case score (and its binary CRIT gate) and the radiologist consensus.
+\item Identify systematic scorer failure modes (cases where the deterministic checks and the human panel disagree) to drive calibration.
 \end{enumerate}
 
 \section{Design}
-\paragraph{Sample.} A \emph{locked} subset of $N$ report instances drawn from the controlled-eval suite, frozen by suite hash before reading begins. Cases stratified by modality, anatomy, and presence/absence of a critical finding (over-sampling critical and negative-control cases).
-\paragraph{Readers.} 2--3 board-certified radiologists, plus at least one reviewer \emph{not affiliated with Laudos.AI}. Readers are blinded to the system identity, to each other's ratings, and to the LAIBench score.
-\paragraph{Rating instrument.} Per case, each reader records a structured judgment on the constructs in Objective~1, with a free-text justification, on a fixed rubric agreed before reading.
-\paragraph{Disagreement protocol.} Discordant cases are resolved by a pre-specified rule (independent third reader, then consensus discussion); the adjudicated label and the raw per-reader labels are both retained.
+
+\paragraph{Sample size and stratification.} A \textbf{locked subset of $N=60$ report instances} is drawn from the controlled-eval suite and frozen by suite hash before reading begins. The subset is stratified by modality and over-samples the safety-critical extremes:
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+Modality stratum & Cases & of which critical-present \\
+\midrule
+CT (chest/abdomen) & 18 & 8 \\
+MRI (brain/spine)  & 12 & 5 \\
+Radiograph (chest) & 12 & 4 \\
+Ultrasound (abdomen/thyroid) & 10 & 2 \\
+Mammography & 8 & 3 \\
+\midrule
+\textbf{Total} & \textbf{60} & \textbf{22} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent In addition to the 22 critical-present cases, $\geq 12$ are confirmed negative controls (no actionable finding) so that gate \emph{specificity} is estimable. $N=60$ is chosen for estimation, not hypothesis testing: for an observed $\kappa$ in $[0.6,0.8]$ it yields a 95\% bootstrap CI half-width below $\approx 0.12$, adequate to distinguish ``substantial'' from ``poor'' agreement, while remaining feasible for a 3-reader fully-crossed design ($60\times3=180$ reads).
+
+\paragraph{Reader panel.} \textbf{Three board-certified radiologists} ($\geq 5$ years post-residency), of whom \textbf{at least one is not affiliated with Laudos.AI}. All three read all 60 cases (fully crossed). Readers are blinded to the generating system's identity, to one another's ratings, and to the LAIBench score and gate.
+
+\paragraph{Rating instrument.} For each case each reader records, on a rubric agreed and frozen before reading, with a mandatory free-text justification per non-trivial judgment:
+\begin{itemize}[leftmargin=*,nosep]
+\item \textbf{Critical-finding preservation} --- binary: every critical finding present in the source is stated, and none is fabricated (\textsc{preserved} / \textsc{violated}).
+\item \textbf{Clinically relevant omission} --- binary (\textsc{absent}/\textsc{present}).
+\item \textbf{Hallucinated / unsupported finding} --- binary.
+\item \textbf{Factual contradiction} --- binary.
+\item \textbf{Impression actionability} --- 3-point ordinal (\textsc{actionable} / \textsc{partial} / \textsc{not actionable}).
+\item \textbf{Global judgment} --- binary: ``clinically acceptable report?'' (\textsc{yes}/\textsc{no}), the primary human reference label.
+\end{itemize}
+
+\paragraph{Disagreement-resolution rule.} For each construct, the consensus label is the \textbf{$\geq 2/3$ reader majority}. Cases with a non-majority split, or any case flagged ``\textsc{violated}'' on critical-finding preservation by at least one reader, are escalated to an independent fourth adjudicating radiologist; the adjudicated label is then fixed by structured consensus discussion. Both the raw per-reader labels and the adjudicated consensus are retained.
 
 \section{Analysis plan}
-Inter-rater: report $\kappa$/$\alpha$ with bootstrap confidence intervals per construct. Scorer--human: Spearman $\rho$ and Pearson $r$ between LAIBench score and consensus, plus a confusion analysis of the binary critical-finding gate against the human critical-finding judgment (sensitivity/specificity of the gate). Calibration: reliability diagram of scorer score versus probability of human ``acceptable''. Pre-specified acceptance threshold for ``scorer tracks radiologists'': consensus correlation and gate sensitivity above thresholds fixed in the locked protocol.
 
-\section{Governance and limitations}
-The subset is locked and never used to tune the scorer (that would destroy it as a holdout). This is a measurement study of agreement, not a clinical trial: it does not establish clinical safety, diagnostic accuracy, or regulatory fitness, and it is not image interpretation. Until this study reports, the correct public claim for LAIBench remains \emph{technical benchmark framework}, not \emph{clinically validated benchmark}. Reader counts, exact $N$, and thresholds are finalized in the locked protocol prior to data collection. Validator and record schema for adjudication artifacts already exist in the LAIBench repository; this protocol governs the study that produces them.
+\paragraph{Inter-rater reliability.} Report Fleiss $\kappa$ and Krippendorff $\alpha$ per construct with 95\% bootstrap confidence intervals (10{,}000 resamples over cases), interpreted on the Landis--Koch scale. Ordinal constructs use weighted (quadratic) $\kappa$.
+
+\paragraph{Scorer--human agreement.} Report Spearman $\rho$ and Pearson $r$ between the continuous LAIBench per-case score and the consensus (proportion of readers rating ``acceptable''), plus Kendall $\tau$ rank concordance. The binary LAIBench CRIT gate is cross-tabulated against the consensus critical-finding judgment in a $2\times2$ table, reporting \textbf{sensitivity, specificity, PPV, NPV} with Wilson 95\% CIs.
+
+\paragraph{Calibration.} A reliability diagram bins the LAIBench score and plots binned score against the empirical probability of human ``acceptable'', summarized by Brier score and calibration slope/intercept.
+
+\paragraph{Pre-specified acceptance thresholds.} The scorer is declared to \emph{track radiologists} only if \textbf{all} of the following hold on the locked subset:
+\begin{enumerate}[leftmargin=*,nosep]
+\item inter-rater Fleiss $\kappa \geq 0.61$ on critical-finding preservation (otherwise the human reference is too noisy to validate against, and the study reports the human-agreement ceiling instead);
+\item CRIT-gate \textbf{sensitivity} $\geq 0.95$ against the consensus critical-finding label (missing a true critical is the unacceptable error);
+\item scorer--consensus Spearman $\rho \geq 0.70$.
+\end{enumerate}
+These thresholds are fixed here and will not be revised post-hoc; any deviation will be reported as a protocol amendment with its date.
+
+\section{Data management and governance}
+The locked subset is sealed by suite hash and \textbf{never used to tune or debug the scorer} --- doing so would retire it as a validation holdout. Reader identities are pseudonymized; raw ratings, justifications, and the adjudicated consensus are stored as signed adjudication records conforming to the schema already implemented in the LAIBench repository (\texttt{src/adjudication.ts}), tied to the exact suite hash and scorer hash under test.
+
+\section{Limitations}
+This is a measurement study of agreement and calibration, not a clinical trial. It does not establish clinical safety, diagnostic accuracy, generalization, or regulatory fitness, and it is not image interpretation. It validates whether an automated \emph{report-faithfulness} score agrees with radiologist judgment on a controlled set; external validity across sites and equipment is the subject of a separate hidden-holdout protocol. Until this study reports, the correct public claim for LAIBench remains \emph{technical benchmark framework}, not \emph{clinically validated benchmark}.
 
 \end{document}

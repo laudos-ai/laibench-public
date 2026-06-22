@@ -2,6 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb}
+\usepackage{booktabs}
 \usepackage{geometry}
 \usepackage{hyperref}
 \usepackage{enumitem}
@@ -9,31 +10,58 @@
 \geometry{margin=1in}
 \hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
 
-\title{External Validation of Finding-to-Report Faithfulness Scoring\\ Across Sites and Equipment\\[4pt]\large A Hidden-Holdout Protocol}
+\title{External Validation of Finding-to-Report Faithfulness Scoring\\ Across Sites and Equipment\\[4pt]\large A Locked Hidden-Holdout Protocol}
 \author{
   Natan Paraiso Ribeiro, MD \quad Petrus Paraiso Ribeiro, MD \quad Stephanie Alba Herrera, MD \\
   Francisco Akira, MD \quad Raquel Moreno, MD \\[6pt]
   \normalsize Laudos.AI Research \quad\textbullet\quad \texttt{research@laudos.ai}
 }
-\date{Protocol -- 2026 (pre-registration; no results reported)}
+\date{Protocol v1.0 -- 2026 (pre-registration; no results reported)}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Public synthetic cases are useful for harness inspection but are weak evidence for clinical generalization: they are contaminable and not drawn from real reporting distributions. This protocol pre-registers an external-validation study for the LAIBench scorer and for the systems it ranks, using a \emph{hidden holdout} that is never published and never used for tuning. We specify the holdout construction, the cross-site/cross-equipment stratification, the frozen-submission and contamination-audit procedures, and the generalization analysis. \textbf{No results are reported here}; this document fixes the design before the holdout is built or scored.
+Public synthetic cases are useful for harness inspection but are weak evidence for clinical generalization: they are contaminable and not drawn from real reporting distributions. This protocol pre-registers, in full, an external-validation study for the LAIBench scorer and for the systems it ranks, using a \emph{hidden holdout} that is never published and never used for tuning. All parameters --- holdout construction, cross-site/cross-vendor stratification, frozen-submission and contamination-audit procedures, the generalization analysis, and the claim-acceptance rule --- are fixed here. \textbf{No results are reported.}
 \end{abstract}
 
 \section{Motivation}
-A score on a contaminable public set, or on a controlled set that has been used during development, cannot support a strong external claim. LAIBench therefore separates four tiers: public-smoke (contaminable, demo only), controlled-eval (gated, first-party, aggregate-only), calibration-set (scorer tuning only), and \emph{hidden-holdout} (never seen, never tuned). Only the hidden-holdout can sustain a strong generalization claim. This protocol governs that tier.
+A score on a contaminable public set, or on a controlled set used during development, cannot support a strong external claim. LAIBench separates four tiers: \textbf{public-smoke} (contaminable, demo only), \textbf{controlled-eval} (gated, first-party, aggregate-only), \textbf{calibration-set} (scorer tuning only), and \textbf{hidden-holdout} (never seen, never tuned). Only the hidden-holdout can sustain a strong generalization claim. This protocol governs that tier.
 
 \section{Design}
-\paragraph{Holdout construction.} A held-out set assembled to span multiple institutions, scanners/equipment vendors, and modalities, disjoint from any case ever used for development or calibration. The holdout is sealed (suite hash recorded) and access-controlled; no case text, answer key, or example from it appears in any public artifact (paper, site, README, prompts, demos).
-\paragraph{Frozen submissions.} The leaderboard accepts only runs produced by the official runner or validated frozen predictions: each submission JSONL is hashed and timestamped and pinned to a scorer version, with no unlimited resubmission against the same holdout.
-\paragraph{Contamination audit.} For every run we record the declared training-data cutoff (where known), the public prompt used, the suite hash, a canary-token scan, whether the model/provider may have seen the public repository, and whether outputs echo case IDs or benchmark boilerplate; each run publishes a summary \emph{contamination scan: pass / fail / unknown}.
+
+\paragraph{Holdout construction and size.} A held-out set of \textbf{$N \geq 150$ report instances} is assembled to span \textbf{$\geq 3$ institutions} and \textbf{$\geq 2$ equipment vendors} per modality, fully disjoint from any case used for development, demonstration, or scorer calibration. The set is sealed (suite hash recorded), access-controlled, and versioned; each version is used \textbf{at most once per submitting system}. Per-stratum minimum cell size is \textbf{$\geq 20$} cases; strata with fewer cases are reported but excluded from per-stratum claims.
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+Stratification axis & Levels & Min cases / cell \\
+\midrule
+Modality & CT, MRI, radiograph, US, mammography & 20 \\
+Institution & $\geq 3$ distinct sites & --- \\
+Equipment vendor & $\geq 2$ per modality where available & --- \\
+Criticality & critical-present vs negative-control & 20 each \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Frozen submissions.} The leaderboard accepts only runs produced by the official runner, or validated frozen predictions. Each submission is a JSONL that is \textbf{content-hashed, timestamped, and pinned to a scorer version}; resubmission against the same holdout version is not permitted. The submission hash, scorer hash, and suite hash are published with the result so any number can be re-derived.
+
+\paragraph{Contamination audit (per run).} Every run records and publishes:
+\begin{itemize}[leftmargin=*,nosep]
+\item declared training-data cutoff, where known;
+\item the exact public prompt / scaffold id used;
+\item the holdout suite hash and scorer hash;
+\item a canary-token scan result;
+\item whether the model/provider could have seen the public repository;
+\item whether outputs echo case identifiers or benchmark boilerplate.
+\end{itemize}
+These reduce to a single published flag: \textbf{contamination scan = pass / fail / unknown}. A run flagged \textsc{fail} is not eligible for a ranked claim.
 
 \section{Analysis plan}
-Report scorer and system performance overall and stratified by site, equipment vendor, and modality; quantify the generalization gap between controlled-eval and hidden-holdout. Pair the hidden-holdout reading with the radiologist-adjudication protocol so that scorer--human agreement is estimated on never-tuned data. Pre-specify the strata, the minimum per-stratum case counts, and the degradation threshold beyond which a generalization claim is withheld.
+Report scorer and system performance overall and per stratum (site, vendor, modality, criticality), each with 95\% bootstrap CIs. Quantify the \textbf{generalization gap} as the difference between controlled-eval and hidden-holdout clinical score, with its CI. Where the radiologist-adjudication protocol is run on a holdout subset, estimate scorer--human agreement on \emph{never-tuned} data (the strongest available evidence). Critical-finding gate sensitivity/specificity are reported on the holdout against the adjudicated label.
+
+\paragraph{Pre-specified claim-acceptance rule.} A generalization claim for a system is \emph{supported} only if, on the sealed holdout: (i) \textbf{contamination scan = pass}; (ii) every claimed stratum has $\geq 20$ cases; and (iii) the holdout clinical-score 95\% CI does not fall more than \textbf{10 points} below the system's controlled-eval score (a larger drop is reported as a generalization failure, not smoothed over). Absent all three, the published claim is restricted to \emph{first-party, controlled, aggregate-only}.
 
 \section{Governance and limitations}
 The golden rule is enforced operationally: any suite used for debugging or scorer tuning is retired as a holdout. This study measures generalization and contamination control; it does not by itself establish clinical safety or regulatory fitness, and it is not image interpretation. Until it reports, LAIBench claims remain first-party and aggregate, with external validation explicitly \emph{pending}.

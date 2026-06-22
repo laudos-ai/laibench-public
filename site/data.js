@@ -36,190 +36,162 @@ window.LAIBENCH_DATA = {
   },
   "en-US": {
    "suite": "lite-public.en-US",
-   "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8",
-   "cases": 12,
+   "suiteHash": "013cfb0d91d7ec0aca31ed5e6748c0e851d060cfaa52fb7c1274aeed46ce6d5c",
+   "cases": 49,
    "track": "agent",
    "scoring": "conservative-min",
    "entries": [
     {
-     "system": "North Mini Code · Cohere",
+     "system": "Nemotron 3 Super 120B · NVIDIA",
      "kind": "open-model",
-     "group": "free-open",
-     "score": 0.652,
-     "allPass": 0,
-     "criterionPass": 0.816,
-     "clinicalScore": 0.652,
-     "strictPass": 0.16699999999999998,
+     "group": "open-model",
+     "score": 0.609,
+     "allPass": 0.02,
+     "criterionPass": 0.795,
+     "clinicalScore": 0.609,
+     "strictPass": 0.02,
      "dims": {
-      "CRIT": 1,
-      "QUAL": 0.75,
-      "TERM": 0.985,
-      "GUIDE": 0.382,
-      "RAG": 0.782
+      "CRIT": 0.997,
+      "QUAL": 0.7070000000000001,
+      "TERM": 0.971,
+      "GUIDE": 0.242,
+      "RAG": 0.8220000000000001
      },
-     "latencyMs": 7337.6,
-     "track": "agent",
-     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
-    },
-    {
-     "system": "Laguna M.1 · Poolside",
-     "kind": "open-model",
-     "group": "free-open",
-     "score": 0.632,
-     "allPass": 0,
-     "criterionPass": 0.794,
-     "clinicalScore": 0.632,
-     "strictPass": 0.083,
-     "dims": {
-      "CRIT": 1,
-      "QUAL": 0.637,
-      "TERM": 0.9470000000000001,
-      "GUIDE": 0.392,
-      "RAG": 0.7609999999999999
-     },
-     "latencyMs": 38160.8,
-     "track": "agent",
-     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
-    },
-    {
-     "system": "gpt-oss-120b · OpenAI",
-     "kind": "open-model",
-     "group": "free-open",
-     "score": 0.626,
-     "allPass": 0,
-     "criterionPass": 0.804,
-     "clinicalScore": 0.626,
-     "strictPass": 0,
-     "dims": {
-      "CRIT": 0.99,
-      "QUAL": 0.667,
-      "TERM": 0.977,
-      "GUIDE": 0.423,
-      "RAG": 0.727
-     },
-     "latencyMs": 10453.8,
-     "track": "agent",
-     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
-    },
-    {
-     "system": "gpt-oss-20b · OpenAI",
-     "kind": "open-model",
-     "group": "free-open",
-     "score": 0.5920000000000001,
-     "allPass": 0,
-     "criterionPass": 0.835,
-     "clinicalScore": 0.5920000000000001,
-     "strictPass": 0.083,
-     "dims": {
-      "CRIT": 0.99,
-      "QUAL": 0.8340000000000001,
-      "TERM": 0.97,
-      "GUIDE": 0.40700000000000003,
-      "RAG": 0.91
-     },
-     "latencyMs": 7532.3,
-     "track": "agent",
-     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
-    },
-    {
-     "system": "Nex N2 Pro · Nex-AGI",
-     "kind": "open-model",
-     "group": "free-open",
-     "score": 0.586,
-     "allPass": 0.083,
-     "criterionPass": 0.861,
-     "clinicalScore": 0.586,
-     "strictPass": 0.083,
-     "dims": {
-      "CRIT": 1,
-      "QUAL": 0.903,
-      "TERM": 0.985,
-      "GUIDE": 0.369,
-      "RAG": 0.935
-     },
-     "latencyMs": 36466.8,
-     "track": "agent",
-     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
+     "latencyMs": null,
+     "track": "model"
     },
     {
      "system": "Nemotron 3 Nano Omni 30B · NVIDIA",
      "kind": "open-model",
-     "group": "free-open",
-     "score": 0.586,
+     "group": "open-model",
+     "score": 0.608,
      "allPass": 0,
-     "criterionPass": 0.7979999999999999,
-     "clinicalScore": 0.586,
-     "strictPass": 0.083,
+     "criterionPass": 0.82,
+     "clinicalScore": 0.608,
+     "strictPass": 0.061,
+     "dims": {
+      "CRIT": 1,
+      "QUAL": 0.8029999999999999,
+      "TERM": 0.977,
+      "GUIDE": 0.235,
+      "RAG": 0.8590000000000001
+     },
+     "latencyMs": null,
+     "track": "model"
+    },
+    {
+     "system": "North Mini Code · Cohere",
+     "kind": "open-model",
+     "group": "open-model",
+     "score": 0.6,
+     "allPass": 0,
+     "criterionPass": 0.813,
+     "clinicalScore": 0.6,
+     "strictPass": 0.040999999999999995,
+     "dims": {
+      "CRIT": 0.992,
+      "QUAL": 0.7859999999999999,
+      "TERM": 0.9690000000000001,
+      "GUIDE": 0.247,
+      "RAG": 0.899
+     },
+     "latencyMs": null,
+     "track": "model"
+    },
+    {
+     "system": "Laguna M.1 · Poolside",
+     "kind": "open-model",
+     "group": "open-model",
+     "score": 0.595,
+     "allPass": 0,
+     "criterionPass": 0.763,
+     "clinicalScore": 0.595,
+     "strictPass": 0,
      "dims": {
       "CRIT": 0.9670000000000001,
-      "QUAL": 0.754,
-      "TERM": 0.977,
-      "GUIDE": 0.311,
-      "RAG": 0.69
+      "QUAL": 0.617,
+      "TERM": 0.941,
+      "GUIDE": 0.257,
+      "RAG": 0.693
      },
-     "latencyMs": 8362.7,
-     "track": "agent",
-     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
-    },
-    {
-     "system": "Nemotron 3 Super 120B · NVIDIA",
-     "kind": "open-model",
-     "group": "free-open",
-     "score": 0.579,
-     "allPass": 0,
-     "criterionPass": 0.8240000000000001,
-     "clinicalScore": 0.579,
-     "strictPass": 0,
-     "dims": {
-      "CRIT": 1,
-      "QUAL": 0.741,
-      "TERM": 0.977,
-      "GUIDE": 0.402,
-      "RAG": 0.865
-     },
-     "latencyMs": 28686.4,
-     "track": "agent",
-     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
-    },
-    {
-     "system": "Gemma 4 31B · Google",
-     "kind": "open-model",
-     "group": "free-open",
-     "score": 0.579,
-     "allPass": 0,
-     "criterionPass": 0.8190000000000001,
-     "clinicalScore": 0.579,
-     "strictPass": 0,
-     "dims": {
-      "CRIT": 1,
-      "QUAL": 0.7509999999999999,
-      "TERM": 0.977,
-      "GUIDE": 0.36,
-      "RAG": 0.951
-     },
-     "latencyMs": 5932.4,
-     "track": "agent",
-     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
+     "latencyMs": null,
+     "track": "model"
     },
     {
      "system": "Nemotron 3 Ultra 550B · NVIDIA",
      "kind": "open-model",
-     "group": "free-open",
-     "score": 0.529,
+     "group": "open-model",
+     "score": 0.594,
      "allPass": 0,
-     "criterionPass": 0.7829999999999999,
-     "clinicalScore": 0.529,
-     "strictPass": 0.083,
+     "criterionPass": 0.797,
+     "clinicalScore": 0.594,
+     "strictPass": 0,
      "dims": {
-      "CRIT": 0.833,
-      "QUAL": 0.584,
-      "TERM": 0.8029999999999999,
-      "GUIDE": 0.299,
-      "RAG": 0.6709999999999999
+      "CRIT": 0.995,
+      "QUAL": 0.693,
+      "TERM": 0.9620000000000001,
+      "GUIDE": 0.285,
+      "RAG": 0.825
      },
-     "latencyMs": 84319.8,
-     "track": "agent",
-     "suiteHash": "cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8"
+     "latencyMs": null,
+     "track": "model"
+    },
+    {
+     "system": "gpt-oss-120b · OpenAI",
+     "kind": "open-model",
+     "group": "open-model",
+     "score": 0.594,
+     "allPass": 0,
+     "criterionPass": 0.7659999999999999,
+     "clinicalScore": 0.594,
+     "strictPass": 0,
+     "dims": {
+      "CRIT": 0.973,
+      "QUAL": 0.613,
+      "TERM": 0.9440000000000001,
+      "GUIDE": 0.285,
+      "RAG": 0.667
+     },
+     "latencyMs": null,
+     "track": "model"
+    },
+    {
+     "system": "Gemma 4 31B · Google",
+     "kind": "open-model",
+     "group": "open-model",
+     "score": 0.591,
+     "allPass": 0.02,
+     "criterionPass": 0.799,
+     "clinicalScore": 0.591,
+     "strictPass": 0.02,
+     "dims": {
+      "CRIT": 0.9890000000000001,
+      "QUAL": 0.736,
+      "TERM": 0.9690000000000001,
+      "GUIDE": 0.249,
+      "RAG": 0.882
+     },
+     "latencyMs": null,
+     "track": "model"
+    },
+    {
+     "system": "gpt-oss-20b · OpenAI",
+     "kind": "open-model",
+     "group": "open-model",
+     "score": 0.5870000000000001,
+     "allPass": 0,
+     "criterionPass": 0.8140000000000001,
+     "clinicalScore": 0.5870000000000001,
+     "strictPass": 0.02,
+     "dims": {
+      "CRIT": 0.981,
+      "QUAL": 0.804,
+      "TERM": 0.946,
+      "GUIDE": 0.262,
+      "RAG": 0.8540000000000001
+     },
+     "latencyMs": null,
+     "track": "model"
     }
    ],
    "reliability": null,

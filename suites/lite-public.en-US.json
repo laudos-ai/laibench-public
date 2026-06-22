@@ -8,7 +8,7 @@
   "visibility": "public",
   "evaluationMode": "local",
   "casesPath": "../cases/public/synthetic-demo.en-US.json",
-  "caseCount": 12,
+  "caseCount": 49,
   "tags": [
     "synthetic",
     "demo",

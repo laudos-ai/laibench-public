@@ -23,14 +23,14 @@ Disallowed: *clinical-grade · validated (without external adjudication) · open
 | --- | --- |
 | Tier | **public-smoke** |
 | Visibility | Public (ships case JSON) |
-| Case count | 12 |
+| Case count | 49 |
 | Case source | Synthetic, authored for the harness |
 | Synthetic vs real-derived | **Synthetic** (every case flagged `synthetic: true`) |
 | Answer-key status | No private answer keys; deterministic checks are public |
 | Leakage / contamination risk | **High** — public + on GitHub; assume models may have seen it |
 | Allowed use | Install checks, CI smoke, harness inspection, open-model *diagnostic baselines* |
 | Disallowed claims | Ranking, clinical validation, "open benchmark" as evidence of capability |
-| Suite hash | `cb991b30f3f765a2deffcb9c755fe8ce8aa409992efc165d298400dbf99a3ff8` |
+| Suite hash | `013cfb0d91d7ec0aca31ed5e6748c0e851d060cfaa52fb7c1274aeed46ce6d5c` |
 | Scoring hash | `07388382f55f6fecd64b914b9c1febfdf13f523f8eae060f04f083ba6c6a585f` |
 | Adjudication status | None (synthetic) |
 

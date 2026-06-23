@@ -1,6 +1,9 @@
 import { escapeHtml } from "./normalize.js";
 
 export function normalizeGeneratedHtml(input: string): string {
+  // Defense-in-depth: model output crosses an I/O boundary and may not be a string
+  // at runtime despite the type. Coerce so a malformed value never throws here.
+  if (typeof input !== "string") input = input == null ? "" : String(input);
   return input
     .replace(/```html/gi, "")
     .replace(/```/g, "")

@@ -110,3 +110,35 @@ describe("docs/consistency: no local command runs a cloud-private suite", () => 
     assert.equal(bad.length, 0, `site/data.js must be aggregate-only (no per-case identifiers or raw findings); found: ${bad.join(", ")}`);
   });
 });
+
+// Count/hash drift guard: the en-US public suite's case count and suite hash must
+// agree across the suite manifest, the actual case file, GOVERNANCE.md, and the
+// benchmark card. This pins the "12 vs 49" class of drift that a prior review
+// caught manually.
+import { suiteHashFromCases } from "./provenance.js";
+import type { BenchCase } from "./types.js";
+
+describe("docs/consistency: en-US public suite count + hash are pinned across artifacts", () => {
+  const root = process.cwd();
+  const suite = JSON.parse(readFileSync(join(root, "suites/lite-public.en-US.json"), "utf8")) as {
+    caseCount: number; casesPath: string;
+  };
+  const cases = JSON.parse(readFileSync(join(root, "suites", suite.casesPath), "utf8")) as BenchCase[];
+
+  it("suite caseCount equals the actual number of cases shipped", () => {
+    assert.equal(suite.caseCount, cases.length, `suite caseCount=${suite.caseCount} but case file has ${cases.length}`);
+  });
+
+  it("GOVERNANCE.md and the benchmark card state the same case count", () => {
+    const gov = readFileSync(join(root, "GOVERNANCE.md"), "utf8");
+    assert.ok(gov.includes(`${cases.length} synthetic`), `GOVERNANCE.md must say "${cases.length} synthetic"`);
+    const card = readFileSync(join(root, "docs/benchmark-cards.md"), "utf8");
+    assert.ok(new RegExp(`Case count \\| ${cases.length}\\b`).test(card), `benchmark card must show Case count | ${cases.length}`);
+  });
+
+  it("benchmark card suite hash equals the recomputed hash of the shipped cases", () => {
+    const card = readFileSync(join(root, "docs/benchmark-cards.md"), "utf8");
+    const recomputed = suiteHashFromCases(cases);
+    assert.ok(card.includes(recomputed), `card must list the en-US suite hash ${recomputed}`);
+  });
+});

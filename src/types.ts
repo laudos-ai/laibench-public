@@ -192,6 +192,10 @@ export type JudgeAdapter = {
   name: string;
   provider: string;
   modelLabel: string;
+  // Sampling config — recorded in the run manifest and bound into runHash because
+  // it materially changes the judge's scores.
+  temperature?: number;
+  maxTokens?: number;
   run(prompt: string): Promise<JudgeOutput>;
 };
 
@@ -310,7 +314,10 @@ export type RunManifest = {
   scaffoldId: string | null;
   judgeProvider: string | null;
   judgeModel: string | null;
+  judgeTemperature?: number | null;
+  judgeMaxTokens?: number | null;
   scoreMode?: ScoreCombinationMode;
+  policyId?: string | null;
   evaluationMode: EvaluationMode;
   submissionMode: "generator" | "predictions";
   validation: SubmissionValidation;

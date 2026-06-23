@@ -20,6 +20,10 @@ export async function readPredictionsJsonl(path: string): Promise<SubmissionPred
   return predictions;
 }
 
+// Top-level keys permitted by schemas/prediction-record.schema.json
+// (additionalProperties:false). Anything else fails validation.
+const ALLOWED_PREDICTION_KEYS = new Set(["instance_id", "model_output", "metadata", "model_name_or_path"]);
+
 export function validatePredictions(cases: BenchCase[], predictions: SubmissionPrediction[]): SubmissionValidation {
   const expectedIds = cases.map((item) => item.id);
   const receivedIds = predictions.map((item) => item.instance_id);
@@ -41,6 +45,11 @@ export function validatePredictions(cases: BenchCase[], predictions: SubmissionP
     ) {
       errors.push(`prediction ${index + 1}: metadata must be an object when provided`);
     }
+    // Enforce the published prediction-record schema's additionalProperties:false at
+    // the top level. A submission cannot smuggle scoring inputs (e.g. retrievedDocIds)
+    // as unknown top-level keys and still validate as eligible.
+    const unknownKeys = Object.keys(item).filter((k) => !ALLOWED_PREDICTION_KEYS.has(k));
+    if (unknownKeys.length > 0) errors.push(`prediction ${index + 1}: unknown keys not allowed: ${unknownKeys.join(", ")}`);
 
     const key = item.instance_id;
     receivedCount.set(key, (receivedCount.get(key) ?? 0) + 1);

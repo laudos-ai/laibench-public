@@ -41,7 +41,7 @@ export const ptBR: LocaleSpec = {
   normalPatterns: [/^normal$/i, /^sem\s+alterações/i, /^sem\s+achados/i, /^dentro\s+da\s+normalidade/i],
   modalityVocab: {
     US_forbidden: /\bdensidade\b|\bhipersinal\b/gi,
-    MRI_forbidden: /\becogenicidade\b|\bhipoecoic\b|\banecoic\b/gi,
+    MRI_forbidden: /\becogenicidade\b|\bhipoecoic[oa]s?\b|\banecoic[oa]s?\b/gi,
     // BUG 7 FIX: "densidade" is legitimate CT terminology (e.g., "densidade espontanea",
     // "densidade de partes moles"). It is only wrong in US context where the US_forbidden
     // already catches it. Removing the CT-level ban.
@@ -88,6 +88,7 @@ export const ptBR: LocaleSpec = {
     "US:thyroid": ["lobo direito", "lobo esquerdo", "istmo", "nodulo"],
     "US:breast": ["nodulo", "pele", "axilar"],
     "MG:breast": ["nodulo", "pele", "axilar"],
+    "MX:breast": ["nodulo", "pele", "axilar"],
     "XR:chest": ["area cardiac", "mediast", "hilos", "parenquima", "seios costofren", "partes moles"],
   },
   negationPatterns: [

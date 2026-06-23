@@ -13,7 +13,7 @@ CI guards are held to. See per-suite [benchmark cards](docs/benchmark-cards.md).
 | **hidden-holdout** | Never published, never tuned on | Final claims | The only tier that can support a strong external claim — once externally adjudicated |
 | **calibration-set** | Internal | Calibrate scorer/judge | Never for ranking |
 
-Today the repo ships `public-smoke.en-US` (`lite-public.en-US`, 12 synthetic) and
+Today the repo ships `public-smoke.en-US` (`lite-public.en-US`, 49 synthetic) and
 `controlled-eval.pt-BR` (`lite-public.pt-BR`, 120 gated, `casesPath: null`).
 `hidden-holdout` and `calibration-set` are governance commitments, not yet built.
 

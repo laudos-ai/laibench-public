@@ -32,13 +32,14 @@ const PUBLIC_ANSWER_KEY = /"(?:goldFindings|criticalFindings|referenceReport|gui
 
 // Public artifacts whose prose must not assert clinical validation / independent
 // review of scored or public cases unless a signed adjudication record backs it.
-// Matches site/data.js and any leaderboard markdown (the rendered public board).
-const PUBLIC_CLAIM_ARTIFACT = /^(?:site\/data\.js|leaderboard\/(?:.*\/)?[^/]+\.md)$/i;
+// Matches site/data.js, any leaderboard markdown (the rendered public board), and
+// the root data-access policy (a public claim document about the controlled suite).
+const PUBLIC_CLAIM_ARTIFACT = /^(?:site\/data\.js|leaderboard\/(?:.*\/)?[^/]+\.md|DATA_ACCESS_POLICY\.md)$/i;
 
 // Affirmative clinical-validation / independent-review claims about the scored or
 // public cases. These are the strings that require a backing adjudication record.
 const CLINICAL_VALIDATION_CLAIM =
-  /\b(?:clinically reviewed|clinically validated|clinical validation|radiologist[- ]adjudicated|independent (?:third[- ]party )?(?:validation|adjudication|review)|third[- ]party (?:validation|adjudication|review)|externally validated|independently validated)\b/i;
+  /\b(?:clinically reviewed|clinically validated|clinical validation|radiologist[- ]adjudicated|independent (?:third[- ]party )?(?:validation|adjudication|review)|third[- ]party (?:validation|adjudication|review)|externally validated|independently validated|clinicamente (?:validad|revisad)\w*|valida[çc][ãa]o cl[íi]nica|adjudicad\w* por radiologista|validad\w* (?:de forma )?independente|valida[çc][ãa]o (?:independente|de terceiros)|revis[ãa]o (?:independente|de terceiros)|validad\w* externamente)\b/i;
 
 // Negation / scoping qualifiers that turn a CLINICAL_VALIDATION_CLAIM match into an
 // honest, non-overclaiming statement (e.g. "not clinically reviewed", "must not be
@@ -47,7 +48,7 @@ const CLINICAL_VALIDATION_CLAIM =
 // these appear in the SAME sentence as the claim, the sentence is not an assertion
 // of validation and is therefore safe.
 const CLINICAL_CLAIM_NEGATION =
-  /\b(?:not|never|no|without|tracked as future work|future work|must not|cannot|is not|are not|were not|was not|internal data[- ]quality|not an? independent|not a? third[- ]party)\b/i;
+  /\b(?:not|never|no|without|tracked as future work|future work|must not|cannot|is not|are not|were not|was not|internal data[- ]quality|not an? independent|not a? third[- ]party|n[ãa]o|nem|sem|processo interno de qualidade|qualidade interna|trabalho futuro)\b/i;
 
 function splitSentences(text: string): string[] {
   // Split on sentence boundaries (period/semicolon/newline). Crude but sufficient:
@@ -61,9 +62,34 @@ function splitSentences(text: string): string[] {
 // negated, or internal-data-quality-scoped statements are not flagged.
 function assertsClinicalValidation(content: string): boolean {
   for (const sentence of splitSentences(content)) {
-    if (CLINICAL_VALIDATION_CLAIM.test(sentence) && !CLINICAL_CLAIM_NEGATION.test(sentence)) {
-      return true;
+    CLINICAL_VALIDATION_CLAIM.lastIndex = 0;
+    const claim = CLINICAL_VALIDATION_CLAIM.exec(sentence);
+    if (!claim) continue;
+    // A qualifier neutralizes the claim only when it sits in the SAME CLAUSE, before
+    // the claim phrase. The sentence splitter only breaks on .;\n, so a comma- or
+    // conjunction-joined leading negation in an UNRELATED clause ("We do not
+    // overclaim, and every scored case was clinically validated ...") must not
+    // shelter the affirmative claim. Re-split on commas and coordinating
+    // conjunctions and inspect only the clause that contains the claim.
+    const claimGlobalIdx = claim.index;
+    // Find clause boundaries (commas + coordinating conjunctions) within the sentence.
+    // NB: bare PT "e" (and) is deliberately EXCLUDED — after accent folding it is
+    // indistinguishable from "é" (is), so including it would split "não é uma
+    // validação" and strip the "não" from the claim's clause (false positive on an
+    // honest negated PT statement). Comma-joined PT evasions are still caught by the
+    // comma boundary; "mas"/"porém"/etc. cover PT contrast.
+    const clauseBoundary = /,|\b(?:and|but|yet|while|whereas|however|though|although|mas|porem|porém|contudo|entretanto|todavia)\b/gi;
+    let clauseStart = 0;
+    let m: RegExpExecArray | null;
+    clauseBoundary.lastIndex = 0;
+    while ((m = clauseBoundary.exec(sentence)) !== null) {
+      if (m.index + m[0].length <= claimGlobalIdx) clauseStart = m.index + m[0].length;
+      else break;
+      if (clauseBoundary.lastIndex === m.index) clauseBoundary.lastIndex++;
     }
+    const beforeClaimInClause = sentence.slice(clauseStart, claimGlobalIdx);
+    if (CLINICAL_CLAIM_NEGATION.test(beforeClaimInClause)) continue;
+    return true;
   }
   return false;
 }
@@ -172,12 +198,17 @@ export function auditReleaseFiles(files: ReleaseFile[], mode: ReleaseMode): Rele
           message: "Merged-CSV/private-derived fixture marker found in a public-release scan.",
         });
       }
-      if (/^cases\/public\//.test(path) && PUBLIC_ANSWER_KEY.test(content)) {
+      // Answer keys (goldFindings/criticalFindings/referenceReport/...) must not
+      // appear in public case files OR in any rendered public claim artifact
+      // (site/data.js, leaderboard markdown). Previously scoped to cases/public/
+      // only, so an answer key embedded in site/data.js was caught by a test but
+      // not by the deploy-gating guard.
+      if ((/^cases\/public\//.test(path) || PUBLIC_CLAIM_ARTIFACT.test(path)) && PUBLIC_ANSWER_KEY.test(content)) {
         issues.push({
           path,
           rule: "public-answer-key",
           severity: "error",
-          message: "Public case files must not expose answer keys or reference reports.",
+          message: "Public case files and claim artifacts must not expose answer keys or reference reports.",
         });
       }
       if (/^(cases|leaderboard|site)\//.test(path) && CALENDAR_DATE.test(content)) {

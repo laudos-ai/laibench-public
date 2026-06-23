@@ -198,12 +198,19 @@ export function evaluateRetrieval(
 
   details.mode = "retrieval-evaluation";
 
+  // Dedup retrieved ids (first-occurrence order). Repeated relevant ids would
+  // otherwise let recall@k and nDCG exceed 1.0 and trivially pass RG02/RG03.
+  const dedupedDocIds = Array.from(new Set(retrievedDocIds));
+  if (dedupedDocIds.length !== retrievedDocIds.length) {
+    details.duplicatesDropped = retrievedDocIds.length - dedupedDocIds.length;
+  }
+
   // Build relevance array in retrieval order
-  const relevances = retrievedDocIds.map((id) => goldMap.get(id) ?? 0);
+  const relevances = dedupedDocIds.map((id) => goldMap.get(id) ?? 0);
   const allRelevances = benchCase.retrievalGold.map((item) => item.relevance);
 
   // Compute metrics at various K values
-  const kValues = [1, 3, 5, 10].filter((k) => k <= retrievedDocIds.length);
+  const kValues = [1, 3, 5, 10].filter((k) => k <= dedupedDocIds.length);
 
   for (const k of kValues) {
     const pk = precisionAtK(relevances, k);
@@ -219,11 +226,11 @@ export function evaluateRetrieval(
   const ndcgAll = ndcg(relevances, allRelevances);
   details.mrr = Number(mrrScore.toFixed(3));
   details.ndcg = Number(ndcgAll.toFixed(3));
-  details.retrievedCount = retrievedDocIds.length;
+  details.retrievedCount = dedupedDocIds.length;
   details.goldCount = benchCase.retrievalGold.length;
 
   // Generate checks based on metrics
-  const primaryK = Math.min(5, retrievedDocIds.length);
+  const primaryK = Math.min(5, dedupedDocIds.length);
   const pk5 = precisionAtK(relevances, primaryK);
   const rk5 = recallAtK(relevances, allRelevances, primaryK);
   const nk5 = ndcgAtK(relevances, allRelevances, primaryK);
@@ -241,7 +248,10 @@ export function evaluateRetrieval(
     dim: "RAG",
     id: "RG02",
     name: `Recall@${primaryK}`,
-    severity: "critical",
+    // Retrieval recall is a 10%-weight quality signal, NOT a clinical safety gate.
+    // A retrieval shortfall must lower the RAG score, never force-FAIL an otherwise
+    // clinically sound report — so this is major, not critical.
+    severity: "major",
     passed: rk5 >= 0.5,
     evidence: `R@${primaryK}=${(rk5 * 100).toFixed(0)}%`,
   });

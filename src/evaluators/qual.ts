@@ -145,7 +145,13 @@ function synthesisPenalty(reportHtml: string, benchCase: BenchCase, locale: Loca
     }
   }
 
-  if (hasSubstantiveConclusion(reportHtml, locale)) {
+  // A "substantive conclusion" earns the synthesis pass UNLESS the Impression is a
+  // near-verbatim DUPLICATE of the Findings section (copy the source into both
+  // sections). That echo otherwise satisfied hasSubstantiveConclusion and scored
+  // QUAL=100 with zero synthesis — a leaderboard-gaming path. This is distinct from
+  // a faithful concise report whose conclusion condenses/reframes the findings
+  // (different text), which must still pass.
+  if (hasSubstantiveConclusion(reportHtml, locale) && !impressionDuplicatesFindings(reportHtml, locale)) {
     return { penalty: 0, copiedOutputRatio, addedTokenCount, clinicalAddedTokenCount, reason: "substantive-conclusion" };
   }
 
@@ -432,7 +438,31 @@ function matchFindings(
 
   // Identify potential hallucinations: extracted findings that don't match any gold finding
   const hallucinations: HallucinationResult[] = [];
-  const goldNorms = hallucinationReferenceFindings.map((g) => normalizeLoose(g.finding));
+  // The similarity exemption must measure against AFFIRMED-ABNORMAL gold only. A
+  // fabrication that shares an organ/location token with a NORMAL or negated gold
+  // ("Liver normal" vs fabricated "Liver metastasis") otherwise reached the 0.2
+  // similarity threshold and laundered past detection. Exclude negated/normality
+  // gold from the reference set.
+  const goldNormalityRx = locale === "pt-BR"
+    ? /\bsem\b|\bausencia\b|\bnao ha\b|\bnao se (?:observa|identifica|detecta)|\blivres?\b|\bnormal\b|\bnormais\b|\bpreservad|\bhabituais?\b|\bsem alterac/i
+    : /\bno\b|\bwithout\b|\bclear\b|\bunremarkable\b|\bnegative\b|\bwithin normal\b|\bnormal\b|\bpreserved\b|\bintact\b|\babsent\b/i;
+  const goldNorms = hallucinationReferenceFindings
+    .filter((g) => g.negated !== true && !goldNormalityRx.test(normalizeLoose(g.finding)))
+    .map((g) => normalizeLoose(g.finding));
+
+  // Fabricated-malignancy guard. A bag-of-token similarity exemption can be
+  // defeated by a fabrication that shares only the ORGAN token with a benign gold
+  // of the same organ ("renal cell carcinoma" vs gold "simple renal cyst"; share
+  // "renal" → sim ≥ 0.2 → wrongly exempt). A malignancy assertion that appears
+  // NOWHERE in the source material is unambiguously a high-stakes hallucination, so
+  // it is flagged regardless of organ-token similarity.
+  const MALIGNANCY_RX = /carcinoma|metastas|malign|neoplas|sarcoma|lymphoma|linfoma|adenocarcin|\bcancer/i;
+  const sourceMalignancyNorm = normalizeLoose(
+    `${benchCase.findings ?? ""} ${benchCase.referenceReport ?? ""} ` +
+    `${(benchCase.goldFindings ?? []).map((g) => g.finding).join(" ")} ` +
+    `${(benchCase.criticalFindings ?? []).join(" ")}`,
+  );
+  const sourceHasMalignancy = MALIGNANCY_RX.test(sourceMalignancyNorm);
 
   for (let i = 0; i < extractedFindings.length; i++) {
     if (usedExtracted.has(i)) continue;
@@ -445,14 +475,34 @@ function matchFindings(
     // Locale-split: in pt-BR, "no" is the contraction em+o ("no exemplo"), not a negation —
     // matching it disabled hallucination detection for the primary locale.
     const efNorm = normalizeLoose(ef.text);
-    const isPertinentNegative = locale === "pt-BR"
-      ? /\bsem\b|\bausencia\b|\bnao ha\b|\bnao se (?:observa|identifica|detecta)|\blivres?\b|\bnormal\b|\bnormais\b|\bpreservad|\bhabituais?\b|\bsem alterac/i.test(efNorm)
-      : /\bno\b|\bwithout\b|\bclear\b|\bunremarkable\b|\bnegative\b|\bwithin normal\b|\bnormal\b|\bpreserved\b|\bintact\b|\babsent\b/i.test(efNorm);
+    // A pertinent negative must be negative/normal in EVERY substantive clause.
+    // Testing the whole text for ANY normality cue let a fabricated frank finding
+    // launder past detection by co-occurring with a normality word in the same
+    // sentence ("Large hepatic metastasis, liver enzymes normal."). Scope the test
+    // per clause: if any clause carries affirmed clinical content with no negation,
+    // it is NOT a pure pertinent negative.
+    const clauses = efNorm.split(/[.,;]/).map((c) => c.trim()).filter(Boolean);
+    const isPertinentNegative =
+      clauses.length > 0 && clauses.every((cl) => goldNormalityRx.test(cl) || clinicalTokens(cl).length < 2);
     if (isPertinentNegative) continue;
 
-    // Check if this finding has any similarity to the input findings
+    // Fabricated malignancy absent from the source → high-confidence hallucination,
+    // bypassing the organ-token similarity exemption (see MALIGNANCY_RX above). Only
+    // when the malignancy term is AFFIRMED — a negated "..., no malignancy" must not
+    // trip the guard (it's a pertinent negative, not a fabrication).
+    const malMatch = efNorm.match(MALIGNANCY_RX);
+    if (!sourceHasMalignancy && malMatch && !isFindingNegated(ef.text, malMatch[0], locale)) {
+      hallucinations.push({ text: ef.text, confidence: "high" });
+      continue;
+    }
+
+    // Check if this finding has any similarity to the input findings. The severity
+    // classifier defaults unknown findings to "incidental", so a blanket
+    // "incidental" exemption let fabrications with sim 0 escape entirely. A finding
+    // that is unsupported by the source (checked above), not a pertinent negative,
+    // and dissimilar to every gold finding is a hallucination regardless of severity.
     const maxSim = Math.max(0, ...goldNorms.map((g) => tokenSimilarity(g, ef.text)));
-    if (maxSim < 0.2 && ef.severity !== "incidental") {
+    if (maxSim < 0.2) {
       hallucinations.push({
         text: ef.text,
         confidence: maxSim < 0.1 ? "high" : "medium",
@@ -531,6 +581,33 @@ function rawConclusionSection(reportHtml: string, locale: LocaleKey): string {
   const match = new RegExp(`<b>\\s*${header.source}[^<]*<\\/b>\\s*(?:<br\\s*\\/?>|\\s|:)*([\\s\\S]*)$`, "i").exec(reportHtml);
   if (!match) return "";
   return stripTags(match[1].replace(/<br\s*\/?>/gi, "\n")).trim();
+}
+
+// True when the Impression/Conclusion section is a near-verbatim duplicate of the
+// Findings section (the report copied the source into both sections rather than
+// synthesizing). Requires high token overlap in BOTH directions, so a condensed or
+// reframed conclusion (a subset, or adding interpretive terms) is NOT flagged.
+function impressionDuplicatesFindings(reportHtml: string, locale: LocaleKey): boolean {
+  const localeSpec = getLocale(locale);
+  const labels = localeSpec.sectionLabels;
+  const plain = stripTags(reportHtml.replace(/<br\s*\/?>/gi, "\n"));
+  const conclusionHeaders = locale === "pt-BR"
+    ? [labels.conclusion, "Conclusao", "Impressão", "Impressao"]
+    : [labels.conclusion, "Conclusion"];
+  const findingsHeaders = locale === "pt-BR"
+    ? [labels.analysis, "Analise", "Achados"]
+    : [labels.analysis, "Findings"];
+  const allHeaders = locale === "pt-BR"
+    ? [labels.analysis, "Analise", "Achados", labels.conclusion, "Conclusao", "Impressão", "Impressao", labels.technique, "Tecnica"]
+    : [labels.analysis, "Findings", labels.conclusion, "Conclusion", labels.technique, "Technique"];
+  const concTokens = clinicalTokens(extractSectionText(plain, conclusionHeaders, allHeaders));
+  const findTokens = clinicalTokens(extractSectionText(plain, findingsHeaders, allHeaders));
+  if (concTokens.length < 2 || findTokens.length < 2) return false;
+  const concSet = new Set(concTokens);
+  const findSet = new Set(findTokens);
+  const aInB = concTokens.filter((t) => findSet.has(t)).length / concTokens.length;
+  const bInA = findTokens.filter((t) => concSet.has(t)).length / findTokens.length;
+  return aInB >= 0.9 && bInA >= 0.9;
 }
 
 function hasSubstantiveConclusion(reportHtml: string, locale: LocaleKey): boolean {

@@ -74,7 +74,10 @@ export function buildRunManifest(args: {
   scaffoldId: string | null;
   judgeProvider: string | null;
   judgeModel: string | null;
+  judgeTemperature?: number | null;
+  judgeMaxTokens?: number | null;
   scoreMode?: ScoreCombinationMode;
+  policyId?: string | null;
   validation: SubmissionValidation;
   submissionMode: "generator" | "predictions";
   canaryToken?: string;
@@ -104,7 +107,10 @@ export function buildRunManifest(args: {
     scaffoldId: args.scaffoldId,
     judgeProvider: args.judgeProvider,
     judgeModel: args.judgeModel,
+    judgeTemperature: args.judgeTemperature ?? null,
+    judgeMaxTokens: args.judgeMaxTokens ?? null,
     scoreMode: args.scoreMode ?? "conservative-min",
+    policyId: args.policyId ?? null,
     evaluationMode: args.suite.evaluationMode,
     submissionMode: args.submissionMode,
     validation: args.validation,

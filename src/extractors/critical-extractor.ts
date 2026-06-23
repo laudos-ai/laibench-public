@@ -15,7 +15,7 @@
  * radiologist labels, it must not silently replace the default.
  */
 
-import { extractCriticalMentions, hasNegationCue, isFindingNegated, type ExtractedCriticalMention } from "../extract.js";
+import { extractCriticalMentions, isFindingNegated, type ExtractedCriticalMention } from "../extract.js";
 import { clinicalComparableText, clinicalTokenCoverage, clinicalTokens } from "../clinical-match.js";
 import { normalizeLoose, stripTags } from "../normalize.js";
 import type { LocaleKey } from "../types.js";
@@ -36,6 +36,26 @@ export type CriticalFindingExtractor = {
   readonly validated: boolean;
   detect(goldLabels: string[], reportHtml: string, locale: LocaleKey): CriticalDetection;
 };
+
+// Non-discriminative tokens excluded from the FP-suppression overlap: acuity /
+// laterality / size MODIFIERS plus ANATOMY/ORGAN nouns. Both are shared across
+// clinically unrelated findings, so neither a shared modifier ("acute") nor a
+// shared organ ("aortic") may mask a fabricated critical as "overlapping" an
+// unrelated gold label — only a shared LESION/process token (dissection, hemorrhage,
+// laceration, ...) should suppress an FP.
+const FP_MODIFIER_TOKENS = new Set([
+  // modifiers
+  "acute", "chronic", "subacute", "agudo", "aguda", "cronico", "cronica", "subagudo",
+  "left", "right", "bilateral", "esquerdo", "esquerda", "direito", "direita", "bilaterais",
+  "mild", "moderate", "severe", "leve", "moderado", "moderada", "grave", "acentuad",
+  "small", "large", "pequeno", "pequena", "grande", "focal", "diffuse", "difuso", "difusa",
+  // anatomy / organ nouns
+  "aortic", "aorta", "aortica", "hepatic", "hepatico", "hepatica", "liver", "figado",
+  "renal", "kidney", "rim", "rins", "splenic", "spleen", "baco", "esplenico",
+  "pulmonary", "pulmonar", "lung", "pulmao", "pulmoes", "cerebral", "brain", "cerebro",
+  "cardiac", "cardiaco", "heart", "coracao", "pancreatic", "pancreatico", "pancreas",
+  "gastric", "gastrico", "intestinal", "vascular", "pleural", "osseo", "bone", "spinal",
+]);
 
 // ---- shared helpers (moved verbatim from crit.ts; behavior unchanged) ----
 
@@ -94,6 +114,11 @@ export class KeywordCriticalExtractor implements CriticalFindingExtractor {
 
   detect(goldLabels: string[], reportHtml: string, locale: LocaleKey): CriticalDetection {
     const reportText = normalizeLoose(stripTags(reportHtml));
+    // Case-PRESERVED report text for token-coverage calls: clinicalTokens expands
+    // the case-sensitive "PE" abbreviation (vs "pé"=foot) before folding case, so
+    // it must see original case. reportText (already lowercased) is kept only for
+    // the literal substring `.includes()` check.
+    const reportSource = stripTags(reportHtml);
     const extractedMentions = extractCriticalMentions(reportHtml, locale);
     const usedMentions = new Set<number>();
 
@@ -106,7 +131,7 @@ export class KeywordCriticalExtractor implements CriticalFindingExtractor {
 
       // Try direct substring match first
       const directMatch = reportText.includes(goldNorm);
-      const clinicalExactMatch = comparableGold.length > 0 && clinicalTokenCoverage(goldLabel, reportText) >= 0.92;
+      const clinicalExactMatch = comparableGold.length > 0 && clinicalTokenCoverage(goldLabel, reportSource) >= 0.92;
       if (directMatch || clinicalExactMatch) {
         const matchingSentence = directMatch
           ? findMatchingSentence(reportHtml, goldNorm)
@@ -132,7 +157,7 @@ export class KeywordCriticalExtractor implements CriticalFindingExtractor {
 
       // Try token-level matching
       const goldTokens = clinicalTokens(goldLabel);
-      const tokenRatio = clinicalTokenCoverage(goldLabel, reportText);
+      const tokenRatio = clinicalTokenCoverage(goldLabel, reportSource);
 
       if (tokenRatio >= 0.55) {
         const bestSentence = findBestTokenMatchSentence(reportHtml, goldTokens);
@@ -163,17 +188,26 @@ export class KeywordCriticalExtractor implements CriticalFindingExtractor {
     }
 
     // False positives: extracted critical mentions not matched to any gold label.
-    // Negated mentions are pertinent negatives ("Sem desvio da linha media",
-    // "No intracranial hemorrhage") — clinically required statements, never
-    // hallucinated criticals — so they must not count against precision.
+    // Pertinent negatives are ALREADY excluded upstream: extractCriticalMentions
+    // applies CLAUSE-scoped negation (isFindingNegated on the matched term), so a
+    // mention only reaches here if its own critical term is affirmed. The old
+    // coarse hasNegationCue(whole sentence) re-check here defeated that scoping —
+    // an affirmed critical sharing a sentence with an unrelated negation ("No acute
+    // findings but acute hemorrhage in the spleen") was wrongly excused from the FP
+    // count, inflating precision in the UNSAFE direction. Removed.
     const falsePositives: ExtractedCriticalMention[] = [];
     for (let i = 0; i < extractedMentions.length; i++) {
       if (!usedMentions.has(i)) {
-        const mention = extractedMentions[i];
-        if (hasNegationCue(mention.text, locale)) continue;
-        const mentionText = normalizeLoose(extractedMentions[i].text);
+        // Suppress a mention as "matches some gold" only on SUBSTANTIVE overlap.
+        // Acuity/laterality/size modifiers (acute, left, mild, ...) are shared
+        // across unrelated findings, so a single shared modifier must not excuse a
+        // fabricated affirmed critical from the FP count ("acute appendicitis" gold
+        // vs fabricated "acute hemorrhage" — only "acute" overlaps). Strip modifiers
+        // from the gold before measuring coverage.
         const hasAnyOverlap = goldLabels.some((gl) => {
-          return clinicalTokenCoverage(gl, mentionText) >= 0.25 && !hasLateralityConflict(gl, extractedMentions[i].text);
+          const substantive = clinicalTokens(gl).filter((t) => !FP_MODIFIER_TOKENS.has(t));
+          const needle = substantive.length > 0 ? substantive.join(" ") : gl;
+          return clinicalTokenCoverage(needle, extractedMentions[i].text) >= 0.25 && !hasLateralityConflict(gl, extractedMentions[i].text);
         });
         if (!hasAnyOverlap) falsePositives.push(extractedMentions[i]);
       }

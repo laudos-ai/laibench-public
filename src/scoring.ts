@@ -179,8 +179,12 @@ export function combineScores(
   const scoredDims = DIMS.filter((dim) => detDims[dim].score !== null);
 
   // Decide the judge score scale once, over the whole result, so a single
-  // catastrophic 0-100 dimension is never misread as a 0-5 Likert value.
-  const judgeLikert = judgeScoresAreLikert(DIMS.map((dim) => adv?.scores?.[dim]));
+  // catastrophic 0-100 dimension is never misread as a 0-5 Likert value. The
+  // judge's `overall` is included as corroboration: a genuinely catastrophic 0-100
+  // result whose dims happen to be <= 5 will report `overall` on the 0-100 scale
+  // (> 5), which blocks the Likert reading and its unsafe x20 inflation. Only when
+  // EVERY dimension AND the overall are <= 5 is the result treated as Likert.
+  const judgeLikert = judgeScoresAreLikert([...DIMS.map((dim) => adv?.scores?.[dim]), adv?.overall]);
 
   // The clinical dimensions (CRIT, QUAL) carry the safety-critical signal: a
   // missed/fabricated finding lives here. Even in judge-primary mode these dims
@@ -209,7 +213,10 @@ export function combineScores(
     overall += score * (weights[dim] / totalWeight);
   }
 
-  overall = round1(overall);
+  // NB: `overall` is kept UNROUNDED through all gate/threshold comparisons below.
+  // Rounding before the `>= passThreshold` test would let a raw 83.95 round up to
+  // 84.0 and grade PASS at the boundary (an unsafe FAIL/PARTIAL→PASS promotion).
+  // The displayed score is rounded once, at the return.
 
   const hasDetCritical = checks.some((check) => !check.passed && check.severity === "critical");
   const hasJudgeCritical = (adv?.critical_failures.length ?? 0) > 0;
@@ -267,6 +274,10 @@ export function combineScores(
   let confidence: Confidence = adv ? "high" : "low";
   if (!adv && overall >= 80 && !hasDetCritical) confidence = "medium";
   if (adv && (adv.hallucinated.length > 0 || adv.missing.length > 0 || overall < passThreshold)) confidence = "medium";
+  // A gate cap / anti-compensation reason means the channels (or the dimensions)
+  // disagree enough to force the score down — exactly the cases a reviewer must not
+  // see labeled "high" confidence. Down-rank high → medium whenever a gate fired.
+  if (confidence === "high" && gateReasons.length > 0) confidence = "medium";
 
-  return { combined, overall, verdict, phaseStatus, confidence, gateReasons };
+  return { combined, overall: round1(overall), verdict, phaseStatus, confidence, gateReasons };
 }

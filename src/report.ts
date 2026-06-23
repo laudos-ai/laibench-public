@@ -20,6 +20,7 @@ import { readSuiteRun } from "./leaderboard.js";
 import { bootstrapCI } from "./stats.js";
 import { discriminate } from "./discriminate.js";
 import { calibrateJudges, scanContamination } from "./calibrate.js";
+import { runHash } from "./provenance.js";
 import type { SuiteRunResult } from "./types.js";
 
 export type ConsolidatedReport = {
@@ -127,8 +128,13 @@ export async function buildConsolidatedReport(args: {
   if (args.provenancePath) {
     const prov = await readJsonFile<{ suites: Array<{ suiteId: string; suiteHash: string }>; scoringHash: string }>(args.provenancePath);
     const ourSuite = prov.suites.find((s) => s.suiteId === primary.manifest.suiteId);
+    const suiteHash = ourSuite?.suiteHash ?? primary.manifest.suiteHash;
     provenance = {
-      suiteHash: ourSuite?.suiteHash ?? primary.manifest.suiteHash,
+      suiteHash,
+      // Emit the (now reproducible) runHash so the published provenance binds the
+      // run configuration — judge model, scaffold, score mode, submission mode — to
+      // a hash anyone can recompute, not just the suite + scoring hashes.
+      runHash: runHash({ suiteHash, manifest: primary.manifest, scoringHash: prov.scoringHash }),
       note: `scoringHash=${prov.scoringHash}`,
     };
   }

@@ -161,6 +161,8 @@ export function buildOpenAICompatibleJudge(config: OpenAICompatibleConfig, prici
     name: `openai-compatible-judge:${config.model}`,
     provider: "openai-compatible",
     modelLabel: config.model,
+    temperature: config.temperature ?? 0,
+    maxTokens: config.maxTokens ?? 2048,
     async run(prompt: string): Promise<JudgeOutput> {
       const result = await callOpenAICompatible({
         config: { ...config, temperature: config.temperature ?? 0, maxTokens: config.maxTokens ?? 2048 },

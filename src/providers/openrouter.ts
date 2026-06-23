@@ -104,6 +104,8 @@ export function buildOpenRouterJudge(apiKey: string, model: string, pricing?: Pr
     name: `openrouter-judge:${model}`,
     provider: "openrouter",
     modelLabel: model,
+    temperature: options?.temperature ?? 0,
+    maxTokens: options?.maxTokens ?? 2048,
     async run(prompt: string): Promise<JudgeOutput> {
       const result = await callOpenRouter({
         apiKey,

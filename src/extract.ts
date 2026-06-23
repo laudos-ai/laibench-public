@@ -172,13 +172,25 @@ const CLASSIFICATION_PATTERNS: ClassificationPattern[] = [
   },
   {
     system: "tirads",
-    rx: /(?:acr\s+)?ti-?rads\s*[:\s]?\s*(\d)/gi,
-    normalizer: (raw) => raw,
+    // Accept both the bare-digit ("TI-RADS 5") and canonical "TR"-prefixed
+    // ("TI-RADS TR5", "ACR TI-RADS: TR5") notations; normalize both to the bare
+    // digit so the two forms never mismatch the gold expectation.
+    rx: /(?:acr\s+)?ti-?rads\s*[:\s]?\s*(?:TR[-\s]?)?(\d)/gi,
+    normalizer: (raw) => raw.replace(/[^0-9]/g, ""),
   },
   {
     system: "lirads",
-    rx: /li-?rads\s*[:\s]?\s*((?:LR[-\s]?)?[1-5M](?:\s*[a-cA-C])?)/gi,
+    // Add the LR-TNC (treated, no criteria) category alongside LR1–5 / LR-M.
+    rx: /li-?rads\s*[:\s]?\s*((?:LR[-\s]?)?(?:TNC|[1-5M])(?:\s*[a-cA-C])?)/gi,
     normalizer: (raw) => raw.replace(/^LR[-\s]?/i, "").toUpperCase(),
+  },
+  {
+    // Standalone "LR-5" / "LR-TNC" notation without the repeated "LI-RADS" acronym
+    // (the canonical way a category appears in an impression line). "LR" before a
+    // category value is LI-RADS-specific; \b avoids matching inside other words.
+    system: "lirads",
+    rx: /\bLR[-\s]?((?:TNC|[1-5M])(?:\s*[a-cA-C])?)\b/gi,
+    normalizer: (raw) => raw.replace(/\s+/g, "").toUpperCase(),
   },
   {
     system: "pirads",
@@ -211,7 +223,10 @@ const CLASSIFICATION_PATTERNS: ClassificationPattern[] = [
   },
   {
     system: "lungrads",
-    rx: /lung-?rads\s*[:\s]?\s*(\d[a-cA-C]?)/gi,
+    // Lung-RADS categories include 4X and the standalone S modifier, not just
+    // 1/2/3/4A/4B — the old `\d[a-cA-C]?` dropped "4X" to "4" and missed "S",
+    // causing a false critical valid-range failure on correct screening reports.
+    rx: /lung-?rads\s*[:\s]?\s*(\d[abxABX]?|[sS])/gi,
     normalizer: (raw) => raw.toUpperCase(),
   },
 ];
@@ -299,6 +314,13 @@ type CriticalCategory = {
   category: string;
   rxPt: RegExp;
   rxEn: RegExp;
+  // Case-SENSITIVE abbreviation regexes (no /i). Spelled-out forms stay in rxPt/rxEn
+  // with /i (so sentence-initial capitals match), but abbreviations that collide
+  // with common lowercase words — "PE" (could be "pe"), "CVA" (costovertebral
+  // angle), "AVC", "TEP", "SBO" — must match only as uppercase tokens, else a
+  // benign lowercase word fabricates a critical.
+  abbrPt?: RegExp;
+  abbrEn?: RegExp;
 };
 
 const CRITICAL_CATEGORIES: CriticalCategory[] = [
@@ -309,13 +331,21 @@ const CRITICAL_CATEGORIES: CriticalCategory[] = [
   },
   {
     category: "pulmonary-embolism",
-    rxPt: /embolia\s+pulmonar|tromboembolismo\s+pulmonar|TEP\b/i,
-    rxEn: /pulmonary\s+emboli|PE\b(?!\w)|thromboemboli/i,
+    rxPt: /embolia\s+pulmonar|tromboembolismo\s+pulmonar/i,
+    rxEn: /pulmonary\s+emboli|thromboemboli/i,
+    abbrPt: /\bTEP\b/,
+    abbrEn: /\bPE\b/,
   },
   {
     category: "stroke",
-    rxPt: /(?:acidente\s+vascular|AVC\b|isquemia\s+(?:cerebral|aguda))/i,
-    rxEn: /(?:stroke|acute\s+(?:cerebral\s+)?ischemi|CVA\b)/i,
+    rxPt: /(?:acidente\s+vascular|isquemia\s+(?:cerebral|aguda))/i,
+    // Bare "stroke" excludes non-clinical collocations (golf/swimming/sun/back/
+    // breast/brush/key + stroke, "stroke of luck"); clinical "stroke"/"acute
+    // stroke"/"prior stroke" still match. (Single-word forms like "heatstroke" are
+    // already excluded by the \b boundary.)
+    rxEn: /(?:(?<!\b(?:golf|swimming|sun|back|breast|butterfly|brush|key|gentle|finishing)\s)\bstroke\b(?!\s+of\s+(?:luck|genius|midnight))|acute\s+(?:cerebral\s+)?ischemi)/i,
+    abbrPt: /\bAVC\b/,
+    abbrEn: /\bCVA\b/,
   },
   {
     category: "pneumothorax",
@@ -339,13 +369,17 @@ const CRITICAL_CATEGORIES: CriticalCategory[] = [
   },
   {
     category: "mass-effect",
-    rxPt: /efeito\s+(?:de\s+)?massa|hernia[çc]ão\s+(?:cerebral|transtentorial|subfalcial)/i,
-    rxEn: /mass\s+effect|herniation|uncal\s+herniation|transtentorial|subfalcine/i,
+    rxPt: /efeito\s+(?:de\s+)?massa|hernia[çc]ão\s+(?:cerebral|transtentorial|subfalcial|uncal|tonsilar)/i,
+    // "herniation" must carry an INTRACRANIAL qualifier — a bare "herniation" fired
+    // on the routine benign findings disc/hiatal/inguinal herniation and fabricated
+    // a mass-effect critical (the PT side was already correctly scoped).
+    rxEn: /mass\s+effect|(?:cerebral|uncal|tonsillar|transtentorial|subfalcine|tentorial)\s+herniation|transtentorial|subfalcine|herniation\s+of\s+(?:the\s+)?(?:brain|cerebellar\s+tonsils?|tonsils?)/i,
   },
   {
     category: "bowel-obstruction",
     rxPt: /obstru[çc]ão\s+intestinal|[ií]leo\s+(?:mecânico|obstrutivo)/i,
-    rxEn: /bowel\s+obstruction|small\s+bowel\s+obstruction|SBO\b/i,
+    rxEn: /bowel\s+obstruction|small\s+bowel\s+obstruction/i,
+    abbrEn: /\bSBO\b/,
   },
   {
     category: "perforation",
@@ -354,8 +388,8 @@ const CRITICAL_CATEGORIES: CriticalCategory[] = [
   },
   {
     category: "fracture",
-    rxPt: /fratura/i,
-    rxEn: /fracture/i,
+    rxPt: /\bfratura/i,
+    rxEn: /\bfracture/i,
   },
   {
     category: "cord-compression",
@@ -422,8 +456,11 @@ export function isNegated(sentence: string, locale: LocaleKey): boolean {
   return localeSpec.negationPatterns.some((rx) => rx.test(normalized));
 }
 
-const NEGATION_PREFIX_PT = /\b(?:sem|nao\s+(?:ha|foram?|foi|se|mais\s+se|existe(?:m)?|identificad|observad|detectad|evidenciad|caracterizad|visualizad|apresenta|demonstrad)|ausencia de|livres? de|afastad[oa]s?|excluid[oa]s?|inden[ei]s?)\b/;
-const NEGATION_PREFIX_EN = /\b(?:no|without|absent|negative for|ruled out|excluded|not\s+(?:identified|seen|detected|demonstrated|observed|present|visualized))\b/;
+const NEGATION_PREFIX_PT = /\b(?:sem|nao\s+(?:ha|foram?|foi|se|mais\s+se|existe(?:m)?|identificad|observad|detectad|evidenciad|caracterizad|visualizad|apresenta|demonstrad)|ausencia de|livres? de|afastad[oa]s?|excluid[oa]s?|inden[ei]s?|nao\s+(?:se\s+|e\s+possivel\s+|podemos\s+|pode(?:ndo)?\s+(?:se\s+)?)?(?:excluir|afastar|descartar))\b/;
+// "cannot exclude/rule out X" is a HEDGE (non-committal), handled symmetrically to
+// the suffix form ("X cannot be excluded") which the SUFFIX regex already negates,
+// so detection is order-independent. "no evidence" is an explicit denial.
+const NEGATION_PREFIX_EN = /\b(?:no|without|absent|negative for|ruled out|excluded|no\s+evidence|cannot\s+(?:be\s+)?(?:exclud\w*|ruled?\s+out)|not\s+(?:identified|seen|detected|demonstrated|observed|present|visualized))\b/;
 const NEGATION_SUFFIX_PT = /\b(?:ausentes?|nao (?:caracterizad|identificad|evidenciad|observad|detectad)|descartad[oa]s?)\b/;
 const NEGATION_SUFFIX_EN = /\b(?:absent|not (?:identified|seen|detected|demonstrated|observed|present)|excluded|ruled out)\b/;
 
@@ -538,7 +575,9 @@ export function extractCriticalMentions(html: string, locale?: LocaleKey): Extra
   for (const sentence of sentences) {
     for (const cat of CRITICAL_CATEGORIES) {
       const rx = effectiveLocale === "en-US" ? cat.rxEn : cat.rxPt;
-      const match = rx.exec(sentence);
+      const abbrRx = effectiveLocale === "en-US" ? cat.abbrEn : cat.abbrPt;
+      // Spelled-out form (case-insensitive) OR the case-sensitive abbreviation.
+      const match = rx.exec(sentence) ?? (abbrRx ? abbrRx.exec(sentence) : null);
       if (!match) continue;
       // Clause-scoped negation. Skip only when the matched critical term itself
       // is negated within its clause, using the same predicate the gold path and
@@ -584,6 +623,9 @@ export function normalizeClassificationValue(value: string): string {
     .replace(/lung[-\s]?rads\s*/i, "")
     .replace(/bosniak\s*/i, "")
     .replace(/lr[-\s]?/i, "")
+    // Strip a TI-RADS "TR" prefix so "TR5" and bare "5" normalize identically,
+    // matching the extractor (which also emits the bare digit).
+    .replace(/tr[-\s]?(?=\d)/i, "")
     .replace(/^[-:\s]+/, "")
     .replace(/\s+/g, "")
     .toUpperCase();

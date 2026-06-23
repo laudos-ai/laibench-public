@@ -56,7 +56,9 @@ function isOperationalFailure(metadata: Record<string, unknown> | undefined): bo
 
 function reportedLatencyMs(metadata: Record<string, unknown> | undefined, fallbackMs: number): number {
   const value = metadata?.latencyMs;
-  return typeof value === "number" && Number.isFinite(value) ? value : fallbackMs;
+  // Only honor a non-negative finite self-report; never let a submission claim
+  // 0ms / negative latency (latencyMs is a leaderboard tiebreaker).
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : fallbackMs;
 }
 
 function buildOperationalFailureChecks(message: string): Check[] {
@@ -99,6 +101,11 @@ export async function benchmarkCase(args: {
   policyId?: PolicyProfileId;
   canaryToken?: string;
   providedMetadata?: Record<string, unknown>;
+  // When the metadata is submitter-controlled (frozen predictions), it cannot be
+  // trusted as a scoring input: retrieval doc-ids and latency are ignored so a
+  // submission cannot inflate the RAG dimension with fabricated citations or spoof
+  // the published latency tiebreaker.
+  untrustedMetadata?: boolean;
 }): Promise<CaseRunResult> {
   const started = Date.now();
   const trace: TraceEvent[] = [];
@@ -117,7 +124,12 @@ export async function benchmarkCase(args: {
         locale: args.locale,
         systemPrompt,
       });
-      rawOutput = generation.html;
+      // `html: string` is a compile-time type, but a generator's output crosses an
+      // I/O boundary (subprocess stdout / HTTP JSON) where it can be null or a
+      // non-string at runtime. Coerce here — the single point all generator output
+      // converges — so a malformed value scores that case as empty/FAIL instead of
+      // throwing and rejecting the whole suite via runCasePool's Promise.all.
+      rawOutput = typeof generation.html === "string" ? generation.html : (generation.html == null ? "" : String(generation.html));
       generationMetadata = generation.metadata;
       trace.push({
         step: "generate",
@@ -147,7 +159,12 @@ export async function benchmarkCase(args: {
 
   const normalizedHtml = normalizeGeneratedHtml(rawOutput);
   const sanitizedHtml = sanitizeAllowedHtml(normalizedHtml);
-  const retrievedDocIds = extractRetrievedDocIds(generationMetadata);
+  // Retrieval evidence is a scoring input. In predictions mode the metadata is
+  // submitter-controlled, so naming the gold doc-ids there would game the RAG
+  // dimension with zero actual retrieval — never trust it. RAG is left UNSCORED
+  // in that mode (honest: there is no verifiable retrieval signal in a frozen
+  // HTML submission) rather than scored from self-reported ids.
+  const retrievedDocIds = args.untrustedMetadata ? undefined : extractRetrievedDocIds(generationMetadata);
 
   if (isOperationalFailure(generationMetadata)) {
     const failureMessage = typeof generationMetadata?.error === "string"
@@ -260,7 +277,10 @@ export async function benchmarkCase(args: {
   let judge = null;
   if (args.judge) {
     try {
-      const prompt = buildJudgePrompt(args.locale, args.case.exam, args.case.findings, normalizedHtml, args.canaryToken, args.case);
+      // Feed the SANITIZED html to the judge: scripts/styles are stripped and tags
+      // escaped, so model output cannot terminate the prompt frame or inject judge
+      // instructions to inflate the judge half of MIN(det, judge).
+      const prompt = buildJudgePrompt(args.locale, args.case.exam, args.case.findings, sanitizedHtml, args.canaryToken, args.case);
       const judged = await args.judge.run(prompt);
       trace.push({
         step: "judge",
@@ -306,7 +326,9 @@ export async function benchmarkCase(args: {
     phaseStatus: combined.phaseStatus,
     gateReasons: combined.gateReasons,
     costUsd: roundCost(trace.reduce((sum, item) => sum + (item.costUsd ?? 0), 0)),
-    latencyMs: reportedLatencyMs(generationMetadata, Date.now() - started),
+    // Submitter-reported latency is meaningless for frozen predictions (scoring
+    // only) and is a leaderboard tiebreaker, so never trust it in that mode.
+    latencyMs: args.untrustedMetadata ? (Date.now() - started) : reportedLatencyMs(generationMetadata, Date.now() - started),
     trace,
   };
 }
@@ -480,6 +502,8 @@ export async function benchmarkSuiteFromGenerator(args: {
       scaffoldId: resolveScaffoldId(track, args.generator),
       judgeProvider: args.judge?.provider ?? null,
       judgeModel: args.judge?.modelLabel ?? null,
+      judgeTemperature: args.judge?.temperature ?? null,
+      judgeMaxTokens: args.judge?.maxTokens ?? null,
       scoreMode: args.scoreMode,
       validation,
       submissionMode: "generator",
@@ -527,6 +551,7 @@ export async function benchmarkSuiteFromPredictions(args: {
       locale: item.locale ?? args.locale,
       providedHtml: predictionMap.get(item.id)?.model_output ?? "",
       providedMetadata: predictionMap.get(item.id)?.metadata,
+      untrustedMetadata: true,
       providerLabel: args.provider,
       modelLabel: args.modelLabel,
       judge: args.judge,
@@ -554,6 +579,8 @@ export async function benchmarkSuiteFromPredictions(args: {
       scaffoldId: resolveScaffoldId(track),
       judgeProvider: args.judge?.provider ?? null,
       judgeModel: args.judge?.modelLabel ?? null,
+      judgeTemperature: args.judge?.temperature ?? null,
+      judgeMaxTokens: args.judge?.maxTokens ?? null,
       scoreMode: args.scoreMode,
       validation: args.validation,
       submissionMode: "predictions",

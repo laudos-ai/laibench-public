@@ -101,8 +101,23 @@ export function runHash(args: { suiteHash: string; manifest: Omit<RunManifest, "
     scaffoldId: args.manifest.scaffoldId,
     judgeProvider: args.manifest.judgeProvider,
     judgeModel: args.manifest.judgeModel,
+    // Judge sampling params and the policy profile materially change the published
+    // scores (judge temperature/max-tokens change the judge's output; a policy
+    // re-weights dims and shifts thresholds), so they bind into runHash too.
+    judgeTemperature: args.manifest.judgeTemperature ?? null,
+    judgeMaxTokens: args.manifest.judgeMaxTokens ?? null,
+    policyId: args.manifest.policyId ?? null,
     submissionMode: args.manifest.submissionMode,
-    canaryToken: args.manifest.canaryToken,
+    // scoreMode materially changes the published scores (judge-primary takes the
+    // raw judge value for non-clinical dims instead of MIN(det,judge)), so it MUST
+    // bind into runHash — otherwise two runs differing only in scoreMode share a
+    // hash and a judge-primary result could masquerade under a conservative-min run.
+    scoreMode: args.manifest.scoreMode ?? "conservative-min",
+    // canaryToken is a fresh per-run integrity NONCE (randomUUID), NOT a scoring
+    // input. Including it made runHash non-reproducible: two byte-identical
+    // re-scorings of the same predictions+suite+code produced different hashes,
+    // contradicting the "recompute to prove no tampering" guarantee. Excluded so
+    // runHash is deterministic over (suite, scoring code, run configuration).
   });
   return sha256(`${args.suiteHash}|${manifestCanon}|${args.scoringHash}`);
 }

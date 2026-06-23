@@ -13,7 +13,17 @@ function deriveModality(normalizedExam: string): Modality {
 
 function deriveContrast(normalizedExam: string, normalizedFindings: string): boolean {
   const examIndicatesContrast = /\b(cc|c\/c|com contraste|contrastado|with contrast|contrast-enhanced|contrast enhanced)\b/.test(normalizedExam);
-  const findingsIndicateContrast = /\b(?:meio de contraste|contraste administrado|pos contraste|gadol[ií]nio|gadolinio|realce|impregnacao|contrastacao|wash out|fase arterial|fase portal|fase venosa|fase tardia)\b/.test(normalizedFindings);
+  // Strong, unambiguous contrast-administration cues — locale-SYMMETRIC (pt-BR and
+  // en-US). The findings branch was previously pt-BR-only, so en-US enhancement /
+  // phase language did not register contrast (false C01 penalty on correct reports).
+  const strongCue =
+    /\b(?:meio de contraste|contraste (?:administrad\w*|endovenos\w*|injetad\w*)|pos[\s-]?contraste|post[\s-]?contrast|intravenous contrast|gadol[ií]nio|gadolineo|fase arterial|fase (?:porto[\s-]?)?venosa|fase portal|fase tardia|arterial phase|portal[\s-]?venous phase|portal phase|venous phase|delayed phase|washout|wash[\s-]out)\b/.test(normalizedFindings);
+  // Ambiguous cues count ONLY when not negated: "ausência de realce" / "no
+  // enhancement" describes a NON-contrast study and must not flip contrast=true
+  // (which would silently disable the C01 hallucination gate).
+  const ambiguousCue = /\b(?:realce|impregnacao|contrastacao|enhancement|enhancing|hyperenhanc\w*)\b/.test(normalizedFindings);
+  const negatedAmbiguous = /\b(?:sem|ausencia de|nao (?:ha|apresenta|demonstra|se observa)|no|without|absent|negative for)\b[^.;]{0,24}\b(?:realce|impregnacao|contrastacao|enhancement|enhancing)\b/.test(normalizedFindings);
+  const findingsIndicateContrast = strongCue || (ambiguousCue && !negatedAmbiguous);
   return examIndicatesContrast || findingsIndicateContrast;
 }
 

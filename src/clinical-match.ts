@@ -32,9 +32,56 @@ const HEDGE_DIFFERENTIAL_RX =
 const MANAGEMENT_VERB_RX =
   /\b(?:sugere\s*-\s*se|sugerimos|recomenda\s*-\s*se|recomenda(?:mos|do|da)?|correlacao|correlacionar|endoscop|laringoscop|seguimento|acompanhamento|controle|biopsia|puncao)\b/i;
 
+// Locale-scoped synonym / abbreviation canonicalization for the deterministic
+// matcher. Each clinically-equivalent family collapses to one canonical token so
+// that "PE" / "pulmonary embolism" / "TEP" / "tromboembolismo pulmonar" all match,
+// and a paraphrased-but-correct critical is no longer a guaranteed false FAIL
+// (the double-penalty FN+FP defect). Families are restricted to high-stakes
+// criticals where the paraphrase risk is real; ordinary descriptive prose is left
+// untouched to avoid manufacturing false matches.
+//
+// COLLISION SAFETY: bare "PE" is the abbreviation for pulmonary embolism in
+// en-US, but "pé" (foot) normalizes to "pe" in pt-BR. So bare PE is matched
+// CASE-SENSITIVELY on the original text (uppercase only) BEFORE normalization;
+// the lowercase form is never canonicalized. Other abbreviations (SAH/HSA/SBO/
+// CVA/AVC/TEP/PTX) are not real words in either language, so they are safe to map
+// case-insensitively on the normalized text.
+// Bare "PE" is matched CASE-SENSITIVELY (uppercase only) BEFORE normalization, so
+// it never matches "pé"→"pe" (foot) in pt-BR.
+const CASE_SENSITIVE_ABBR: Array<[RegExp, string]> = [
+  [/\bPE\b/g, " pulmonary embolism "],
+];
+// Abbreviation EXPANSION on normalized text. These short tokens are not real words
+// in either locale (and were previously dropped by the length>2 filter, so a report
+// stating only "PE"/"SAH"/"TEP" matched nothing). Expand to phrase WORDS so existing
+// multi-token phrases match WITHOUT collapsing them — preserving the token-count
+// ratios the matcher and source-backing rely on. Prefix-5 token matching already
+// bridges en/pt morphology (pulmonary≈pulmonar, hemorrhage≈hemorragia, subarachnoid≈
+// subaracnoide), so one canonical expansion serves both locales.
+const ABBR_EXPANSIONS: Array<[RegExp, string]> = [
+  [/\bsah\b/g, " subarachnoid hemorrhage "],
+  [/\bhsa\b/g, " subarachnoid hemorrhage "],
+  [/\btep\b/g, " tromboembolismo pulmonar embolia "],
+  [/\bsbo\b/g, " bowel obstruction "],
+];
+// Divergent-surface critical families: genuinely different words for the same
+// entity that share no token prefix, so they are collapsed to one canonical token
+// (e.g. "stroke" ≡ "cerebrovascular accident" ≡ "acidente vascular cerebral").
+const CANON_COLLAPSE: Array<[RegExp, string]> = [
+  [/\bstroke\b|cerebrovascular\s+accident|acidente\s+vascular(?:\s+(?:cerebral|encefalic\w*))?|\bcva\b|\bavc\b/g, " xcrtstroke "],
+];
+
+function canonicalizeClinical(stripped: string): string {
+  let s = ` ${stripped} `;
+  for (const [rx, sub] of CASE_SENSITIVE_ABBR) s = s.replace(rx, sub);
+  s = normalizeLoose(s).replace(/[^a-z0-9]+/g, " ");
+  for (const [rx, sub] of ABBR_EXPANSIONS) s = s.replace(rx, sub);
+  for (const [rx, sub] of CANON_COLLAPSE) s = s.replace(rx, sub);
+  return s;
+}
+
 export function clinicalTokens(value: string): string[] {
-  const normalized = normalizeLoose(stripTags(value))
-    .replace(/[^a-z0-9]+/g, " ");
+  const normalized = canonicalizeClinical(stripTags(value));
   const tokens = normalized
     .split(/\s+/)
     .filter((token) => token.length > 2 && !CLINICAL_STOPWORDS.has(token));
@@ -45,11 +92,25 @@ export function clinicalComparableText(value: string): string {
   return clinicalTokens(value).join(" ");
 }
 
+// Confusable pairs that share a 5-char prefix but are clinically distinct words.
+// A prefix-length heuristic cannot reject these without also breaking legitimate
+// pt/en cognates (which diverge as early as char 6, e.g. hemorragia/hemorrhage),
+// so they are denylisted explicitly. Keyed as the two tokens sorted + joined.
+const CONFUSABLE_PAIRS = new Set([
+  "fractional|fracture", "fractional|fractured", "fractional|fractures",
+  "fraction|fracture", "fraction|fractured",
+  "hemorrhage|hemorrhoid", "hemorrhages|hemorrhoids", "hemorrhage|hemorrhoids",
+  "hemorragia|hemorroida", "hemorragia|hemorroidas",
+]);
+
 function tokenMatches(a: string, b: string): boolean {
   if (a === b) return true;
   const shorter = a.length <= b.length ? a : b;
   const longer = a.length > b.length ? a : b;
-  if (shorter.length >= 5 && longer.startsWith(shorter.slice(0, 5))) return true;
+  if (shorter.length >= 5 && longer.startsWith(shorter.slice(0, 5))) {
+    if (CONFUSABLE_PAIRS.has(a < b ? `${a}|${b}` : `${b}|${a}`)) return false;
+    return true;
+  }
   return false;
 }
 

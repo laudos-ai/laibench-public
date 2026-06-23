@@ -252,8 +252,22 @@ export function assertSuiteRunIntegrity(run: SuiteRunResult, label = "suite run"
     errors.push(`comparableKey mismatch: expected ${expectedComparableKey}, got ${run.manifest.comparableKey}`);
   }
 
-  if (run.manifest.validation.valid && run.results.length !== run.manifest.validation.expectedIds.length) {
-    errors.push(`valid run result count mismatch: expected ${run.manifest.validation.expectedIds.length}, got ${run.results.length}`);
+  if (run.manifest.validation.valid) {
+    // Bind the result case-id SET to the locked suite, not just the count. A count-
+    // only check let a forged artifact ship N duplicates of one easy case (or any N
+    // substituted rows) and still rank as eligible. Require an exact id-set match
+    // with no duplicates and no substitutions.
+    const expected = run.manifest.validation.expectedIds;
+    const resultIds = run.results.map((r) => r.case?.id).filter((id): id is string => typeof id === "string");
+    const expectedSet = new Set(expected);
+    const resultSet = new Set(resultIds);
+    if (resultIds.length !== run.results.length) {
+      errors.push("valid run has a result row with no case id");
+    } else if (resultIds.length !== resultSet.size) {
+      errors.push("valid run has duplicate case ids in results");
+    } else if (resultSet.size !== expectedSet.size || [...expectedSet].some((id) => !resultSet.has(id))) {
+      errors.push(`valid run result id-set does not match the locked suite (expected ${expectedSet.size} unique ids, got ${resultSet.size})`);
+    }
   }
 
   run.results.forEach((result, index) => {

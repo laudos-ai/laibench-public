@@ -49,7 +49,7 @@ export const enUS: LocaleSpec = {
     chest: ["chest", "thorax"],
     abdomen: ["abdomen", "abdominal"],
     spine: ["spine", "lumbar", "cervical", "thoracic"],
-    urinary: ["urinary", "urogram", "urinary tract"],
+    urinary: ["urinary", "urogra", "urinary tract"],
     pelvis: ["pelvis", "pelvic"],
     breast: ["breast", "mammogra"],
     thyroid: ["thyroid"],
@@ -73,6 +73,7 @@ export const enUS: LocaleSpec = {
     "US:thyroid": ["right lobe", "left lobe", "isthmus", "nodule"],
     "US:breast": ["nodule", "skin", "axilla"],
     "MG:breast": ["nodule", "skin", "axilla"],
+    "MX:breast": ["nodule", "skin", "axilla"],
     "XR:chest": ["cardiac", "mediast", "hila", "parenchym", "costophrenic", "soft tissue"],
   },
   negationPatterns: [

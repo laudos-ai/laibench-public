@@ -20,21 +20,31 @@ function nonGlobal(rx: RegExp): RegExp {
 // clinical vocabulary.
 const PT_FUNCTION_WORDS = /\b(?:de|da|do|das|dos|sem|com|nao|para|em|os|as|uma|seios|analise|conclusao|achados|ausencia|presenca|aspecto|demais)\b/g;
 const EN_FUNCTION_WORDS = /\b(?:the|of|with|without|no|in|is|are|and|there|within|findings|impression|technique|unremarkable|normal limits)\b/g;
+// Morphology + bare organ names. Telegraphic radiology prose (noun phrases, no
+// articles/verbs) emits ~zero function words, so function-word counting collapses
+// and an English report can slip through a pt-BR suite. These locale-exclusive
+// content signals (PT -ção/-ões/-ência/-ose endings + PT organ names vs English
+// -tion/-osis endings + English organ names) keep detection alive on terse prose.
+// Text is already accent-folded/lowercased, so PT "-ção" appears as "-cao".
+const PT_CONTENT_WORDS = /\b\w{4,}(?:cao|coes|oes|encia|ose|agem)\b|\b(?:figado|rim|rins|baco|bexiga|cranio|torax|abdome|abdomen|coluna|utero|ovario|ovarios|prostata|mama|mamas|pulmoes|rins|rincao)\b/g;
+const EN_CONTENT_WORDS = /\b\w{4,}(?:tion|osis|emia)\b|\b(?:liver|kidney|kidneys|spleen|lung|lungs|chest|spine|brain|breast|breasts|bladder|uterus|ovary|ovaries|prostate|gallbladder)\b/g;
 
 function detectReportLanguageMismatch(
   normalizedText: string,
   localeKey: LocaleKey,
 ): { mismatch: boolean; detected: string; evidence: string } {
-  const ptHits = normalizedText.match(PT_FUNCTION_WORDS)?.length ?? 0;
-  const enHits = normalizedText.match(EN_FUNCTION_WORDS)?.length ?? 0;
+  const ptHits = (normalizedText.match(PT_FUNCTION_WORDS)?.length ?? 0) + (normalizedText.match(PT_CONTENT_WORDS)?.length ?? 0);
+  const enHits = (normalizedText.match(EN_FUNCTION_WORDS)?.length ?? 0) + (normalizedText.match(EN_CONTENT_WORDS)?.length ?? 0);
   const expected = localeKey === "pt-BR" ? ptHits : enHits;
   const other = localeKey === "pt-BR" ? enHits : ptHits;
-  // Mismatch only on strong evidence: the opposite locale dominates clearly.
-  const mismatch = other >= 6 && other >= expected * 2;
+  // Mismatch only when the opposite locale clearly dominates: at least 4 signals
+  // AND at least double the expected-locale signal (so a stray cognate cannot flip
+  // a genuine same-locale report).
+  const mismatch = other >= 4 && other >= expected * 2;
   return {
     mismatch,
     detected: ptHits >= enHits ? "pt-BR" : "en-US",
-    evidence: `pt function words: ${ptHits}, en function words: ${enHits}`,
+    evidence: `pt signals: ${ptHits}, en signals: ${enHits}`,
   };
 }
 
@@ -261,26 +271,38 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
       : "ok",
   );
 
-  // TERM - Terminology structural checks
+  // TERM - Terminology structural checks.
+  // Forbidden-term and modality-vocab patterns are matched ACCENT-INSENSITIVELY:
+  // every other comparison in the engine folds diacritics (normalizeLoose), so an
+  // accent-stripped output (e.g. "espessacao", "hipoecoico") must be caught the
+  // same as the accented form. Fold both the text and the pattern source.
+  const foldDiacritics = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const foldedHtml = foldDiacritics(html);
+  const foldedMatch = (rx: RegExp) => matchAll(new RegExp(foldDiacritics(rx.source), rx.flags), foldedHtml);
   locale.forbiddenTerms.forEach(([rx, label], index) => {
-    const hits = matchAll(rx, html);
+    const hits = foldedMatch(rx);
     ck(checks, "TERM", `T${String(index).padStart(2, "0")}`, label, "major", hits.length === 0, hits.length ? hits[0] : "ok");
   });
   locale.forbiddenOpeners.forEach((opener, index) => {
-    const escaped = opener.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    // Accent-insensitive, like the forbiddenTerms/TM checks above: fold the opener
+    // pattern and match the folded text, so an accent-stripped opener ("Presenca de"
+    // for "Presença de") cannot evade the check.
+    const escaped = foldDiacritics(opener).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const rx = new RegExp(`(?:<br>|<\\/b>|\\.)\\s*${escaped}`, "gi");
-    ck(checks, "TERM", `TO${index}`, `No forbidden opener: ${opener}`, "major", !rx.test(html), "ok");
+    ck(checks, "TERM", `TO${index}`, `No forbidden opener: ${opener}`, "major", !rx.test(foldedHtml), "ok");
   });
   if (meta.modality === "US") {
-    const hits = matchAll(locale.modalityVocab.US_forbidden, html);
+    const hits = foldedMatch(locale.modalityVocab.US_forbidden);
     ck(checks, "TERM", "TM1", "Ultrasound uses correct modality vocabulary", "critical", hits.length === 0, hits.length ? hits.join(", ") : "ok");
   }
   if (meta.modality === "MRI") {
-    const hits = matchAll(locale.modalityVocab.MRI_forbidden, html);
+    const hits = foldedMatch(locale.modalityVocab.MRI_forbidden);
     ck(checks, "TERM", "TM2", "MRI uses correct modality vocabulary", "critical", hits.length === 0, hits.length ? hits.join(", ") : "ok");
   }
   if (meta.modality === "CT") {
-    ck(checks, "TERM", "TM3", locale.modalityVocab.CT_fix, "major", !locale.modalityVocab.CT_forbidden.test(html), "ok");
+    // Emit the actual offending term as evidence (was hardcoded "ok" on both paths).
+    const ctHits = foldedMatch(locale.modalityVocab.CT_forbidden);
+    ck(checks, "TERM", "TM3", locale.modalityVocab.CT_fix, "major", ctHits.length === 0, ctHits.length ? ctHits.join(", ") : "ok");
   }
 
   // Expert-level quality checks

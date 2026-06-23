@@ -188,6 +188,11 @@ const fleischnerModule: GuidelineModule = {
   name: "Fleischner Society Guidelines (Pulmonary Nodules)",
   appliesTo(benchCase, reportHtml, meta) {
     if (meta.modality !== "CT") return false;
+    // Fleischner governs INCIDENTAL nodules. In a screening/low-dose context the
+    // correct framework is Lung-RADS, not Fleischner — they are mutually exclusive,
+    // so do not also expect Fleischner on a screening case (which would penalize a
+    // correct Lung-RADS-only report).
+    if (sourceContextContains(benchCase, /screening|rastreamento|rastreio|low[\s-]?dose/i)) return false;
     return sourceContextContains(benchCase, /nodulo[\s\S]{0,50}pulmon|pulmon[\s\S]{0,50}nodulo|pulmonary\s+nodule|lung\s+nodule/i);
   },
   evaluate(benchCase, reportHtml, _meta, _locale, goldExpectation) {

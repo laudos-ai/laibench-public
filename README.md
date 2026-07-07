@@ -34,6 +34,9 @@
 
 ## Why LAIBench
 
+Why LAIBench exists? 
+Existing LLM benchmarks measure general reasoning. Radiology requires evaluation of clinical safety, report faithfulness, terminology consistency, and critical finding detection. LAIBench was created to measure those properties.
+
 Most "report quality" benchmarks reward fluent prose. A confidently-written report that **misses a pneumothorax** can score well. LAIBench is built so that **cannot happen**:
 
 - **Hard critical-finding veto.** A missed or fabricated critical finding caps the score and forces `FAIL` — no matter how polished the rest of the report is. Form never rescues substance.

@@ -25,7 +25,7 @@ export async function callOpenRouter(args: {
     headers: {
       "content-type": "application/json",
       authorization: `Bearer ${args.apiKey}`,
-      "HTTP-Referer": "https://laudos.ai",
+      "HTTP-Referer": "https://www.laudos.ai",
       "X-Title": "laibench",
     },
     body: JSON.stringify({

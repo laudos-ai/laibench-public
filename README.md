@@ -9,7 +9,7 @@
   Turn an exam descriptor + concise findings into a faithful report — scored where it matters clinically, not on prose.
 </p>
 
-<p align="center"><em>Authored by <a href="https://laudos.ai">Laudos.AI Research</a>.</em></p>
+<p align="center"><em>Authored by <a href="https://www.laudos.ai">Laudos.AI Research</a>.</em></p>
 
 <p align="center">
   <a href="https://github.com/laudos-ai/laibench-public/actions/workflows/ci.yml"><img src="https://github.com/laudos-ai/laibench-public/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
@@ -25,7 +25,7 @@
   <a href="docs/laibench-leaderboard-methods.md">Methodology</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
   <a href="CONTRIBUTING.md">Contributing</a> ·
-  <a href="https://laudos.ai">By Laudos.AI Research</a>
+  <a href="https://www.laudos.ai">By Laudos.AI Research</a>
 </p>
 
 ---

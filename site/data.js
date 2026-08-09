@@ -1,5 +1,6 @@
 window.LAIBENCH_DATA = {
  "generatedAt": null,
+ "benchmarkVersion": "3.10.0",
  "locales": {
   "pt-BR": {
    "suite": "lite-public.pt-BR",

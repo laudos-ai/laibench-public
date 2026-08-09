@@ -19,7 +19,7 @@
   html, body { margin: 0; padding: 0; }
   :root{
     --bg:#efedea; --ink:#1a1a1a; --ink2:#4d4a46; --muted:#57544f; --faint:#8a8782;
-    --line:#ddd9d3; --line2:#cbc7c0; --panel:#e8e5e0; --dark:#1a1a1a; --teal:#10866f;
+    --line:#ddd9d3; --line2:#cbc7c0; --panel:#e8e5e0; --dark:#1a1a1a; --accent:#E84A0C;
   }
   body { background: var(--bg); color: var(--ink); font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
   ::selection { background:#1a1a1a; color:#efedea; }
@@ -27,7 +27,7 @@
   .mono { font-family:ui-monospace,'SF Mono',Menlo,monospace; }
   .wrap { max-width:1180px; margin:0 auto; }
   .logo { position:relative; border-radius:50%; overflow:hidden; flex:none;
-    background:conic-gradient(#161616 0 90deg,#6e6e6e 90deg 180deg,#9c9c9c 180deg 270deg,#3c3c3c 270deg 360deg); }
+    background:conic-gradient(var(--accent) 0 90deg,#6e6e6e 90deg 180deg,#9c9c9c 180deg 270deg,#3c3c3c 270deg 360deg); }
   .logo::before { content:''; position:absolute; left:calc(50% - .6px); top:0; width:1.2px; height:100%; background:var(--bg); }
   .logo::after { content:''; position:absolute; top:calc(50% - .6px); left:0; height:1.2px; width:100%; background:var(--bg); }
   nav { position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between;
@@ -40,17 +40,17 @@
   nav .links { display:flex; align-items:center; gap:clamp(16px,2.4vw,34px); }
   nav .links a { text-decoration:none; color:var(--muted); font-size:14px; letter-spacing:-.01em; }
   nav .links a:hover { color:var(--ink); }
-  nav .cta { display:inline-flex; align-items:center; gap:8px; color:#efedea!important; background:var(--ink); font-size:13px; padding:9px 16px; border-radius:999px; }
-  nav .cta:hover { background:#000; }
+  nav .cta { display:inline-flex; align-items:center; gap:8px; color:#fff!important; background:var(--accent); font-size:13px; padding:9px 16px; border-radius:999px; }
+  nav .cta:hover { background:#c83b00; }
   header { padding:clamp(64px,11vw,150px) clamp(24px,5vw,72px) clamp(40px,6vw,80px); }
   .eyebrow { display:flex; align-items:center; gap:12px; margin-bottom:34px; }
-  .eyebrow .dot { width:7px; height:7px; border-radius:50%; background:var(--ink); }
+  .eyebrow .dot { width:7px; height:7px; border-radius:50%; background:var(--accent); }
   .eyebrow span { font-size:12px; letter-spacing:.14em; color:#6f6c68; text-transform:uppercase; }
   h1 { font-size:clamp(40px,7vw,92px); line-height:.96; letter-spacing:-.04em; font-weight:500; margin:0; }
   .lede { font-size:clamp(17px,1.5vw,21px); line-height:1.55; color:var(--ink2); max-width:60ch; margin:30px 0 0; }
   .actions { display:flex; flex-wrap:wrap; gap:14px; margin-top:42px; }
   .btn { display:inline-flex; align-items:center; gap:10px; text-decoration:none; font-size:15px; padding:14px 24px; border-radius:999px; letter-spacing:-.01em; }
-  .btn.dark { color:#efedea; background:var(--ink); } .btn.dark:hover { background:#000; }
+  .btn.dark { color:#fff; background:var(--accent); } .btn.dark:hover { background:#c83b00; }
   .btn.ghost { color:var(--ink); border:1px solid var(--line2); } .btn.ghost:hover { border-color:var(--ink); }
   section { padding:clamp(52px,7vw,104px) clamp(24px,5vw,72px); }
   .sec-head { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:clamp(36px,4.5vw,60px); }
@@ -84,7 +84,7 @@
   tbody td.rank { color:var(--faint); width:34px; }
   tbody td.score { color:var(--ink); font-weight:500; }
   .tag { font-size:10px; letter-spacing:.08em; text-transform:uppercase; border:1px solid var(--line2); border-radius:999px; padding:3px 9px; color:var(--muted); margin-left:10px; white-space:nowrap; }
-  .tag.prod { background:var(--ink); color:#efedea; border-color:var(--ink); }
+  .tag.prod { background:var(--accent); color:#fff; border-color:var(--accent); }
   .disclosure { font-size:12px; line-height:1.6; color:var(--faint); margin-top:18px; max-width:90ch; }
   .pubs { border-top:1px solid var(--line); }
   .pub { display:grid; grid-template-columns:96px 1fr auto; gap:clamp(16px,3vw,48px); align-items:start; padding:clamp(22px,2.6vw,32px) 0; border-bottom:1px solid var(--line); text-decoration:none; color:inherit; }
@@ -165,7 +165,7 @@
       <a href="#scoring">Scoring</a>
       <a href="#leaderboard">Leaderboard</a>
       <a href="#research">Research</a>
-      <a class="cta" href="https://laudos.ai" target="_blank" rel="noopener">Laudos.AI →</a>
+      <a class="cta" href="https://www.laudos.ai" target="_blank" rel="noopener">Laudos.AI →</a>
     </div>
   </nav>
 
@@ -185,7 +185,7 @@
     <div class="grid" data-reveal>
       <div class="cell"><div class="num">5</div><div class="lbl mono">weighted clinical dimensions</div></div>
       <div class="cell"><div class="num">120</div><div class="lbl mono">controlled pt-BR cases</div></div>
-      <div class="cell"><div class="num">90.0<span class="u">%</span></div><div class="lbl mono">Laudos.AI clinical score</div></div>
+      <div class="cell"><div class="num">90.0<span class="u">%</span></div><div class="lbl mono">controlled fidelity score · not clinical validation</div></div>
       <div class="cell"><div class="num">0</div><div class="lbl mono">prose / aesthetic axes</div></div>
     </div>
   </div>
@@ -212,7 +212,8 @@
         <h2>Leaderboard</h2>
         <span class="idx mono">02 — RESULTS</span>
       </div>
-      <p class="disc-tiny" style="margin:-24px 0 30px">Two governance tiers, never mixed: <b>controlled-eval</b> (gated, first-party, aggregate-only) and <b>public-smoke</b> (synthetic, contaminable, diagnostic baselines — not a ranking). See the <a href="https://github.com/laudos-ai/laibench-public/blob/main/docs/benchmark-cards.md" style="color:var(--muted);text-decoration:underline">benchmark cards</a> for case source, leakage risk, and adjudication status.</p>
+      <p class="disc-tiny" style="margin:-24px 0 12px">Two governance tiers, never mixed: <b>controlled-eval</b> (gated, first-party, aggregate-only) and <b>public-smoke</b> (synthetic, contaminable, diagnostic baselines — not a ranking). See the <a href="https://github.com/laudos-ai/laibench-public/blob/main/docs/benchmark-cards.md" style="color:var(--muted);text-decoration:underline">benchmark cards</a> for case source, leakage risk, and adjudication status.</p>
+      <p id="snapshot-meta" class="disc-tiny" style="margin:0 0 30px">Controlled score snapshot: benchmark v3.10.0 · 120 cases · suite hash b7f412e25a713520… · published 23 June 2026. The evaluation interval is not published; do not read this snapshot as continuous production monitoring.</p>
       <div id="boards"></div>
     </div>
   </section>
@@ -280,7 +281,7 @@
           <div class="col">
             <span class="h mono">Contact</span>
             <a href="mailto:research@laudos.ai">research@laudos.ai</a>
-            <a href="https://laudos.ai" target="_blank" rel="noopener">laudos.ai</a>
+            <a href="https://www.laudos.ai" target="_blank" rel="noopener">www.laudos.ai</a>
           </div>
         </div>
       </div>
@@ -317,7 +318,7 @@
         html += '<div class="board">';
         html += '<h3 style="font-size:20px;font-weight:500;letter-spacing:-.02em;margin:0 0 2px">'+b.title+'</h3>';
         html += '<div class="meta mono"><b>'+(loc.suite||b.key)+'</b> · '+(loc.cases||'?')+' cases · '+(loc.scoring||'')+' · '+b.sub+'</div>';
-        html += '<div class="t-scroll"><table><thead><tr><th class="l">#</th><th class="l">System</th><th>Clinical</th><th>CRIT</th><th>QUAL</th><th>TERM</th><th>GUIDE</th><th>RAG</th><th>Latency</th></tr></thead><tbody>';
+        html += '<div class="t-scroll"><table><thead><tr><th class="l">#</th><th class="l">System</th><th>Fidelity score</th><th>CRIT</th><th>QUAL</th><th>TERM</th><th>GUIDE</th><th>RAG</th><th>Latency</th></tr></thead><tbody>';
         entries.forEach(function(e,i){
           var lat = e.latencyMs!=null ? (Math.round(e.latencyMs/100)/10)+'s' : '—';
           html += '<tr>';

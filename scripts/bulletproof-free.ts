@@ -57,7 +57,7 @@ async function genOne(model: string, c: Case): Promise<Gen> {
     try {
       const res = await fetch(API, {
         method: "POST",
-        headers: { "content-type": "application/json", authorization: `Bearer ${KEY}`, "HTTP-Referer": "https://laudos.ai", "X-Title": "laibench" },
+        headers: { "content-type": "application/json", authorization: `Bearer ${KEY}`, "HTTP-Referer": "https://www.laudos.ai", "X-Title": "laibench" },
         body,
       });
       if (res.ok) {

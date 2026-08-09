@@ -31,7 +31,12 @@ for (let i = 0; i < argv.length; i += 1) {
   }
 }
 
-const data = { generatedAt: null, locales: {} };
+const pkg = JSON.parse(readFileSync("package.json", "utf8"));
+const data = {
+  generatedAt: null,
+  benchmarkVersion: pkg.version,
+  locales: {},
+};
 
 for (const [locale, files] of Object.entries(boards)) {
   const runs = files.map((f) => JSON.parse(readFileSync(f, "utf8")));

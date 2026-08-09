@@ -62,6 +62,42 @@ describe("docs/consistency: no local command runs a cloud-private suite", () => 
     );
   });
 
+  it("public license declarations follow the canonical LICENSE file", () => {
+    const root = process.cwd();
+    const license = readFileSync(join(root, "LICENSE"), "utf8").trim();
+    const siteLicense = readFileSync(join(root, "site", "LICENSE.txt"), "utf8").trim();
+    const readme = readFileSync(join(root, "README.md"), "utf8");
+    const site = readFileSync(join(root, "site", "index.html"), "utf8");
+    const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as { license?: string };
+    const isMit = license.startsWith("MIT License");
+
+    assert.equal(siteLicense, license, "site/LICENSE.txt must be byte-for-byte equivalent to the canonical LICENSE");
+    if (isMit) {
+      assert.equal(pkg.license, "MIT");
+      assert.match(readme, /MIT License/);
+      assert.match(site, /released under the MIT License/);
+    } else {
+      assert.notEqual(pkg.license, "MIT");
+      assert.doesNotMatch(readme, /MIT License|open source/i);
+      assert.doesNotMatch(site, /MIT License|Open source/i);
+    }
+  });
+
+  it("uses the canonical Laudos.AI red-orange token on the public site", () => {
+    const site = readFileSync(join(process.cwd(), "site", "index.html"), "utf8");
+    assert.match(site, /--accent:\s*#E84A0C/i);
+    assert.doesNotMatch(site, /--(?:accent|primary):\s*#(?:F55555|D42800|FF6A3F)/i);
+  });
+
+  it("keeps the public snapshot hash aligned with the generated leaderboard", () => {
+    const root = process.cwd();
+    const data = readFileSync(join(root, "site", "data.js"), "utf8");
+    const site = readFileSync(join(root, "site", "index.html"), "utf8");
+    const match = data.match(/"pt-BR"\s*:\s*\{[\s\S]*?"suiteHash"\s*:\s*"([0-9a-f]{64})"/i);
+    assert.ok(match, "site/data.js must expose the controlled pt-BR suite hash");
+    assert.ok(site.includes(`suite hash ${match[1].slice(0, 16)}…`), "snapshot metadata must display the generated suite hash prefix");
+  });
+
   it("no public doc affirmatively calls the controlled (cloud-private) suite an open/open-download benchmark", () => {
     const root = process.cwd();
     const docFiles: string[] = [];

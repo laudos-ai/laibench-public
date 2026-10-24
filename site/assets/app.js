@@ -633,6 +633,7 @@ function initPilot(p) {
       <td class="big">${fmt1(e.meanScore)}</td>
       <td>${pct(e.passRate)} <span style="color:var(--faint)">(${fmt1(e.passCI[0] * 100)}–${fmt1(e.passCI[1] * 100)})</span></td>
       <td>${pct(e.criticalVetoRate)}</td>
+      <td>${e.medianSeconds != null ? `${fmt1(e.medianSeconds)} s` : "—"}</td>
       <td>${e.cases}</td></tr>`).join("");
   const pairs = p.paired.map((x) => `<tr><td class="l sys">${esc(x.versus)} · ${esc(x.org)}</td><td class="big">+${fmt1(x.lead)}</td><td>${fmt1(x.ci[0])} to ${fmt1(x.ci[1])}</td><td>${x.higher}</td><td>${x.tie}</td><td>${x.lower}</td></tr>`).join("");
   host.innerHTML = `<h3>${esc(p.title)}: ${esc(top.system)} first</h3>
@@ -642,7 +643,7 @@ function initPilot(p) {
       <div><div class="k">Critical veto</div><div class="v">${pct(top.criticalVetoRate)}</div><div class="s">Reports failed by a critical error</div></div>
       <div><div class="k">Smallest paired lead</div><div class="v">+${fmt1(minLead.lead)}</div><div class="s">over ${esc(minLead.versus)}, 95% CI ${fmt1(minLead.ci[0])} to ${fmt1(minLead.ci[1])}</div></div>
     </div>
-    <div class="t-scroll"><table><thead><tr><th class="l">#</th><th class="l">System</th><th>Mean score</th><th>PASS (95% CI)</th><th>Critical veto</th><th>Cases</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="t-scroll"><table><thead><tr><th class="l">#</th><th class="l">System</th><th>Mean score</th><th>PASS (95% CI)</th><th>Critical veto</th><th>Generation time</th><th>Cases</th></tr></thead><tbody>${rows}</tbody></table></div>
     <h4>${esc(top.system)} against each model on the same cases</h4>
     <div class="t-scroll"><table><thead><tr><th class="l">Model</th><th>Mean lead</th><th>95% CI</th><th>${esc(top.system)} higher</th><th>Tie</th><th>Lower</th></tr></thead><tbody>${pairs}</tbody></table></div>
     <p class="disclosure">${esc(p.method)} ${esc(p.scoring)} ${esc(p.disclosure)}</p>`;

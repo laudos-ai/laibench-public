@@ -90,6 +90,13 @@ regression test (`src/evaluators/review-v311.test.ts`).
   "Pneumotórax não identificado".
 - Linear-time analysis: a 36k-character single-sentence report scores in
   milliseconds (was quadratic).
+- **Correct radiology read as a fabrication** (found by a private pt-BR pilot):
+  a hyperattenuating extra-axial / subdural / epidural collection is now an
+  acute-bleed anchor, so a report that names it "hematoma subdural agudo" is not
+  a fabricated critical (and omitting it is a missed one); the anatomical
+  "raízes da cauda equina" / "cauda equina nerve roots" is no longer read as the
+  cauda equina syndrome; pt-BR "contexto de paciente" and plural "sintéticos"
+  harness lines are not abnormal findings.
 
 ### Provenance
 - `src/evaluators/source-critical.ts`, `src/evaluators/source-findings.ts` and
@@ -108,7 +115,7 @@ regression test (`src/evaluators/review-v311.test.ts`).
   public discrimination ladder. Under v3.11.0 every critical rung (denied,
   omitted, fabricated, null report) is vetoed in 100% of applicable cases and no
   faithful reference report is vetoed.
-- Tests: 496 → 634 (source-critical gate, list negation in both locales,
+- Tests: 496 → 642 (source-critical gate, list negation in both locales,
   gold-path isolation, 20 frozen paraphrased correct reports, region map,
   adversarial-review regressions, browser-bundle parity).
 

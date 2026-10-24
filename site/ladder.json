@@ -44,7 +44,7 @@
    "meanScore": 72.3,
    "passRate": 27.3,
    "failRate": 54.5,
-   "criticalVetoRate": 45.5,
+   "criticalVetoRate": 54.5,
    "meanDrop": 18.9,
    "detectedRate": 81.8
   },
@@ -92,12 +92,12 @@
    "label": "Critical fabricated",
    "description": "A plausible critical finding the input never states is added.",
    "critical": true,
-   "n": 35,
+   "n": 33,
    "meanScore": 59.9,
    "passRate": 0,
    "failRate": 100,
    "criticalVetoRate": 100,
-   "meanDrop": 30.9,
+   "meanDrop": 31.6,
    "detectedRate": 100
   },
   {
@@ -176,6 +176,8 @@
       "deterministic critical failure"
      ],
      "failedCritical": [
+      "C09",
+      "C10",
       "R02"
      ]
     },
@@ -207,18 +209,7 @@
       "R02"
      ]
     },
-    "L6": {
-     "score": 59.9,
-     "verdict": "FAIL",
-     "criticalVeto": true,
-     "gateReasons": [
-      "severity cap: critical failure",
-      "deterministic critical failure"
-     ],
-     "failedCritical": [
-      "C10"
-     ]
-    },
+    "L6": null,
     "L7": {
      "score": 59.9,
      "verdict": "FAIL",
@@ -846,11 +837,14 @@
     "L2": {
      "score": 59.9,
      "verdict": "FAIL",
-     "criticalVeto": false,
+     "criticalVeto": true,
      "gateReasons": [
-      "severity cap: severe failure weight 10"
+      "severity cap: critical failure",
+      "deterministic critical failure"
      ],
-     "failedCritical": []
+     "failedCritical": [
+      "C09"
+     ]
     },
     "L3": {
      "score": 59.9,
@@ -866,18 +860,7 @@
     },
     "L4": null,
     "L5": null,
-    "L6": {
-     "score": 59.9,
-     "verdict": "FAIL",
-     "criticalVeto": true,
-     "gateReasons": [
-      "severity cap: critical failure",
-      "deterministic critical failure"
-     ],
-     "failedCritical": [
-      "C10"
-     ]
-    },
+    "L6": null,
     "L7": {
      "score": 59.9,
      "verdict": "FAIL",
@@ -887,6 +870,7 @@
       "deterministic critical failure"
      ],
      "failedCritical": [
+      "C09",
       "Q17",
       "R02"
      ]

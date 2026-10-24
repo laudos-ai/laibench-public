@@ -33,7 +33,7 @@ import { clinicalReportBody } from "./source-critical.js";
 
 // Harness / context lines are not findings: the public synthetic cases carry
 // "Synthetic text for ... testing" and "High-risk patient context" sentences.
-const HARNESS_RX = /\b(?:synthetic|harness|for testing|testing\b|texto sintetico|sintetic[oa]|in the example|for the example|patient context|clinical context|contexto clinico)\b/;
+const HARNESS_RX = /\b(?:synthetic|harness|for testing|testing\b|texto sintetico|sintetic[oa]s?|in the example|for the example|patient context|clinical context|contexto clinico|contexto\s+d[eo]\s+paciente)\b/;
 // Indications, questions and resolved/old findings are not current abnormal findings.
 const NOT_A_FINDING_RX: Record<LocaleKey, RegExp> = {
   "en-US": /\b(?:clinical\s+(?:indication|question|history)|indication|history\s+of|rule\s+out|r\/o|evaluate\s+for|to\s+exclude|has\s+resolved|resolved|no\s+longer)\b/,

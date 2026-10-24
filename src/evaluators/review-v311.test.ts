@@ -289,3 +289,38 @@ describe("ladder audit: postfix negation is a normal statement, not a finding", 
     assert.equal(r.verdict, "FAIL");
   });
 });
+
+describe("pilot audit: correct radiology read as fabrication or as a finding", () => {
+  it("the anatomical cauda equina is not the cauda equina syndrome", () => {
+    assert.deepEqual(sourceCriticalAnchors("Raízes da cauda equina com distribuição normal.", "pt-BR"), []);
+    assert.deepEqual(sourceCriticalAnchors("Cauda equina nerve roots are normal in distribution.", "en-US"), []);
+    assert.ok(sourceCriticalAnchors("Volumosa extrusão discal com compressão das raízes da cauda equina.", "pt-BR").some((a) => a.category === "cauda-equina"));
+    assert.ok(sourceCriticalAnchors("Large central extrusion causing cauda equina compression.", "en-US").some((a) => a.category === "cauda-equina"));
+  });
+  it("a normal lumbar MRI that names the cauda equina roots is not a fabrication", () => {
+    const out = evaluateSourceCriticals("<b>Análise</b><br>Cone medular tópico.<br>Raízes da cauda equina com distribuição normal.<br><br><b>Conclusão</b><br>Coluna lombar sem alterações.", "Exame normal. Sem hérnia discal.", "pt-BR");
+    assert.equal(out.fabricated.length, 0, JSON.stringify(out.fabricated));
+  });
+  for (const [findings, report, locale] of [
+    ["Pequena coleção extra-axial hiperatenuante frontoparietal direita, com discreto efeito de massa local.", "<b>Análise</b><br>Pequena coleção extra-axial hiperatenuante frontoparietal direita, com discreto efeito de massa local.<br><br><b>Conclusão</b><br>Achado compatível com hematoma subdural agudo frontoparietal direito.", "pt-BR"],
+    ["Fina coleção subdural hiperatenuante de 5 mm ao longo da foice cerebral.", "<b>Análise</b><br>Fina coleção subdural hiperatenuante ao longo da foice.<br><br><b>Conclusão</b><br>Hematoma subdural inter-hemisférico agudo.", "pt-BR"],
+    ["Small right frontoparietal hyperattenuating extra-axial collection, with mild local mass effect.", "<b>Findings</b><br>Small right frontoparietal hyperattenuating extra-axial collection, with mild local mass effect.<br><br><b>Impression</b><br>Acute right subdural hematoma.", "en-US"],
+  ] as Array<[string, string, LocaleKey]>) {
+    it(`naming a hyperattenuating extra-axial collection a hematoma is not a fabrication (${locale})`, () => {
+      const out = evaluateSourceCriticals(report, findings, locale);
+      assert.equal(out.fabricated.length, 0, JSON.stringify(out.fabricated));
+      assert.equal(out.missed.length, 0, JSON.stringify(out.outcomes));
+    });
+  }
+  it("omitting the hyperattenuating subdural collection is a missed critical", () => {
+    const out = evaluateSourceCriticals("<b>Análise</b><br>Infarto lacunar antigo na coroa radiada esquerda.<br><br><b>Conclusão</b><br>Infarto lacunar crônico.", "Fina coleção subdural hiperatenuante de 5 mm ao longo da foice cerebral. Infarto lacunar antigo na coroa radiada esquerda.", "pt-BR");
+    assert.ok(out.missed.length > 0, JSON.stringify(out.outcomes));
+  });
+  it("a hypoattenuating (chronic) collection is not an acute bleed", () => {
+    assert.deepEqual(sourceCriticalAnchors("Coleção subdural hipoatenuante laminar à direita, crônica.", "pt-BR").map((a) => a.category), []);
+  });
+  it("patient context and synthetic-harness lines are not abnormal findings (pt-BR)", () => {
+    assert.deepEqual(abnormalInputClauses("Contexto de paciente de alto risco.", "pt-BR"), []);
+    assert.deepEqual(abnormalInputClauses("Achados sintéticos classificados como categoria BI-RADS 4.", "pt-BR"), []);
+  });
+});

@@ -31,7 +31,7 @@ Disallowed: *clinical-grade · validated (without external adjudication) · open
 | Allowed use | Install checks, CI smoke, harness inspection, open-model *diagnostic baselines* |
 | Disallowed claims | Ranking, clinical validation, "open benchmark" as evidence of capability |
 | Suite hash | `013cfb0d91d7ec0aca31ed5e6748c0e851d060cfaa52fb7c1274aeed46ce6d5c` |
-| Scoring hash | `0075296b735332d404366c13e478739cc61732949d94c164670c133471600816` (v3.11.0; recomputed by `site/provenance.json` and the website's Verify section) |
+| Scoring hash | `1a87f81570ce17fe4bbdf821f7d1ca9b9b1d425c3188000d80fb49ccdce9a565` (v3.11.0; recomputed by `site/provenance.json` and the website's Verify section) |
 | Adjudication status | None (synthetic) |
 
 ## Card — `controlled-eval.pt-BR`  (suite id: `lite-public.pt-BR`)
@@ -48,7 +48,7 @@ Disallowed: *clinical-grade · validated (without external adjudication) · open
 | Allowed use | First-party aggregate results locked to this suite hash + case count, with disclosure |
 | Disallowed claims | "Open benchmark", "clinically validated", external-validation language |
 | Suite hash | `b7f412e25a71352072d525c9bee9d7630818eb09996d172e9c2664224d7b2217` |
-| Scoring hash | `0075296b735332d404366c13e478739cc61732949d94c164670c133471600816` (v3.11.0 scorer). The published controlled result was scored with v3.10.0 and must be re-run before it is cited under v3.11.0. |
+| Scoring hash | `1a87f81570ce17fe4bbdf821f7d1ca9b9b1d425c3188000d80fb49ccdce9a565` (v3.11.0 scorer). The published controlled result was scored with v3.10.0 and must be re-run before it is cited under v3.11.0. |
 | Adjudication status | **Internal review only.** External inter-rater adjudication (2–3 radiologists, locked subset, κ/α, external reviewer) is *pending* — tracked as research "em andamento". |
 
 ---

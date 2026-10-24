@@ -121,7 +121,7 @@ function perturb(rung: string, findings: string, region: string): string | null 
     case "L6": {
       const fab: Record<string, [RegExp, string]> = {
         chest: [/pneumothorax/i, "Small right apical pneumothorax."],
-        head: [/hematoma|hemorrhag/i, "Small acute subdural hematoma along the right convexity."],
+        head: [/hematoma|hemorrhag|(?:hyperattenuating|hyperdense)\s+(?:\S+\s+){0,2}?(?:extra-?axial|subdural|epidural)\s+collection/i, "Small acute subdural hematoma along the right convexity."],
         abdomen: [/free\s+(?:intraperitoneal\s+)?air|pneumoperitoneum|perforation/i, "Small volume of free intraperitoneal air."],
         pelvis: [/free\s+(?:intraperitoneal\s+)?air|pneumoperitoneum|perforation/i, "Small volume of free intraperitoneal air."],
         spine: [/fracture/i, "Acute compression fracture of the L1 vertebral body."],

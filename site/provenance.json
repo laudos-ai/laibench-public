@@ -1,0 +1,102 @@
+{
+ "benchmarkVersion": "3.11.0",
+ "scoringHash": "81c88e64f49fed746ca87d25a498fb4e7a862571a496068bc5d706fdf0d5025f",
+ "scoringFiles": [
+  {
+   "path": "src/benchmark.ts",
+   "sha256": "ff3e0af406d2e881e5f0aa9a8f90d013ee6225e6c363a957ebbda22a728375b1"
+  },
+  {
+   "path": "src/checks.ts",
+   "sha256": "cad29dd2b9c578e6bc8a173bfe428bc60f4817a07c4e252090b73126ee670d7d"
+  },
+  {
+   "path": "src/classify.ts",
+   "sha256": "f86ddc0e828bf50936912e3a30dff1176fc78a32e88b3ea01aace3780aeed95f"
+  },
+  {
+   "path": "src/clinical-match.ts",
+   "sha256": "f21009b9f85e7a3b8a302cb77dfddee8b5a141049f5016efdb5b412c576a2867"
+  },
+  {
+   "path": "src/evaluators/crit.ts",
+   "sha256": "5f8040fa7e6f67a45d61c5a13540f00aad30e509bc23848cbbcdd6e9e57d69c6"
+  },
+  {
+   "path": "src/evaluators/guide.ts",
+   "sha256": "79c8e05c65b51e5d1e63173fbff81846601eb317fbe6ecad410c97770bd10fca"
+  },
+  {
+   "path": "src/evaluators/qual.ts",
+   "sha256": "731baf2bc3d80c99d9d1a41b39c9deeceebcc3569b9890de1a3c53af99e4d2a6"
+  },
+  {
+   "path": "src/evaluators/rag.ts",
+   "sha256": "c88a37c3a673dda81768760e55f042eb5a7341d86b72960edbdaa01ab0468fdb"
+  },
+  {
+   "path": "src/evaluators/source-critical.ts",
+   "sha256": "414b6797c68d6e38501c6fc624c4242754253eed74b47fc7b4c296ce0b3184d4"
+  },
+  {
+   "path": "src/evaluators/source-findings.ts",
+   "sha256": "483f97b7bd53288263651061ff96e88316b3309155c158ffbcb9db6ce0050c39"
+  },
+  {
+   "path": "src/evaluators/structural.ts",
+   "sha256": "a3ec1249cfe2f1b08ad11a386b631013c911e26b5ffec025d8801d2a895dfe3d"
+  },
+  {
+   "path": "src/extract.ts",
+   "sha256": "d94d777aba6ab3b33a9207682aafbd039f67652b269a1e074f70e22d4abf2ac1"
+  },
+  {
+   "path": "src/extractors/critical-extractor.ts",
+   "sha256": "a7c23054149ddebaaead6abde6a91283036140b71bdb6b1cb65a5bd86b2c5f20"
+  },
+  {
+   "path": "src/judge.ts",
+   "sha256": "eb8cc6efbc9126d27b337c580e9deede1e7800b2ca6fe2b97160ac24733841f2"
+  },
+  {
+   "path": "src/locales/en-US.ts",
+   "sha256": "03534d75346895ce482e325bae7b4411719a514e87310966aaaba85eb3b8b164"
+  },
+  {
+   "path": "src/locales/index.ts",
+   "sha256": "ea1680834da7c8d1ed473e03cf27f3b6674f9289f458d1f143f416d861d34801"
+  },
+  {
+   "path": "src/locales/pt-BR.ts",
+   "sha256": "1093623fea8e11cf9172bf59bd999c0075276270da48d88be7a1075dcfd1cfdb"
+  },
+  {
+   "path": "src/locales/types.ts",
+   "sha256": "7e4f022f49ba761c3a088071ad93f8ce8b746fb34ef42ba0c6a3c6e846a1c42e"
+  },
+  {
+   "path": "src/normalize.ts",
+   "sha256": "88486b5c1bc37a88a573fa0ea0f17f44d7105c2b3a3c1c0db30a6e15027a0a92"
+  },
+  {
+   "path": "src/policies.ts",
+   "sha256": "c010967eccdbfd0c65c9c5ca6391d7c3649927b89b8976760224ce7fb14a5017"
+  },
+  {
+   "path": "src/sanitize.ts",
+   "sha256": "c1242fda537577fe354fae26d71b40f4923878f1ba1f0552e6d60d233f88c4a5"
+  },
+  {
+   "path": "src/scoring.ts",
+   "sha256": "06a826e5d53e1c648731643202570dc29691fd0d066b993db05e318a9cd40589"
+  }
+ ],
+ "suites": [
+  {
+   "suiteId": "lite-public.en-US",
+   "locale": "en-US",
+   "caseCount": 49,
+   "suiteHash": "013cfb0d91d7ec0aca31ed5e6748c0e851d060cfaa52fb7c1274aeed46ce6d5c"
+  }
+ ]
+}

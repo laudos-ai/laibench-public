@@ -23,7 +23,8 @@
     "guard:private": "tsx src/release-guard.ts --mode private",
     "guard:public": "tsx src/release-guard.ts --mode public",
     "laibench:validate-adjudication": "tsx src/adjudication.ts",
-    "test": "node scripts/run-tests.mjs"
+    "test": "node scripts/run-tests.mjs",
+    "site:build": "tsx scripts/build-site.mjs"
   },
   "engines": {
     "node": ">=20",

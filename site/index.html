@@ -4,362 +4,623 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>LAIBench — Laudos.AI Research</title>
-<meta name="description" content="LAIBench: a governance-oriented benchmark for AI-assisted radiology report generation, by Laudos.AI Research. Hard critical-finding gate, no prose/aesthetic axis." />
+<meta name="description" content="LAIBench scores AI-written radiology reports on clinical substance — critical findings, laterality, omissions and invented findings — not on prose. Try the real scorer in your browser." />
 <link rel="canonical" href="https://laibench.laudos.ai/" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="LAIBench — Laudos.AI Research" />
-<meta property="og:title" content="LAIBench — Laudos.AI Research" />
-<meta property="og:description" content="A governance-oriented benchmark for AI radiology reports. Hard critical-finding gate, no aesthetic axis." />
+<meta property="og:title" content="LAIBench: a beautiful report that misses a pneumothorax should fail" />
+<meta property="og:description" content="A benchmark for AI radiology reports that scores clinical substance, not prose. Run the real scorer in your browser." />
 <meta property="og:url" content="https://laibench.laudos.ai/" />
-<meta property="og:image" content="https://laibench.laudos.ai/laudos-research-logo.png" />
+<meta property="og:image" content="https://laibench.laudos.ai/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:image" content="https://laibench.laudos.ai/laudos-research-logo.png" />
+<meta name="twitter:image" content="https://laibench.laudos.ai/og.png" />
+<meta name="theme-color" content="#F2F5F7" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#0F171D" media="(prefers-color-scheme: dark)" />
+<link rel="icon" href="laudos-research-logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet" />
 <style>
+  /* ---------- tokens: lightbox (light) / reading room (dark) ---------- */
+  :root {
+    --bg: #F2F5F7; --film: #E2E8ED; --film-2: #D3DBE2; --paper: #FFFFFF;
+    --ink: #13202A; --ink-2: #3E4D59; --slate: #5A6A77; --faint: #7F8E99; --line: #CDD6DD; --line-2: #B9C4CC;
+    --red: #D0243C; --red-wash: rgba(208, 36, 60, .07); --pass: #12875A; --partial: #B98B00;
+    --chart: #FFFFFF; --grid: #E3E9ED;
+    --sans: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+    --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --gutter: clamp(16px, 4vw, 56px);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0F171D; --film: #141E26; --film-2: #1C2833; --paper: #18232C;
+      --ink: #E4EBF0; --ink-2: #B9C6CF; --slate: #8C9CA8; --faint: #6E7F8A; --line: #26333E; --line-2: #34434F;
+      --red: #E84D82; --red-wash: rgba(232, 77, 130, .10); --pass: #2A9C7C; --partial: #B8890C;
+      --chart: #141E26; --grid: #22303A;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0F171D; --film: #141E26; --film-2: #1C2833; --paper: #18232C;
+    --ink: #E4EBF0; --ink-2: #B9C6CF; --slate: #8C9CA8; --faint: #6E7F8A; --line: #26333E; --line-2: #34434F;
+    --red: #E84D82; --red-wash: rgba(232, 77, 130, .10); --pass: #2A9C7C; --partial: #B8890C;
+    --chart: #141E26; --grid: #22303A;
+    color-scheme: dark;
+  }
+
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
-  :root{
-    --bg:#efedea; --ink:#1a1a1a; --ink2:#4d4a46; --muted:#57544f; --faint:#8a8782;
-    --line:#ddd9d3; --line2:#cbc7c0; --panel:#e8e5e0; --dark:#1a1a1a; --teal:#10866f;
-  }
-  body { background: var(--bg); color: var(--ink); font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
-  ::selection { background:#1a1a1a; color:#efedea; }
-  a { color:inherit; }
-  .mono { font-family:ui-monospace,'SF Mono',Menlo,monospace; }
-  .wrap { max-width:1180px; margin:0 auto; }
-  .logo { position:relative; border-radius:50%; overflow:hidden; flex:none;
-    background:conic-gradient(#161616 0 90deg,#6e6e6e 90deg 180deg,#9c9c9c 180deg 270deg,#3c3c3c 270deg 360deg); }
-  .logo::before { content:''; position:absolute; left:calc(50% - .6px); top:0; width:1.2px; height:100%; background:var(--bg); }
-  .logo::after { content:''; position:absolute; top:calc(50% - .6px); left:0; height:1.2px; width:100%; background:var(--bg); }
-  nav { position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between;
-    padding:18px clamp(24px,5vw,72px); background:rgba(239,237,234,.82);
-    backdrop-filter:saturate(140%) blur(12px); -webkit-backdrop-filter:saturate(140%) blur(12px); border-bottom:1px solid var(--line); }
-  nav .brand { display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit; }
-  nav .word { font-size:17px; font-weight:500; letter-spacing:-.02em; }
-  nav .word .ai { color:var(--faint); }
-  nav .rsrch { font-size:10px; letter-spacing:.28em; color:var(--faint); font-weight:500; padding-left:10px; border-left:1px solid #d4d0ca; }
-  nav .links { display:flex; align-items:center; gap:clamp(16px,2.4vw,34px); }
-  nav .links a { text-decoration:none; color:var(--muted); font-size:14px; letter-spacing:-.01em; }
-  nav .links a:hover { color:var(--ink); }
-  nav .cta { display:inline-flex; align-items:center; gap:8px; color:#efedea!important; background:var(--ink); font-size:13px; padding:9px 16px; border-radius:999px; }
-  nav .cta:hover { background:#000; }
-  header { padding:clamp(64px,11vw,150px) clamp(24px,5vw,72px) clamp(40px,6vw,80px); }
-  .eyebrow { display:flex; align-items:center; gap:12px; margin-bottom:34px; }
-  .eyebrow .dot { width:7px; height:7px; border-radius:50%; background:var(--ink); }
-  .eyebrow span { font-size:12px; letter-spacing:.14em; color:#6f6c68; text-transform:uppercase; }
-  h1 { font-size:clamp(40px,7vw,92px); line-height:.96; letter-spacing:-.04em; font-weight:500; margin:0; }
-  .lede { font-size:clamp(17px,1.5vw,21px); line-height:1.55; color:var(--ink2); max-width:60ch; margin:30px 0 0; }
-  .actions { display:flex; flex-wrap:wrap; gap:14px; margin-top:42px; }
-  .btn { display:inline-flex; align-items:center; gap:10px; text-decoration:none; font-size:15px; padding:14px 24px; border-radius:999px; letter-spacing:-.01em; }
-  .btn.dark { color:#efedea; background:var(--ink); } .btn.dark:hover { background:#000; }
-  .btn.ghost { color:var(--ink); border:1px solid var(--line2); } .btn.ghost:hover { border-color:var(--ink); }
-  section { padding:clamp(52px,7vw,104px) clamp(24px,5vw,72px); }
-  .sec-head { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:clamp(36px,4.5vw,60px); }
-  .sec-head h2 { font-size:clamp(26px,3.4vw,42px); letter-spacing:-.03em; font-weight:500; margin:0; max-width:18ch; }
-  .sec-head .idx { font-size:12px; color:var(--faint); letter-spacing:.06em; }
-  .stats { padding:0 clamp(24px,5vw,72px) clamp(44px,6vw,90px); }
-  .stats .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); border-top:1px solid var(--line); }
-  .stats .cell { padding:30px 28px; border-right:1px solid var(--line); }
-  .stats .cell:first-child { padding-left:0; } .stats .cell:last-child { border-right:none; padding-right:0; }
-  .stats .num { font-size:clamp(34px,4vw,52px); letter-spacing:-.04em; font-weight:500; }
-  .stats .num .u { font-size:.5em; color:var(--faint); }
-  .stats .lbl { font-size:12px; color:#6f6c68; margin-top:8px; letter-spacing:.02em; }
-  .panel { background:var(--panel); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
-  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(248px,1fr)); gap:1px; background:#d6d2cc; border:1px solid #d6d2cc; }
-  .card { background:var(--bg); padding:clamp(26px,3vw,38px); min-height:230px; display:flex; flex-direction:column; }
-  .card:hover { background:#f4f2ef; }
-  .card .n { font-size:12px; color:var(--faint); }
-  .card .sw { margin:24px 0 0; width:28px; height:28px; border-radius:50%; }
-  .card h3 { font-size:21px; letter-spacing:-.02em; font-weight:500; margin:20px 0 0; line-height:1.15; }
-  .card p { font-size:14.5px; line-height:1.55; color:var(--muted); margin:11px 0 0; }
-  .board { margin-top:8px; }
-  .board + .board { margin-top:clamp(40px,5vw,64px); }
-  .board .meta { font-size:12px; color:var(--faint); margin:2px 0 16px; letter-spacing:.01em; }
-  .board .meta b { color:var(--muted); font-weight:500; }
-  table { width:100%; border-collapse:collapse; font-size:14px; }
-  thead th { text-align:right; font-weight:500; color:var(--faint); font-size:11px; letter-spacing:.06em; text-transform:uppercase; padding:0 0 12px; border-bottom:1px solid var(--line); }
-  thead th.l { text-align:left; }
-  tbody td { text-align:right; padding:15px 0; border-bottom:1px solid var(--line); color:var(--ink2); font-variant-numeric:tabular-nums; }
-  tbody td.l { text-align:left; }
-  tbody td.sys { color:var(--ink); font-weight:500; letter-spacing:-.01em; }
-  tbody td.rank { color:var(--faint); width:34px; }
-  tbody td.score { color:var(--ink); font-weight:500; }
-  .tag { font-size:10px; letter-spacing:.08em; text-transform:uppercase; border:1px solid var(--line2); border-radius:999px; padding:3px 9px; color:var(--muted); margin-left:10px; white-space:nowrap; }
-  .tag.prod { background:var(--ink); color:#efedea; border-color:var(--ink); }
-  .disclosure { font-size:12px; line-height:1.6; color:var(--faint); margin-top:18px; max-width:90ch; }
-  .pubs { border-top:1px solid var(--line); }
-  .pub { display:grid; grid-template-columns:96px 1fr auto; gap:clamp(16px,3vw,48px); align-items:start; padding:clamp(22px,2.6vw,32px) 0; border-bottom:1px solid var(--line); text-decoration:none; color:inherit; }
-  .pub:hover { background:linear-gradient(90deg,var(--panel),transparent); }
-  .pub .yr { font-size:13px; color:var(--faint); padding-top:4px; }
-  .pub h3 { font-size:clamp(18px,2vw,23px); letter-spacing:-.02em; font-weight:500; margin:0; line-height:1.22; max-width:44ch; }
-  .pub .auth { font-size:14px; color:#6f6c68; margin-top:9px; }
-  .pub .venue { font-size:11px; letter-spacing:.08em; color:var(--muted); text-transform:uppercase; border:1px solid var(--line2); border-radius:999px; padding:6px 12px; white-space:nowrap; align-self:center; }
-  .pub .venue.wip { background:var(--panel); }
-  .quote { border-bottom:1px solid var(--line); }
-  .quote .k { font-size:12px; letter-spacing:.16em; color:var(--faint); text-transform:uppercase; }
-  .quote p { font-size:clamp(24px,3.6vw,44px); line-height:1.2; letter-spacing:-.03em; font-weight:500; margin:26px 0 0; max-width:30ch; }
-  footer { padding:clamp(44px,6vw,76px) clamp(24px,5vw,72px) 40px; }
-  footer .top { display:flex; flex-wrap:wrap; justify-content:space-between; gap:32px; align-items:flex-start; }
-  footer .cols { display:flex; gap:clamp(40px,6vw,90px); flex-wrap:wrap; }
-  footer .col { display:flex; flex-direction:column; gap:12px; }
-  footer .col .h { font-size:11px; letter-spacing:.1em; color:var(--faint); text-transform:uppercase; }
-  footer .col a { text-decoration:none; color:var(--muted); font-size:14px; } footer .col a:hover { color:var(--ink); }
-  footer .legal { display:flex; flex-wrap:wrap; justify-content:space-between; gap:16px; margin-top:clamp(44px,6vw,76px); padding-top:24px; border-top:1px solid var(--line); }
-  footer .legal span { font-size:13px; color:var(--faint); }
-  .disc-tiny { font-size:11px; color:var(--faint); margin-top:14px; max-width:80ch; line-height:1.6; }
-  [data-reveal]{ opacity:0; transform:translateY(18px); transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1); }
-  [data-reveal].in{ opacity:1; transform:none; }
-  @media (prefers-reduced-motion: reduce){ [data-reveal]{ opacity:1; transform:none; transition:none; } html{ scroll-behavior:auto; } }
+  html { -webkit-text-size-adjust: 100%; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 400 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  a { color: inherit; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  a:hover { color: var(--ink); }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+  ::selection { background: var(--ink); color: var(--bg); }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 var(--gutter); }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  code, .mono { font-family: var(--mono); font-size: .86em; }
+  button { font: inherit; color: inherit; }
 
-  /* Lenis smooth scroll (desktop wheel; native scroll on touch) */
-  html.lenis,html.lenis body{ height:auto; }
-  .lenis.lenis-smooth{ scroll-behavior:auto !important; }
-  .lenis.lenis-smooth [data-lenis-prevent]{ overscroll-behavior:contain; }
-  .lenis.lenis-stopped{ overflow:hidden; }
-  .lenis.lenis-smooth iframe{ pointer-events:none; }
+  /* ---------- header ---------- */
+  .top { position: sticky; top: 0; z-index: 40; background: color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter: saturate(140%) blur(12px); -webkit-backdrop-filter: saturate(140%) blur(12px); border-bottom: 1px solid var(--line); }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 20px; height: 60px; }
+  .brand { display: flex; align-items: center; gap: 11px; text-decoration: none; }
+  .logo { position: relative; width: 24px; height: 24px; border-radius: 50%; overflow: hidden; flex: none;
+    background: conic-gradient(var(--ink) 0 90deg, #6e6e6e 90deg 180deg, #9c9c9c 180deg 270deg, #3c3c3c 270deg 360deg); }
+  .logo::before, .logo::after { content: ""; position: absolute; background: var(--bg); }
+  .logo::before { left: calc(50% - .6px); top: 0; width: 1.2px; height: 100%; }
+  .logo::after { top: calc(50% - .6px); left: 0; height: 1.2px; width: 100%; }
+  .brand .wm { font-weight: 600; letter-spacing: -.02em; font-size: 17px; }
+  .brand .wm span { color: var(--faint); font-weight: 500; }
+  .brand .sub { color: var(--slate); font-size: 14px; padding-left: 11px; border-left: 1px solid var(--line-2); }
+  .nav { display: flex; align-items: center; gap: clamp(12px, 1.8vw, 26px); }
+  .nav a { text-decoration: none; color: var(--slate); font-size: 15px; }
+  .nav a:hover { color: var(--ink); }
+  .nav .gh { color: var(--ink); font-weight: 500; }
+  .iconbtn { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: transparent; cursor: pointer; color: var(--slate); }
+  .iconbtn:hover { color: var(--ink); border-color: var(--line-2); }
+  .iconbtn svg { width: 16px; height: 16px; }
 
-  /* Leaderboard table: never break the layout — scroll horizontally on narrow screens */
-  .t-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain; }
-  .t-scroll table{ min-width:600px; }
+  /* ---------- hero: the pneumothorax test ---------- */
+  .hero { padding: clamp(36px, 5.5vw, 72px) 0 clamp(40px, 6vw, 80px); }
+  .hero h1 { margin: 0; font-weight: 600; letter-spacing: -.034em; line-height: 1.04; font-size: clamp(34px, 4.6vw, 62px); max-width: 19em; text-wrap: balance; }
+  .hero h1 .second { display: block; color: var(--slate); font-weight: 500; }
+  .lede { margin: 22px 0 0; max-width: 64ch; font-size: clamp(17px, 1.45vw, 20px); color: var(--ink-2); }
+  .requisition { margin-top: clamp(26px, 3vw, 40px); display: grid; grid-template-columns: auto 1fr; gap: 6px 22px; padding: 18px 22px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--film); max-width: 920px; }
+  .requisition dt { color: var(--slate); font-size: 14px; padding-top: 2px; }
+  .requisition dd { margin: 0; font-family: var(--serif); font-size: 17px; }
+  .duel { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .sheet { position: relative; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 1px 0 var(--line), 0 18px 40px -28px rgba(19, 32, 42, .35); display: flex; flex-direction: column; min-width: 0; }
+  .sheet-head { padding: 16px 20px 0; }
+  .sheet-head h3 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -.01em; }
+  .sheet-head p { margin: 2px 0 0; color: var(--slate); font-size: 14px; }
+  .sheet-body { padding: 14px 20px 18px; flex: 1; }
+  .sheet-foot { border-top: 1px solid var(--line); padding: 16px 20px 18px; display: grid; grid-template-columns: auto 1fr; gap: 6px 22px; align-items: center; }
+  .hero-note { margin: 22px 0 0; color: var(--slate); font-size: 15px; max-width: 70ch; }
+  .actions { margin-top: 22px; display: flex; flex-wrap: wrap; gap: 12px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 15px; font-weight: 500; padding: 11px 18px; border-radius: 999px; border: 1px solid var(--line-2); background: transparent; cursor: pointer; }
+  .btn:hover { border-color: var(--ink); }
+  .btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .btn.primary:hover { color: var(--bg); opacity: .9; }
 
-  /* ---------- Responsive / mobile-first ---------- */
-  @media (max-width:900px){
-    .stats .grid{ grid-template-columns:repeat(2,1fr); }
-    .stats .cell{ padding:24px 22px; border-bottom:1px solid var(--line); }
-    .stats .cell:nth-child(odd){ padding-left:0; }
-    .stats .cell:nth-child(2n){ border-right:none; padding-right:0; }
-    .stats .cell:nth-last-child(-n+2){ border-bottom:none; }
+  /* ---------- report specimen (serif, printed-report feel) ---------- */
+  .report { font-family: var(--serif); font-size: 16px; line-height: 1.62; color: var(--ink); overflow-wrap: anywhere; }
+  .report .ttl { text-align: center; font-weight: 600; letter-spacing: .02em; margin-bottom: 10px; font-size: 15px; }
+  .report .sec { font-family: var(--sans); font-weight: 600; font-size: 13.5px; color: var(--slate); margin-top: 12px; }
+  .report .ln { margin: 0; }
+  .report .note { display: block; margin: 6px 0 2px; padding-left: 12px; border-left: 2px solid var(--red); color: var(--red); font-family: var(--sans); font-size: 14px; line-height: 1.45; }
+  .report .note.minor { border-color: var(--partial); color: var(--ink-2); }
+  .report .note b { font-weight: 600; }
+  /* grease-pencil marks */
+  .mk { position: relative; border-radius: 3px; }
+  .mk-strike { text-decoration: line-through; text-decoration-color: var(--red); text-decoration-thickness: 2px; background: var(--red-wash); }
+  .mk-deny { text-decoration: underline wavy var(--red); text-decoration-thickness: 1.5px; text-underline-offset: 4px; background: var(--red-wash); }
+  .mk-wave { text-decoration: underline wavy var(--partial); text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+  .mk-circle { padding: 0 2px; }
+  .mk-circle::after { content: ""; position: absolute; inset: -5px -7px -4px -7px; pointer-events: none; background: var(--red);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40' preserveAspectRatio='none'%3E%3Cpath d='M58 4C33 2 6 7 4 19c-2 12 24 18 50 17 26-1 43-8 42-18C95 8 72 3 46 5' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40' preserveAspectRatio='none'%3E%3Cpath d='M58 4C33 2 6 7 4 19c-2 12 24 18 50 17 26-1 43-8 42-18C95 8 72 3 46 5' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
+  .caret { color: var(--red); font-family: var(--sans); font-weight: 700; margin: 0 1px; }
+  .ok-mark { color: var(--pass); font-family: var(--sans); font-weight: 700; margin-left: 4px; font-size: .9em; }
+
+  /* ---------- verdict + score ---------- */
+  .stamp { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 86px; padding: 6px 12px 7px; border: 2.5px solid currentColor; border-radius: 6px; transform: rotate(-4deg); font-family: var(--sans); line-height: 1; }
+  .stamp b { font-size: 22px; letter-spacing: .06em; font-weight: 700; }
+  .stamp small { font-size: 11px; margin-top: 4px; font-weight: 600; opacity: .9; }
+  .stamp.PASS { color: var(--pass); } .stamp.PARTIAL { color: var(--partial); } .stamp.FAIL { color: var(--red); }
+  .stamp.pending { color: var(--faint); border-style: dashed; transform: none; }
+  .score-line { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .score-num { font-size: 40px; font-weight: 600; letter-spacing: -.03em; line-height: 1; }
+  .score-of { color: var(--slate); font-size: 14px; }
+  .veto-line { color: var(--red); font-size: 14px; font-weight: 500; }
+  .dims { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 8px; }
+  .dim { min-width: 0; }
+  .dim .lbl { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--slate); gap: 6px; white-space: nowrap; }
+  .dim .lbl b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .dim .bar { margin-top: 5px; height: 6px; border-radius: 3px; background: var(--film-2); overflow: hidden; }
+  .dim .bar i { display: block; height: 100%; width: 0; border-radius: 3px; background: var(--slate); transition: width .9s cubic-bezier(.22, 1, .36, 1); }
+  .dim .bar i.PASS { background: var(--pass); } .dim .bar i.PARTIAL { background: var(--partial); } .dim .bar i.FAIL { background: var(--red); }
+  .dim .w { font-size: 11.5px; color: var(--faint); }
+
+  /* ---------- sections ---------- */
+  section.band { padding: clamp(56px, 8vw, 112px) 0; border-top: 1px solid var(--line); }
+  section.band.film { background: var(--film); }
+  .sec-head { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin-bottom: clamp(28px, 4vw, 48px); max-width: 860px; }
+  .sec-head h2 { margin: 0; font-size: clamp(28px, 3.6vw, 46px); line-height: 1.08; letter-spacing: -.03em; font-weight: 600; text-wrap: balance; }
+  .sec-head p { margin: 0; color: var(--ink-2); font-size: 18px; max-width: 66ch; }
+
+  /* ---------- playground ---------- */
+  .play { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 22px; align-items: start; }
+  .panel { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+  .field { display: grid; gap: 6px; margin-bottom: 14px; }
+  .field label, .field .label { font-size: 14px; color: var(--slate); font-weight: 500; }
+  select, input[type="text"], textarea { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line-2); border-radius: 8px; padding: 9px 11px; }
+  textarea { resize: vertical; line-height: 1.5; }
+  textarea.code { font-family: var(--mono); font-size: 13px; min-height: 260px; }
+  textarea.findings { font-family: var(--serif); font-size: 15.5px; min-height: 92px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { border: 1px solid var(--line-2); background: transparent; border-radius: 999px; padding: 6px 12px; font-size: 14px; cursor: pointer; color: var(--ink-2); }
+  .chip:hover { border-color: var(--ink); color: var(--ink); }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .chip.danger::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--red); margin-right: 7px; vertical-align: 1px; }
+  .hint { font-size: 13.5px; color: var(--slate); margin: 6px 0 0; }
+  .result-head { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .gates { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+  .gates li { font-size: 14px; color: var(--red); }
+  .checks { margin-top: 16px; border-top: 1px solid var(--line); }
+  .check { display: grid; grid-template-columns: 74px 52px minmax(0, 1fr); gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14px; align-items: baseline; }
+  .check .sev { font-weight: 600; font-size: 12.5px; }
+  .check .sev.critical { color: var(--red); } .check .sev.major { color: var(--partial); } .check .sev.minor { color: var(--slate); }
+  .check .id { font-family: var(--mono); font-size: 12.5px; color: var(--slate); }
+  .check .ev { color: var(--slate); display: block; font-size: 13.5px; }
+  details.more { margin-top: 10px; }
+  details.more summary { cursor: pointer; color: var(--slate); font-size: 14px; }
+  .sheet.inline { box-shadow: none; margin-top: 16px; }
+
+  /* ---------- ladder chart ---------- */
+  .chart-wrap { background: var(--chart); border: 1px solid var(--line); border-radius: 12px; padding: 18px 18px 8px; }
+  .chart-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .chart-scroll svg { display: block; min-width: 720px; width: 100%; height: auto; }
+  .legend { display: flex; flex-wrap: wrap; gap: 18px; font-size: 14px; color: var(--ink-2); margin: 0 0 8px 4px; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .tip { position: fixed; z-index: 60; pointer-events: none; background: var(--paper); border: 1px solid var(--line-2); border-radius: 8px; padding: 8px 10px; font-size: 13.5px; box-shadow: 0 10px 30px -14px rgba(0,0,0,.35); max-width: 300px; display: none; }
+  .tip b { font-weight: 600; }
+  .callout { margin: 24px 0 0; font-size: clamp(19px, 2vw, 24px); line-height: 1.35; letter-spacing: -.015em; max-width: 46ch; }
+  .callout .muted { color: var(--slate); }
+
+  /* ---------- tables ---------- */
+  .t-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; font-variant-numeric: tabular-nums; }
+  th { text-align: right; font-weight: 500; color: var(--slate); font-size: 13px; padding: 0 0 10px 12px; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+  th.l, td.l { text-align: left; padding-left: 0; }
+  th button { background: none; border: 0; padding: 0; color: inherit; cursor: pointer; font: inherit; }
+  th button[aria-sort]::after { content: "↓"; margin-left: 4px; }
+  th button[aria-sort="ascending"]::after { content: "↑"; }
+  td { text-align: right; padding: 12px 0 12px 12px; border-bottom: 1px solid var(--line); color: var(--ink-2); vertical-align: middle; white-space: nowrap; }
+  td.l.rank { width: 30px; padding-right: 8px; color: var(--faint); }
+  td.l.wrap-ok, .ladder-table td.l { white-space: normal; }
+  td.sys { color: var(--ink); font-weight: 500; white-space: normal; min-width: 210px; }
+  td.big { color: var(--ink); font-weight: 600; }
+  .ladder-table td:nth-child(2) { color: var(--ink); }
+  .mini { display: inline-block; width: 46px; height: 5px; border-radius: 3px; background: var(--film-2); vertical-align: middle; margin-left: 6px; overflow: hidden; }
+  .mini i { display: block; height: 100%; background: var(--slate); border-radius: 3px; }
+  .gap { width: 150px; }
+  .gap svg { display: block; width: 150px; height: 18px; }
+  .tag { font-size: 12px; border: 1px solid var(--line-2); border-radius: 999px; padding: 2px 8px; color: var(--slate); margin-left: 8px; white-space: nowrap; font-weight: 500; }
+  .board + .board { margin-top: clamp(40px, 5vw, 64px); }
+  .board h3 { margin: 0; font-size: 21px; letter-spacing: -.015em; font-weight: 600; }
+  .board .meta { margin: 4px 0 18px; color: var(--slate); font-size: 14px; }
+  .notice { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--paper); font-size: 15px; color: var(--ink-2); margin-bottom: 28px; }
+  .notice svg { flex: none; width: 18px; height: 18px; margin-top: 2px; color: var(--partial); }
+  .disclosure { font-size: 13px; line-height: 1.6; color: var(--slate); margin-top: 16px; max-width: 100ch; }
+  .insight { margin: 18px 0 0; font-size: 16px; color: var(--ink-2); max-width: 70ch; }
+
+  /* ---------- method ---------- */
+  .pipeline { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; border-top: 2px solid var(--ink); }
+  .pipeline li { padding: 16px 16px 4px 0; position: relative; }
+  .pipeline li + li { padding-left: 16px; border-left: 1px solid var(--line); }
+  .pipeline .n { font-size: 13px; color: var(--slate); font-variant-numeric: tabular-nums; }
+  .pipeline h4 { margin: 4px 0 6px; font-size: 16.5px; font-weight: 600; letter-spacing: -.01em; line-height: 1.25; }
+  .pipeline p { margin: 0; font-size: 14.5px; color: var(--ink-2); line-height: 1.5; }
+  .pipeline li.gate h4 { color: var(--red); }
+  .weights { margin-top: clamp(36px, 5vw, 56px); }
+  .weights .bar { display: flex; gap: 2px; height: 34px; margin-top: 10px; }
+  .weights .bar div { background: var(--film-2); display: flex; align-items: center; padding: 0 10px; font-size: 13.5px; font-weight: 600; color: var(--ink); min-width: 0; overflow: hidden; white-space: nowrap; }
+  .weights .bar div:first-child { border-radius: 6px 0 0 6px; background: var(--ink); color: var(--bg); }
+  .weights .bar div:last-child { border-radius: 0 6px 6px 0; }
+  .weights dl { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; margin: 14px 0 0; }
+  .weights dt { font-weight: 600; font-size: 15px; }
+  .weights dd { margin: 2px 0 0; font-size: 14px; color: var(--ink-2); line-height: 1.45; }
+  .principles { margin-top: clamp(36px, 5vw, 56px); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 40px; }
+  .principles div { padding: 18px 0; border-top: 1px solid var(--line); }
+  .principles h4 { margin: 0 0 6px; font-size: 17px; font-weight: 600; letter-spacing: -.01em; }
+  .principles p { margin: 0; color: var(--ink-2); font-size: 15.5px; }
+  .gate-table { margin-top: clamp(36px, 5vw, 56px); }
+  .gate-table td { text-align: left; vertical-align: top; padding-right: 12px; }
+  .gate-table td { white-space: normal; }
+  .gate-table td:first-child { font-family: var(--mono); font-size: 13px; color: var(--ink); padding-left: 0; width: 60px; }
+
+  /* ---------- cases ---------- */
+  .case-list { margin-top: 18px; display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 0 28px; }
+  .case { display: grid; grid-template-columns: 1fr; gap: 5px; align-content: start; padding: 14px 0; border-top: 1px solid var(--line); text-align: left; background: none; border-left: 0; border-right: 0; border-bottom: 0; cursor: pointer; width: 100%; }
+  .case:hover .case-t { text-decoration: underline; text-underline-offset: 3px; }
+  .case-t { font-weight: 600; font-size: 15.5px; letter-spacing: -.005em; }
+  .case-id { font-family: var(--mono); font-size: 12px; color: var(--faint); }
+  .case-f { display: block; font-family: var(--serif); font-size: 14.5px; color: var(--ink-2); line-height: 1.5; max-height: 3em; overflow: hidden; position: relative; }
+  .case-f::after { content: ""; position: absolute; right: 0; bottom: 0; width: 40%; height: 1.5em; background: linear-gradient(90deg, transparent, var(--film)); }
+  .case-tags { display: flex; gap: 6px; flex-wrap: wrap; align-items: baseline; }
+  .case-tags .case-id { margin-left: auto; }
+  .case-tags span { font-size: 12px; color: var(--slate); }
+  .case-tags span.crit { color: var(--red); }
+
+  /* ---------- verify ---------- */
+  .verify-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+  .verify-grid .panel h3 { margin: 0 0 6px; font-size: 18px; font-weight: 600; letter-spacing: -.01em; }
+  .verify-grid .panel p { margin: 0 0 12px; font-size: 15px; color: var(--ink-2); }
+  .hash { font-family: var(--mono); font-size: 12px; word-break: break-all; color: var(--ink-2); background: var(--bg); border-radius: 6px; padding: 8px 10px; display: block; margin: 6px 0; }
+  .hash.ok { box-shadow: inset 3px 0 0 var(--pass); } .hash.bad { box-shadow: inset 3px 0 0 var(--red); }
+  .match { font-weight: 600; font-size: 14.5px; }
+  .match.ok { color: var(--pass); } .match.bad { color: var(--red); }
+  pre.cmd { position: relative; margin: 8px 0; padding: 11px 44px 11px 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; font-family: var(--mono); font-size: 12.5px; white-space: pre-wrap; word-break: break-word; color: var(--ink); }
+  pre.cmd button { position: absolute; top: 6px; right: 6px; font-size: 12px; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--line-2); background: var(--paper); cursor: pointer; color: var(--slate); }
+  .files { font-size: 12.5px; margin-top: 8px; }
+  .files table { font-size: 12px; } .files td { padding: 5px 0 5px 10px; font-family: var(--mono); }
+  .submit { margin-top: clamp(32px, 4vw, 48px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 28px; align-items: start; }
+  .submit h3 { margin: 0 0 8px; font-size: 22px; letter-spacing: -.015em; font-weight: 600; }
+  .submit p { margin: 0 0 10px; color: var(--ink-2); font-size: 16px; }
+
+  /* ---------- research ---------- */
+  .pubs { border-top: 1px solid var(--line-2); }
+  .pub { display: grid; grid-template-columns: 1fr auto; gap: 8px 32px; padding: 22px 0; border-bottom: 1px solid var(--line); text-decoration: none; }
+  .pub h3 { margin: 0; font-size: clamp(18px, 2vw, 22px); letter-spacing: -.015em; font-weight: 600; line-height: 1.25; max-width: 48ch; }
+  .pub .auth { margin: 6px 0 0; font-size: 15px; color: var(--slate); }
+  .pub .kind { align-self: center; font-size: 13px; color: var(--slate); border: 1px solid var(--line-2); border-radius: 999px; padding: 5px 12px; white-space: nowrap; }
+  .pub:hover h3 { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+
+  /* ---------- footer ---------- */
+  footer { border-top: 1px solid var(--line); padding: 44px 0 36px; color: var(--slate); font-size: 14.5px; }
+  footer .wrap { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 28px; }
+  footer h4 { margin: 0 0 10px; color: var(--ink); font-size: 14.5px; font-weight: 600; }
+  footer a { display: block; text-decoration: none; margin: 6px 0; } footer a:hover { color: var(--ink); text-decoration: underline; }
+  footer .legal { grid-column: 1 / -1; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 13.5px; }
+  .disclaimer { margin: 10px 0 0; max-width: 46ch; line-height: 1.55; }
+
+  /* ---------- motion + responsive ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
   }
-  @media (max-width:760px){
-    nav{ padding:14px clamp(18px,5vw,72px); }
-    nav .links a:not(.cta){ display:none; }
-    nav .rsrch{ display:none; }
-    nav .cta{ padding:9px 14px; }
-    header{ padding-top:clamp(56px,16vw,150px); }
-    .actions{ gap:10px; }
-    .actions .btn{ flex:1 1 auto; justify-content:center; }
-    .cards{ grid-template-columns:1fr; }
-    .card{ min-height:0; }
-    .card .sw{ margin-top:18px; }
-    .pub{ grid-template-columns:1fr; gap:8px; padding:22px 0; }
-    .pub .yr{ padding-top:0; }
-    .pub .venue{ justify-self:start; align-self:start; margin-top:6px; }
-    table{ font-size:13px; }
+  @media (max-width: 1080px) {
+    .pipeline { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .pipeline li:nth-child(4) { border-left: 0; padding-left: 0; }
+    .pipeline li:nth-child(n+4) { border-top: 1px solid var(--line); }
+    .verify-grid { grid-template-columns: 1fr; }
+    .nav a.opt { display: none; }
   }
-  @media (max-width:480px){
-    .stats .grid{ grid-template-columns:1fr; border-top:1px solid var(--line); }
-    .stats .cell{ padding:20px 0; border-right:none; border-bottom:1px solid var(--line); }
-    .stats .cell:last-child{ border-bottom:none; }
-    .quote p{ max-width:none; }
-    .sec-head h2{ max-width:none; }
+  @media (max-width: 900px) {
+    .duel, .play, .submit { grid-template-columns: 1fr; }
+    .weights dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .principles { grid-template-columns: 1fr; }
+    footer .wrap { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    .top .wrap { height: 54px; }
+    .brand .sub, .nav a:not(.gh) { display: none; }
+    .requisition { grid-template-columns: 1fr; gap: 2px; padding: 14px 16px; }
+    .requisition dd + dt { margin-top: 8px; }
+    .dims { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+    .dim .lbl { flex-direction: column; } .dim .w { display: none; }
+    .pipeline { grid-template-columns: 1fr; }
+    .pipeline li, .pipeline li + li { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); }
+    .pipeline li:first-child { border-top: 0; }
+    .weights .bar div { font-size: 12px; padding: 0 6px; }
+    .check { grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; }
+    .check > span:last-child { grid-column: 1 / -1; }
+    .case-list { grid-template-columns: 1fr; }
+    .pub { grid-template-columns: 1fr; } .pub .kind { justify-self: start; }
+    footer .wrap { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
-  <nav>
-    <a class="brand" href="#top">
-      <span class="logo" style="width:26px;height:26px"></span>
-      <span class="word">laudos<span class="ai">.ai</span></span>
-      <span class="rsrch">RESEARCH</span>
+<a class="visually-hidden" href="#try">Skip to the scorer</a>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="LAIBench by Laudos.AI Research, home">
+      <span class="logo" aria-hidden="true"></span>
+      <span class="wm">laudos<span>.ai</span></span>
+      <span class="sub">Research</span>
     </a>
-    <div class="links">
-      <a href="#scoring">Scoring</a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#try">Try it</a>
+      <a href="#ladder">Ladder</a>
       <a href="#leaderboard">Leaderboard</a>
-      <a href="#research">Research</a>
-      <a class="cta" href="https://laudos.ai" target="_blank" rel="noopener">Laudos.AI →</a>
-    </div>
-  </nav>
-
-  <header id="top">
-    <div class="wrap">
-      <div class="eyebrow"><span class="dot"></span><span>Benchmark · AI-assisted radiology reporting</span></div>
-      <h1>LAIBench</h1>
-      <p class="lede">A governance-oriented benchmark for turning an exam descriptor and concise findings into a <strong>faithful</strong> radiology report — scored where it matters clinically, not on prose. A missed or fabricated critical finding is a hard veto, never a soft deduction.</p>
-      <div class="actions">
-        <a class="btn dark" href="#leaderboard">View leaderboard <span class="mono">→</span></a>
-        <a class="btn ghost" href="https://github.com/laudos-ai/laibench-public" target="_blank" rel="noopener">Open source</a>
-      </div>
-    </div>
-  </header>
-
-  <div class="stats wrap">
-    <div class="grid" data-reveal>
-      <div class="cell"><div class="num">5</div><div class="lbl mono">weighted clinical dimensions</div></div>
-      <div class="cell"><div class="num">120</div><div class="lbl mono">controlled pt-BR cases</div></div>
-      <div class="cell"><div class="num">90.0<span class="u">%</span></div><div class="lbl mono">Laudos.AI clinical score</div></div>
-      <div class="cell"><div class="num">0</div><div class="lbl mono">prose / aesthetic axes</div></div>
-    </div>
+      <a class="opt" href="#method">Method</a>
+      <a class="opt" href="#cases">Cases</a>
+      <a href="#verify">Verify</a>
+      <a class="opt" href="#research">Papers</a>
+      <a class="gh" href="https://github.com/laudos-ai/laibench-public" target="_blank" rel="noopener">GitHub</a>
+      <button class="iconbtn" id="theme" type="button" aria-label="Switch color theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17" /><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/></svg>
+      </button>
+    </nav>
   </div>
+</header>
 
-  <section id="scoring" class="panel">
+<main id="top">
+  <!-- ======================= HERO: the pneumothorax test ======================= -->
+  <section class="hero">
     <div class="wrap">
-      <div class="sec-head" data-reveal>
-        <h2>Designed so form never rescues substance</h2>
-        <span class="idx mono">01 — HOW IT SCORES</span>
+      <h1>A beautiful report that misses a pneumothorax should fail. <span class="second">A plain report that catches it should pass.</span></h1>
+      <p class="lede">LAIBench is a benchmark for AI-written radiology reports. It scores what changes patient care — critical findings, laterality, omissions, invented findings — and gives no points for polish. Both reports below are being graded right now, in this tab, by the real scorer.</p>
+
+      <dl class="requisition" aria-label="Case given to the AI">
+        <dt>Exam</dt><dd id="heroExam">Chest radiograph, PA and lateral, without contrast.</dd>
+        <dt>Findings given to the AI</dt><dd id="heroFindings">Large right pneumothorax with partial collapse of the right lung. No pleural effusion. Cardiomediastinal silhouette within normal limits.</dd>
+      </dl>
+
+      <div class="duel">
+        <article class="sheet" id="heroA" aria-labelledby="heroA-h">
+          <div class="sheet-head"><h3 id="heroA-h">The polished report</h3><p>Reads like a senior radiologist. Never mentions the pneumothorax.</p></div>
+          <div class="sheet-body"><div class="report" data-slot="report"></div></div>
+          <div class="sheet-foot" data-slot="foot"><span class="stamp pending"><b>…</b><small>scoring</small></span><div></div></div>
+        </article>
+        <article class="sheet" id="heroB" aria-labelledby="heroB-h">
+          <div class="sheet-head"><h3 id="heroB-h">The plain report</h3><p>Short, a little blunt, and correct.</p></div>
+          <div class="sheet-body"><div class="report" data-slot="report"></div></div>
+          <div class="sheet-foot" data-slot="foot"><span class="stamp pending"><b>…</b><small>scoring</small></span><div></div></div>
+        </article>
       </div>
-      <div class="cards">
-        <div class="card" data-reveal><span class="n mono">01</span><div class="sw" style="background:#161616"></div><h3>Hard critical-finding veto</h3><p>A missed or fabricated critical finding caps the score and forces FAIL — regardless of how polished the rest of the report reads.</p></div>
-        <div class="card" data-reveal><span class="n mono">02</span><div class="sw" style="background:#3c3c3c"></div><h3>No prose / aesthetic axis</h3><p>No standalone style, fluency or "communication quality" dimension. The only discourse signals are minor, non-gating, fallback-only.</p></div>
-        <div class="card" data-reveal><span class="n mono">03</span><div class="sw" style="background:#6e6e6e"></div><h3>Conservative combination</h3><p>The combined dimension score is MIN(deterministic, judge): an optional LLM judge can lower a score but never inflate it past the gate.</p></div>
-        <div class="card" data-reveal><span class="n mono">04</span><div class="sw" style="background:#9c9c9c"></div><h3>Tamper-resistant numbers</h3><p>Every run is re-scored through the gated combiner; a relabeled critical-miss is rejected before it reaches the leaderboard. scoringHash + suiteHash provenance.</p></div>
+
+      <p class="hero-note" id="heroNote">Scored in your browser by LAIBench <span data-bind="version">3.11.0</span>: the same TypeScript the command-line harness runs, bundled for the web. Nothing you type leaves this page.</p>
+      <div class="actions">
+        <a class="btn primary" href="#try" data-load-hero>Edit these reports</a>
+        <a class="btn" href="#ladder">See it across 49 cases</a>
       </div>
-      <p class="disc-tiny">Dimensions: CRIT 30% · QUAL 25% · TERM 20% · GUIDE 15% · RAG 10%, with hard failure gates. LAIBench is a technical benchmark framework — not a medical device, not regulatory approval, not clinical validation.</p>
     </div>
   </section>
 
-  <section id="leaderboard">
+  <!-- ======================= PLAYGROUND ======================= -->
+  <section class="band film" id="try" aria-labelledby="try-h">
     <div class="wrap">
-      <div class="sec-head" data-reveal>
-        <h2>Leaderboard</h2>
-        <span class="idx mono">02 — RESULTS</span>
+      <div class="sec-head">
+        <h2 id="try-h">Score any report</h2>
+        <p>Pick a case, start from a reference report or one of the classic mistakes, then edit freely. The score updates as you type. Reports use the same contract models are given: plain text with <code>&lt;center&gt;</code>, <code>&lt;b&gt;</code> and <code>&lt;br&gt;</code> only.</p>
       </div>
-      <p class="disc-tiny" style="margin:-24px 0 30px">Two governance tiers, never mixed: <b>controlled-eval</b> (gated, first-party, aggregate-only) and <b>public-smoke</b> (synthetic, contaminable, diagnostic baselines — not a ranking). See the <a href="https://github.com/laudos-ai/laibench-public/blob/main/docs/benchmark-cards.md" style="color:var(--muted);text-decoration:underline">benchmark cards</a> for case source, leakage risk, and adjudication status.</p>
+      <div class="play">
+        <div class="panel">
+          <div class="field">
+            <label for="caseSel">Case</label>
+            <select id="caseSel"></select>
+          </div>
+          <div class="field">
+            <label for="examIn">Exam</label>
+            <input type="text" id="examIn" />
+          </div>
+          <div class="field">
+            <label for="findIn">Findings given to the AI</label>
+            <textarea id="findIn" class="findings" spellcheck="false"></textarea>
+          </div>
+          <div class="field">
+            <span class="label" id="startLbl">Start from</span>
+            <div class="chips" role="group" aria-labelledby="startLbl" id="starts">
+              <button class="chip" type="button" data-start="reference">Reference report</button>
+              <button class="chip danger" type="button" data-start="omit">Omit the critical finding</button>
+              <button class="chip danger" type="button" data-start="deny">Deny it</button>
+              <button class="chip danger" type="button" data-start="swap">Swap the side</button>
+              <button class="chip danger" type="button" data-start="fabricate">Invent a critical finding</button>
+              <button class="chip danger" type="button" data-start="null">"No acute abnormality"</button>
+            </div>
+            <p class="hint" id="startHint">Starting points are built from the findings with the same rules as the public ladder.</p>
+          </div>
+          <div class="field">
+            <label for="reportIn">Report (HTML)</label>
+            <textarea id="reportIn" class="code" spellcheck="false"></textarea>
+          </div>
+        </div>
+        <div class="panel" aria-live="polite" id="result">
+          <div class="result-head" data-slot="head"></div>
+          <ul class="gates" data-slot="gates"></ul>
+          <div class="dims" data-slot="dims"></div>
+          <div class="sheet inline"><div class="sheet-body"><div class="report" data-slot="report"></div></div></div>
+          <div class="checks" data-slot="checks"></div>
+          <details class="more"><summary data-slot="passed-summary">Passing checks</summary><div class="checks" data-slot="passed"></div></details>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= LADDER ======================= -->
+  <section class="band" id="ladder" aria-labelledby="ladder-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="ladder-h">Make the report worse, one error at a time. The score should follow.</h2>
+        <p>For each of the 49 public cases we take a faithful reference report and inject exactly one error, from a changed measurement up to inventing a critical finding. Every version is scored against the original case. No answer keys are needed: the input findings are the evidence.</p>
+      </div>
+      <div class="chart-wrap">
+        <div class="legend" id="ladderLegend"></div>
+        <div class="chart-scroll"><svg id="ladderChart" role="img" aria-labelledby="ladderTitle ladderDesc"><title id="ladderTitle">Scores of 49 public cases at each rung of the discrimination ladder</title><desc id="ladderDesc">Each dot is one case. The table below lists the same data.</desc></svg></div>
+      </div>
+      <p class="callout" id="ladderCallout"></p>
+      <div class="t-scroll" style="margin-top:28px">
+        <table class="ladder-table" id="ladderTable"></table>
+      </div>
+      <p class="disclosure" id="ladderNote"></p>
+    </div>
+  </section>
+
+  <!-- ======================= LEADERBOARD ======================= -->
+  <section class="band film" id="leaderboard" aria-labelledby="lb-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="lb-h">Leaderboard</h2>
+        <p>Two governance tiers that are never mixed: a gated, first-party controlled evaluation, and a public smoke test of open models on synthetic cases that is a diagnostic, not a ranking. Benchmark cards cover case source, leakage risk and adjudication status.</p>
+      </div>
+      <div class="notice" id="rescore" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.5"/></svg>
+        <span id="rescoreText"></span>
+      </div>
       <div id="boards"></div>
     </div>
   </section>
 
-  <section id="research" class="panel">
+  <!-- ======================= METHOD ======================= -->
+  <section class="band" id="method" aria-labelledby="method-h">
     <div class="wrap">
-      <div class="sec-head" data-reveal>
-        <h2>Research</h2>
-        <span class="idx mono">03 — PAPERS</span>
+      <div class="sec-head">
+        <h2 id="method-h">How a report is scored</h2>
+        <p>Deterministic checks first, an optional judge that can only lower a score, and gates that no amount of good writing can get past.</p>
       </div>
-      <div class="pubs">
-        <a class="pub" data-reveal href="laibench-preprint.pdf" target="_blank" rel="noopener">
-          <span class="yr mono">2026</span>
-          <div>
-            <h3>Beyond Templates: A Compositional Model and Lower Bound for Radiology Report Variability</h3>
-            <div class="auth">N. Paraiso Ribeiro, P. Paraiso Ribeiro, S. Alba Herrera, F. Akira, R. Moreno · Laudos.AI Research</div>
-          </div>
-          <span class="venue">Preprint · PDF</span>
-        </a>
-        <a class="pub" data-reveal href="adjudication-protocol.pdf" target="_blank" rel="noopener">
-          <span class="yr mono">2026</span>
-          <div>
-            <h3>Radiologist adjudication &amp; inter-rater agreement for automated report scoring</h3>
-            <div class="auth">Laudos.AI Research · blinded multi-reader study protocol to move gold labels from internal review to independent third-party adjudication (κ/α, scorer-vs-radiologist).</div>
-          </div>
-          <span class="venue wip">Protocol · em andamento</span>
-        </a>
-        <a class="pub" data-reveal href="external-validation-protocol.pdf" target="_blank" rel="noopener">
-          <span class="yr mono">2026</span>
-          <div>
-            <h3>External validation of finding-to-report faithfulness across sites and equipment</h3>
-            <div class="auth">Laudos.AI Research · hidden-holdout protocol: cross-institution generalization, frozen submissions, per-run contamination audit.</div>
-          </div>
-          <span class="venue wip">Protocol · em andamento</span>
-        </a>
+      <ol class="pipeline">
+        <li><span class="n">1</span><h4>Sanitize</h4><p>Only <code>&lt;center&gt;</code>, <code>&lt;b&gt;</code>, <code>&lt;br&gt;</code> survive. Scripts and markup injected to sway a judge are stripped.</p></li>
+        <li><span class="n">2</span><h4>Deterministic checks</h4><p>Around 40 checks across five clinical dimensions: sections, terminology, coverage, laterality, measurements.</p></li>
+        <li class="gate"><span class="n">3</span><h4>Source-anchored gates</h4><p>Every critical in the input must survive with the same polarity and side; nothing critical may be invented.</p></li>
+        <li><span class="n">4</span><h4>Optional judge, then MIN</h4><p>A pinned LLM judge can be added. Each dimension keeps the lower of the two scores, so the judge can never inflate one.</p></li>
+        <li><span class="n">5</span><h4>Anti-compensation</h4><p>Perfect terminology and coverage cannot lift a clinically weak report into PASS.</p></li>
+        <li class="gate"><span class="n">6</span><h4>Critical veto</h4><p>Any failed critical check caps the case at 59.9 and forces FAIL. Every published number is re-derived through this gate.</p></li>
+      </ol>
+
+      <div class="weights">
+        <h3 style="margin:0;font-size:20px;font-weight:600;letter-spacing:-.015em">Five weighted dimensions, no prose axis</h3>
+        <div class="bar" aria-hidden="true">
+          <div style="flex:30">CRIT 30%</div><div style="flex:25">QUAL 25%</div><div style="flex:20">TERM 20%</div><div style="flex:15">GUIDE 15%</div><div style="flex:10">RAG 10%</div>
+        </div>
+        <dl>
+          <div><dt>CRIT</dt><dd>Critical findings preserved, never denied, never invented.</dd></div>
+          <div><dt>QUAL</dt><dd>Findings preserved, no hallucination, a real impression.</dd></div>
+          <div><dt>TERM</dt><dd>Report language, modality vocabulary, section contract.</dd></div>
+          <div><dt>GUIDE</dt><dd>Anatomical and guideline coverage for the exam.</dd></div>
+          <div><dt>RAG</dt><dd>Evidence fidelity: title, laterality, levels, measurements, order.</dd></div>
+        </dl>
       </div>
+
+      <div class="t-scroll gate-table">
+        <h3 style="margin:0 0 14px;font-size:20px;font-weight:600;letter-spacing:-.015em">Gates that work without an answer key</h3>
+        <table>
+          <tbody>
+            <tr><td>C09</td><td><b>Input critical findings preserved.</b> Present, affirmed and on the same side. Side must be stated for pneumothorax, fractures, bleeds, torsion and stroke; a contradicted side always fails.</td><td class="l">critical</td></tr>
+            <tr><td>C10</td><td><b>No critical finding beyond the input.</b> Neither a new critical nor one moved to the other side. Recommendations and differentials are not counted.</td><td class="l">critical</td></tr>
+            <tr><td>Q16</td><td><b>Abnormal findings reflected.</b> Paraphrase-tolerant, polarity-aware; each missing finding costs separately.</td><td class="l">major</td></tr>
+            <tr><td>Q17</td><td><b>No unsupported normalcy.</b> An abnormal study cannot be reported as normal.</td><td class="l">critical</td></tr>
+          </tbody>
+        </table>
+        <p class="disclosure">The report title and Technique section are excluded from these gates because they restate the exam, which often names the clinical question. Negation is clause- and list-scoped: “No effusion, consolidation, or pneumothorax” denies every item.</p>
+      </div>
+
+      <div class="principles">
+        <div><h4>Form never rescues substance</h4><p>A missed or fabricated critical finding is a hard veto, not a deduction. There is no style, fluency or “communication” dimension.</p></div>
+        <div><h4>Conservative by construction</h4><p>The combined score per dimension is MIN(deterministic, judge). A judge can catch what rules miss; it cannot forgive what they catch.</p></div>
+        <div><h4>Tamper-resistant numbers</h4><p>Every loaded run is re-scored through the gated combiner. A run whose stored verdict disagrees with the re-derived one is rejected.</p></div>
+        <div><h4>Pinned provenance</h4><p>A scoringHash over every gate-deciding source file and a cases-only suiteHash pin exactly what produced each number.</p></div>
+      </div>
+      <p class="disclosure">LAIBench is a technical benchmark framework. It is not a medical device, not regulatory approval and not clinical validation, and it evaluates reporting from text evidence, not image interpretation.</p>
     </div>
   </section>
 
-  <section class="quote">
-    <div class="wrap" data-reveal>
-      <span class="k mono">Our principle</span>
-      <p>A beautiful report that misses a pneumothorax should fail.<br>A plain report that detects it should win.</p>
+  <!-- ======================= CASES ======================= -->
+  <section class="band film" id="cases" aria-labelledby="cases-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="cases-h">The 49 public cases</h2>
+        <p>Synthetic, input-only demonstration cases: normals, critical findings, and traps for negation, laterality, measurements and hallucination. They are open so anyone can reproduce the harness; they are not clinically reviewed. Choose one to score it above.</p>
+      </div>
+      <div class="chips" role="group" aria-label="Filter cases" id="caseFilters"></div>
+      <div class="case-list" id="caseList"></div>
     </div>
   </section>
 
-  <footer>
+  <!-- ======================= VERIFY ======================= -->
+  <section class="band" id="verify" aria-labelledby="verify-h">
     <div class="wrap">
-      <div class="top">
-        <a class="brand" href="#top" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit">
-          <span class="logo" style="width:30px;height:30px"></span>
-          <div>
-            <div style="font-size:18px;font-weight:500;letter-spacing:-.02em">laudos<span style="color:var(--faint)">.ai</span></div>
-            <div style="font-size:10px;letter-spacing:.28em;color:var(--faint);margin-top:2px">RESEARCH</div>
-          </div>
-        </a>
-        <div class="cols">
-          <div class="col">
-            <span class="h mono">LAIBench</span>
-            <a href="#scoring">Scoring</a>
-            <a href="#leaderboard">Leaderboard</a>
-            <a href="#research">Research</a>
-            <a href="https://github.com/laudos-ai/laibench-public" target="_blank" rel="noopener">GitHub</a>
-          </div>
-          <div class="col">
-            <span class="h mono">Contact</span>
-            <a href="mailto:research@laudos.ai">research@laudos.ai</a>
-            <a href="https://laudos.ai" target="_blank" rel="noopener">laudos.ai</a>
-          </div>
+      <div class="sec-head">
+        <h2 id="verify-h">Don’t take this page’s word for it</h2>
+        <p>Every number here is pinned to hashes you can recompute, in this browser or from a clone of the repository.</p>
+      </div>
+      <div class="verify-grid">
+        <div class="panel">
+          <h3>Public suite</h3>
+          <p>Recompute the suiteHash of the 49 cases this page loaded and compare it with the published one.</p>
+          <button class="btn" type="button" id="hashBtn">Recompute suite hash</button>
+          <div id="hashOut" aria-live="polite"></div>
+        </div>
+        <div class="panel">
+          <h3>Scorer</h3>
+          <p>The scorer running on this page was built from source files whose combined hash is:</p>
+          <code class="hash" id="scoringHash">…</code>
+          <details class="files"><summary>Per-file hashes</summary><div class="t-scroll" id="fileHashes"></div></details>
+        </div>
+        <div class="panel">
+          <h3>Reproduce it</h3>
+          <p>Clone, test, and regenerate the ladder and the provenance manifest yourself.</p>
+          <pre class="cmd" id="cmdRepro">git clone https://github.com/laudos-ai/laibench-public
+cd laibench-public && npm ci
+npm test && npm run ladder
+npm run bench -- provenance --suite suites/lite-public.en-US.json --out provenance.json</pre>
         </div>
       </div>
-      <div class="legal">
-        <span>© <span id="yr"></span> Laudos.AI Research — LAIBench is released under the MIT License.</span>
-        <span class="mono">São Paulo · Brasil</span>
+
+      <div class="submit" id="submit">
+        <div>
+          <h3>Submit a system</h3>
+          <p>Any agent that reads a JSON job on stdin and writes report HTML to stdout can be benchmarked, no SDK required. Frozen predictions are scored the same way and cannot self-report latency or retrieval.</p>
+          <p>For the gated controlled evaluation, write to <a href="mailto:research@laudos.ai">research@laudos.ai</a>.</p>
+        </div>
+        <pre class="cmd">npm run bench -- suite \
+  --suite suites/lite-public.en-US.json \
+  --provider command --cmd "node path/to/your-agent.mjs" \
+  --run-name my-agent --track agent \
+  --entity-name "My Lab" --entity-type org --system-type product-agent \
+  --out runs/my-agent.json</pre>
       </div>
     </div>
-  </footer>
+  </section>
 
-  <script src="data.js"></script>
-  <script>
-    document.getElementById('yr').textContent = new Date().getFullYear();
-    (function(){
-      var els = [].slice.call(document.querySelectorAll('[data-reveal]'));
-      function onscreen(el){ var r=el.getBoundingClientRect(); return r.top < (innerHeight||800)*0.92 && r.bottom>0; }
-      els.forEach(function(el){ if(onscreen(el)) el.classList.add('in'); });
-      var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }); }, {threshold:0.1, rootMargin:'0px 0px -6% 0px'});
-      els.forEach(function(el){ io.observe(el); });
-      setTimeout(function(){ els.forEach(function(el){ el.classList.add('in'); }); }, 1600);
-    })();
-    (function(){
-      var data = window.LAIBENCH_DATA; if(!data || !data.locales) return;
-      var pct = function(x){ return (x==null) ? '—' : (Math.round(x*1000)/10).toFixed(1)+'%'; };
-      var dim = function(d,k){ return (d&&d[k]!=null) ? (Math.round(d[k]*1000)/10).toFixed(1) : '—'; };
-      var BOARDS = [
-        { key:'pt-BR', title:'Controlled-eval · first-party', sub:'gated · aggregate-only · not external validation', prod:true },
-        { key:'en-US', title:'Public-smoke · diagnostic baselines', sub:'synthetic · contaminable · not a ranking · free endpoints rate-limited; incomplete runs excluded', prod:false }
-      ];
-      var html = '';
-      BOARDS.forEach(function(b){
-        var loc = data.locales[b.key]; if(!loc || !(loc.entries||[]).length) return;
-        var entries = loc.entries.slice().sort(function(a,c){ return (c.clinicalScore||0)-(a.clinicalScore||0); });
-        html += '<div class="board">';
-        html += '<h3 style="font-size:20px;font-weight:500;letter-spacing:-.02em;margin:0 0 2px">'+b.title+'</h3>';
-        html += '<div class="meta mono"><b>'+(loc.suite||b.key)+'</b> · '+(loc.cases||'?')+' cases · '+(loc.scoring||'')+' · '+b.sub+'</div>';
-        html += '<div class="t-scroll"><table><thead><tr><th class="l">#</th><th class="l">System</th><th>Clinical</th><th>CRIT</th><th>QUAL</th><th>TERM</th><th>GUIDE</th><th>RAG</th><th>Latency</th></tr></thead><tbody>';
-        entries.forEach(function(e,i){
-          var lat = e.latencyMs!=null ? (Math.round(e.latencyMs/100)/10)+'s' : '—';
-          html += '<tr>';
-          html += '<td class="l rank mono">'+(i+1)+'</td>';
-          html += '<td class="l sys">'+e.system+(b.prod?'<span class="tag prod">product agent</span>':'<span class="tag">open model</span>')+'</td>';
-          html += '<td class="score">'+pct(e.clinicalScore)+'</td>';
-          html += '<td>'+dim(e.dims,'CRIT')+'</td><td>'+dim(e.dims,'QUAL')+'</td><td>'+dim(e.dims,'TERM')+'</td><td>'+dim(e.dims,'GUIDE')+'</td><td>'+dim(e.dims,'RAG')+'</td>';
-          html += '<td class="mono">'+lat+'</td>';
-          html += '</tr>';
-        });
-        html += '</tbody></table></div>';
-        if(loc.disclosure) html += '<p class="disclosure">'+loc.disclosure+'</p>';
-        html += '</div>';
-      });
-      document.getElementById('boards').innerHTML = html;
-    })();
-  </script>
-  <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
-  <script>
-    (function(){
-      var L = window.Lenis;
-      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      // Smooth-scroll anchor jumps work with or without Lenis.
-      function jumpTo(el){
-        if (window.lenis) { window.lenis.scrollTo(el, { offset:-68 }); return; }
-        var y = el.getBoundingClientRect().top + window.pageYOffset - 68;
-        window.scrollTo({ top:y, behavior: reduce ? 'auto' : 'smooth' });
-      }
-      document.querySelectorAll('a[href^="#"]').forEach(function(a){
-        a.addEventListener('click', function(e){
-          var id = a.getAttribute('href'); if (!id || id.length < 2) return;
-          var el = document.querySelector(id); if (!el) return;
-          e.preventDefault(); jumpTo(el);
-          if (history.replaceState) history.replaceState(null, '', id);
-        });
-      });
-      if (typeof L === 'undefined' || reduce) return; // native scroll on touch / reduced-motion
-      var lenis = new L({ duration:1.1, smoothWheel:true, wheelMultiplier:1, touchMultiplier:1.6 });
-      function raf(t){ lenis.raf(t); requestAnimationFrame(raf); }
-      requestAnimationFrame(raf);
-      window.lenis = lenis;
-    })();
-  </script>
+  <!-- ======================= RESEARCH ======================= -->
+  <section class="band film" id="research" aria-labelledby="research-h">
+    <div class="wrap">
+      <div class="sec-head"><h2 id="research-h">Research</h2></div>
+      <div class="pubs">
+        <a class="pub" href="laibench-preprint.pdf" target="_blank" rel="noopener">
+          <div><h3>Beyond Templates: A Compositional Model and Lower Bound for Radiology Report Variability</h3><p class="auth">N. Paraiso Ribeiro, P. Paraiso Ribeiro, S. Alba Herrera, F. Akira, R. Moreno. Laudos.AI Research, 2026.</p></div>
+          <span class="kind">Preprint, PDF</span>
+        </a>
+        <a class="pub" href="https://github.com/laudos-ai/laibench-public/blob/main/docs/public-ladder.md" target="_blank" rel="noopener">
+          <div><h3>A public discrimination ladder for finding-to-report fidelity</h3><p class="auth">Laudos.AI Research, 2026. Method, full results and the same ladder under the previous scorer.</p></div>
+          <span class="kind">Results, Markdown</span>
+        </a>
+        <a class="pub" href="adjudication-protocol.pdf" target="_blank" rel="noopener">
+          <div><h3>Radiologist adjudication and inter-rater agreement for automated report scoring</h3><p class="auth">Laudos.AI Research. Blinded multi-reader protocol to move gold labels from internal review to independent third-party adjudication (κ/α, scorer versus radiologist).</p></div>
+          <span class="kind">Protocol, in progress</span>
+        </a>
+        <a class="pub" href="external-validation-protocol.pdf" target="_blank" rel="noopener">
+          <div><h3>External validation of finding-to-report faithfulness across sites and equipment</h3><p class="auth">Laudos.AI Research. Hidden-holdout protocol: cross-institution generalization, frozen submissions, per-run contamination audit.</p></div>
+          <span class="kind">Protocol, in progress</span>
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="brand" href="#top" style="margin:0"><span class="logo" aria-hidden="true"></span><span class="wm">laudos<span>.ai</span></span><span class="sub">Research</span></a>
+      <p class="disclaimer">LAIBench is released under the MIT License. It is a technical framework, not a medical device or clinical validation.</p>
+    </div>
+    <div><h4>Benchmark</h4><a href="#try">Try it</a><a href="#ladder">Ladder</a><a href="#leaderboard">Leaderboard</a><a href="#method">Method</a></div>
+    <div><h4>Source</h4><a href="https://github.com/laudos-ai/laibench-public" target="_blank" rel="noopener">GitHub</a><a href="https://github.com/laudos-ai/laibench-public/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a><a href="https://github.com/laudos-ai/laibench-public/blob/main/docs/benchmark-cards.md" target="_blank" rel="noopener">Benchmark cards</a></div>
+    <div><h4>Contact</h4><a href="mailto:research@laudos.ai">research@laudos.ai</a><a href="https://laudos.ai" target="_blank" rel="noopener">laudos.ai</a></div>
+    <div class="legal"><span>© <span id="yr">2026</span> Laudos.AI Research</span><span>São Paulo, Brasil</span></div>
+  </div>
+</footer>
+
+<div class="tip" id="tip" role="tooltip"></div>
+<script src="data.js"></script>
+<script type="module" src="assets/app.js"></script>
 </body>
 </html>

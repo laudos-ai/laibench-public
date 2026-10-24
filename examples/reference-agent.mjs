@@ -213,7 +213,9 @@ export function buildReferenceReport(job, coverage = coverageFor(job.exam)) {
 }
 
 // ---- command-provider entry point ----
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+const isCli = typeof process !== "undefined" && Array.isArray(process.argv) && process.argv[1]
+  && (() => { try { return fileURLToPath(import.meta.url) === process.argv[1]; } catch { return false; } })();
+if (isCli) {
   let input = "";
   stdin.setEncoding("utf8");
   stdin.on("data", (c) => { input += c; });

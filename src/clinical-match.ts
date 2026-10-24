@@ -63,6 +63,21 @@ const ABBR_EXPANSIONS: Array<[RegExp, string]> = [
   [/\bhsa\b/g, " subarachnoid hemorrhage "],
   [/\btep\b/g, " tromboembolismo pulmonar embolia "],
   [/\bsbo\b/g, " bowel obstruction "],
+  // v3.11: common anatomical abbreviations, so "Complete ACL tear" reflects
+  // "complete tear of the anterior cruciate ligament" (Q16) instead of reading as
+  // an omission. None is a word in either locale.
+  [/\bacl\b/g, " anterior cruciate ligament "],
+  [/\bpcl\b/g, " posterior cruciate ligament "],
+  [/\bmcl\b/g, " medial collateral ligament "],
+  [/\bmca\b/g, " middle cerebral artery "],
+  [/\buvj\b/g, " ureterovesical junction "],
+  [/\bupj\b/g, " ureteropelvic junction "],
+  [/\bcbd\b/g, " common bile duct "],
+  [/\baaa\b/g, " abdominal aortic aneurysm "],
+  [/\brlq\b/g, " right lower quadrant "],
+  [/\bruq\b/g, " right upper quadrant "],
+  [/\blca\b/g, " ligamento cruzado anterior "],
+  [/\bacm\b/g, " arteria cerebral media "],
 ];
 // Divergent-surface critical families: genuinely different words for the same
 // entity that share no token prefix, so they are collapsed to one canonical token

@@ -1,0 +1,3143 @@
+{
+ "title": "LAIBench public discrimination ladder",
+ "benchmarkVersion": "3.11.0",
+ "scoredWith": "3.11.0",
+ "suite": "lite-public.en-US",
+ "suiteHash": "013cfb0d91d7ec0aca31ed5e6748c0e851d060cfaa52fb7c1274aeed46ce6d5c",
+ "cases": 49,
+ "agent": "examples/reference-agent.mjs (template reference, deterministic)",
+ "scorer": "benchmarkCase, deterministic only (no LLM judge), conservative-min",
+ "note": "Synthetic public cases, input-only (no answer keys). Each rung injects one error into the reference report; drops are paired against the same case's reference score. Not a clinical validation.",
+ "levels": [
+  {
+   "id": "L0",
+   "label": "Reference",
+   "description": "Faithful restructuring of the input findings.",
+   "critical": false,
+   "n": 49,
+   "meanScore": 90.8,
+   "passRate": 63.3,
+   "failRate": 0,
+   "criticalVetoRate": 0,
+   "meanDrop": 0,
+   "detectedRate": null
+  },
+  {
+   "id": "L1",
+   "label": "Measurement drift",
+   "description": "The first measurement is changed (e.g. 7 mm → 8 mm).",
+   "critical": false,
+   "n": 18,
+   "meanScore": 82.1,
+   "passRate": 11.1,
+   "failRate": 0,
+   "criticalVetoRate": 0,
+   "meanDrop": 8,
+   "detectedRate": 83.3
+  },
+  {
+   "id": "L2",
+   "label": "Non-critical omission",
+   "description": "One non-critical abnormal finding is dropped.",
+   "critical": false,
+   "n": 11,
+   "meanScore": 72.3,
+   "passRate": 27.3,
+   "failRate": 54.5,
+   "criticalVetoRate": 45.5,
+   "meanDrop": 18.9,
+   "detectedRate": 81.8
+  },
+  {
+   "id": "L3",
+   "label": "Laterality swap",
+   "description": "The first right/left in an abnormal finding is swapped.",
+   "critical": false,
+   "n": 27,
+   "meanScore": 67.3,
+   "passRate": 18.5,
+   "failRate": 81.5,
+   "criticalVetoRate": 81.5,
+   "meanDrop": 23.7,
+   "detectedRate": 81.5
+  },
+  {
+   "id": "L4",
+   "label": "Critical denied",
+   "description": "The input's critical finding is written as absent (\"No pneumothorax.\").",
+   "critical": true,
+   "n": 14,
+   "meanScore": 59.9,
+   "passRate": 0,
+   "failRate": 100,
+   "criticalVetoRate": 100,
+   "meanDrop": 33.2,
+   "detectedRate": 100
+  },
+  {
+   "id": "L5",
+   "label": "Critical omitted",
+   "description": "Every sentence carrying an input critical finding is dropped; the rest stays polished.",
+   "critical": true,
+   "n": 14,
+   "meanScore": 59.9,
+   "passRate": 0,
+   "failRate": 100,
+   "criticalVetoRate": 100,
+   "meanDrop": 33.2,
+   "detectedRate": 100
+  },
+  {
+   "id": "L6",
+   "label": "Critical fabricated",
+   "description": "A plausible critical finding the input never states is added.",
+   "critical": true,
+   "n": 35,
+   "meanScore": 59.9,
+   "passRate": 0,
+   "failRate": 100,
+   "criticalVetoRate": 100,
+   "meanDrop": 30.9,
+   "detectedRate": 100
+  },
+  {
+   "id": "L7",
+   "label": "Null report",
+   "description": "\"No acute abnormality.\" written for an abnormal study.",
+   "critical": true,
+   "n": 45,
+   "meanScore": 60.6,
+   "passRate": 0,
+   "failRate": 95.6,
+   "criticalVetoRate": 95.6,
+   "meanDrop": 29.9,
+   "detectedRate": 97.8
+  }
+ ],
+ "previous": {
+  "benchmarkVersion": "3.10.0",
+  "levels": [
+   {
+    "id": "L0",
+    "label": "Reference",
+    "description": "Faithful restructuring of the input findings.",
+    "critical": false,
+    "n": 49,
+    "meanScore": 89.7,
+    "passRate": 61.2,
+    "failRate": 2,
+    "criticalVetoRate": 2,
+    "meanDrop": 0,
+    "detectedRate": null
+   },
+   {
+    "id": "L1",
+    "label": "Measurement drift",
+    "description": "The first measurement is changed (e.g. 7 mm → 8 mm).",
+    "critical": false,
+    "n": 18,
+    "meanScore": 82.1,
+    "passRate": 11.1,
+    "failRate": 0,
+    "criticalVetoRate": 0,
+    "meanDrop": 8,
+    "detectedRate": 83.3
+   },
+   {
+    "id": "L2",
+    "label": "Non-critical omission",
+    "description": "One non-critical abnormal finding is dropped.",
+    "critical": false,
+    "n": 11,
+    "meanScore": 75.9,
+    "passRate": 36.4,
+    "failRate": 45.5,
+    "criticalVetoRate": 45.5,
+    "meanDrop": 12.4,
+    "detectedRate": 63.6
+   },
+   {
+    "id": "L3",
+    "label": "Laterality swap",
+    "description": "The first right/left in an abnormal finding is swapped.",
+    "critical": false,
+    "n": 27,
+    "meanScore": 68.2,
+    "passRate": 18.5,
+    "failRate": 74.1,
+    "criticalVetoRate": 74.1,
+    "meanDrop": 21.6,
+    "detectedRate": 74.1
+   },
+   {
+    "id": "L4",
+    "label": "Critical denied",
+    "description": "The input's critical finding is written as absent (\"No pneumothorax.\").",
+    "critical": true,
+    "n": 14,
+    "meanScore": 73,
+    "passRate": 21.4,
+    "failRate": 50,
+    "criticalVetoRate": 50,
+    "meanDrop": 17.7,
+    "detectedRate": 78.6
+   },
+   {
+    "id": "L5",
+    "label": "Critical omitted",
+    "description": "Every sentence carrying an input critical finding is dropped; the rest stays polished.",
+    "critical": true,
+    "n": 14,
+    "meanScore": 73,
+    "passRate": 21.4,
+    "failRate": 50,
+    "criticalVetoRate": 50,
+    "meanDrop": 17.7,
+    "detectedRate": 78.6
+   },
+   {
+    "id": "L6",
+    "label": "Critical fabricated",
+    "description": "A plausible critical finding the input never states is added.",
+    "critical": true,
+    "n": 35,
+    "meanScore": 88,
+    "passRate": 48.6,
+    "failRate": 2.9,
+    "criticalVetoRate": 2.9,
+    "meanDrop": 1.2,
+    "detectedRate": 20
+   },
+   {
+    "id": "L7",
+    "label": "Null report",
+    "description": "\"No acute abnormality.\" written for an abnormal study.",
+    "critical": true,
+    "n": 45,
+    "meanScore": 67.7,
+    "passRate": 6.7,
+    "failRate": 68.9,
+    "criticalVetoRate": 68.9,
+    "meanDrop": 21.5,
+    "detectedRate": 86.7
+   }
+  ]
+ },
+ "perCase": [
+  {
+   "id": "SYN-DEMO-EN-001",
+   "label": "Synthetic chest radiograph normal demo",
+   "region": "chest",
+   "cells": {
+    "L0": {
+     "score": 91.9,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": null,
+    "L4": null,
+    "L5": null,
+    "L6": null,
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C07",
+      "Q17",
+      "R05"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-002",
+   "label": "Synthetic head CT urgent finding demo",
+   "region": "head",
+   "cells": {
+    "L0": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "R02"
+     ]
+    },
+    "L4": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    },
+    "L5": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    },
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-003",
+   "label": "Synthetic abdominal ultrasound gallstone demo",
+   "region": "abdomen",
+   "cells": {
+    "L0": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": null,
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C07",
+      "Q17",
+      "R05"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-004",
+   "label": "Synthetic lumbar spine MRI structure demo",
+   "region": "spine",
+   "cells": {
+    "L0": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": null,
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "Q17"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-PRO-EN-005",
+   "label": "Synthetic head/neck CT angiography acute M1 occlusion demo",
+   "region": "head",
+   "cells": {
+    "L0": {
+     "score": 75.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 6"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "R02"
+     ]
+    },
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "R02"
+     ]
+    },
+    "L4": null,
+    "L5": null,
+    "L6": null,
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "Q17",
+      "R02"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-PRO-EN-006",
+   "label": "Synthetic diagnostic mammography spiculated mass BI-RADS demo",
+   "region": "breast",
+   "cells": {
+    "L0": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
+     ],
+     "failedCritical": []
+    },
+    "L1": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
+     "failedCritical": []
+    },
+    "L2": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "R02"
+     ]
+    },
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "R02"
+     ]
+    },
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "Q17",
+      "R02"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-PRO-EN-007",
+   "label": "Synthetic chest CTA pulmonary embolism demo",
+   "region": "chest",
+   "cells": {
+    "L0": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C07",
+      "R05"
+     ]
+    },
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "C10",
+      "R02"
+     ]
+    },
+    "L4": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09"
+     ]
+    },
+    "L5": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09"
+     ]
+    },
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C07",
+      "C09",
+      "Q17",
+      "R02",
+      "R05"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-PRO-EN-008",
+   "label": "Synthetic abdominal trauma CT splenic laceration demo",
+   "region": "abdomen",
+   "cells": {
+    "L0": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L1": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
+     ],
+     "failedCritical": []
+    },
+    "L2": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L3": null,
+    "L4": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09"
+     ]
+    },
+    "L5": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09"
+     ]
+    },
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-PRO-EN-009",
+   "label": "Synthetic chest CT solitary 7 mm nodule Fleischner demo",
+   "region": "chest",
+   "cells": {
+    "L0": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L1": {
+     "score": 91.9,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2"
+     ],
+     "failedCritical": []
+    },
+    "L2": null,
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "R02"
+     ]
+    },
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C07",
+      "Q17",
+      "R02",
+      "R05"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-PRO-EN-010",
+   "label": "Synthetic knee MRI ACL and bucket-handle meniscus demo",
+   "region": "spine",
+   "cells": {
+    "L0": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": {
+     "score": 91.9,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2"
+     ],
+     "failedCritical": []
+    },
+    "L3": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "Q17"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-PRO-EN-011",
+   "label": "Synthetic thyroid ultrasound TI-RADS 5 nodule demo",
+   "region": "thyroid",
+   "cells": {
+    "L0": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
+     "failedCritical": []
+    },
+    "L1": {
+     "score": 75.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 6"
+     ],
+     "failedCritical": []
+    },
+    "L2": null,
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "R02"
+     ]
+    },
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 67.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 8"
+     ],
+     "failedCritical": []
+    }
+   }
+  },
+  {
+   "id": "SYN-PRO-EN-012",
+   "label": "Synthetic head CT subtle subdural omission-trap demo",
+   "region": "head",
+   "cells": {
+    "L0": {
+     "score": 75.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 6"
+     ],
+     "failedCritical": []
+    },
+    "L1": {
+     "score": 67.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 8"
+     ],
+     "failedCritical": []
+    },
+    "L2": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 10"
+     ],
+     "failedCritical": []
+    },
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "R02"
+     ]
+    },
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "Q17",
+      "R02"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-013",
+   "label": "Synthetic chest CT demo (critical)",
+   "region": "chest",
+   "cells": {
+    "L0": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C07",
+      "R05"
+     ]
+    },
+    "L3": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L4": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09"
+     ]
+    },
+    "L5": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09"
+     ]
+    },
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C07",
+      "C09",
+      "Q17",
+      "R02",
+      "R05"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-014",
+   "label": "Synthetic chest CT demo",
+   "region": "chest",
+   "cells": {
+    "L0": {
+     "score": 91.9,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2"
+     ],
+     "failedCritical": []
+    },
+    "L1": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
+     "failedCritical": []
+    },
+    "L2": null,
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "R02"
+     ]
+    },
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C07",
+      "Q17",
+      "R02",
+      "R05"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-015",
+   "label": "Synthetic chest CT demo",
+   "region": "chest",
+   "cells": {
+    "L0": {
+     "score": 91.9,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2"
+     ],
+     "failedCritical": []
+    },
+    "L1": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
+     "failedCritical": []
+    },
+    "L2": null,
+    "L3": null,
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "Q17"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-016",
+   "label": "Synthetic chest CT demo (critical)",
+   "region": "chest",
+   "cells": {
+    "L0": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C07",
+      "R05"
+     ]
+    },
+    "L3": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L4": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09"
+     ]
+    },
+    "L5": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09"
+     ]
+    },
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C07",
+      "C09",
+      "Q17",
+      "R02",
+      "R05"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-017",
+   "label": "Synthetic abdomen CT demo (critical)",
+   "region": "pelvis",
+   "cells": {
+    "L0": {
+     "score": 91.9,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2"
+     ],
+     "failedCritical": []
+    },
+    "L1": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
+     "failedCritical": []
+    },
+    "L2": null,
+    "L3": null,
+    "L4": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17"
+     ]
+    },
+    "L5": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17"
+     ]
+    },
+    "L6": null,
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-018",
+   "label": "Synthetic abdomen CT demo (critical)",
+   "region": "pelvis",
+   "cells": {
+    "L0": {
+     "score": 91.9,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": {
+     "score": 91.9,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2"
+     ],
+     "failedCritical": []
+    },
+    "L3": null,
+    "L4": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09"
+     ]
+    },
+    "L5": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09"
+     ]
+    },
+    "L6": null,
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-019",
+   "label": "Synthetic abdomen CT demo",
+   "region": "pelvis",
+   "cells": {
+    "L0": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L1": {
+     "score": 91.9,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2"
+     ],
+     "failedCritical": []
+    },
+    "L2": null,
+    "L3": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C07",
+      "Q17",
+      "R02",
+      "R05"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-020",
+   "label": "Synthetic abdomen CT demo (critical)",
+   "region": "pelvis",
+   "cells": {
+    "L0": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L1": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
+     ],
+     "failedCritical": []
+    },
+    "L2": null,
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "R02"
+     ]
+    },
+    "L4": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    },
+    "L5": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    },
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-021",
+   "label": "Synthetic abdomen CT demo (critical)",
+   "region": "abdomen",
+   "cells": {
+    "L0": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
+     "failedCritical": []
+    },
+    "L1": {
+     "score": 75.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 6"
+     ],
+     "failedCritical": []
+    },
+    "L2": null,
+    "L3": null,
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "Q17"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-022",
+   "label": "Synthetic abdomen CT demo",
+   "region": "pelvis",
+   "cells": {
+    "L0": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": null,
+    "L4": null,
+    "L5": null,
+    "L6": null,
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "Q17"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-023",
+   "label": "Synthetic abdomen CT demo",
+   "region": "abdomen",
+   "cells": {
+    "L0": {
+     "score": 91.9,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": null,
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": null
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-024",
+   "label": "Synthetic brain MRI demo (critical)",
+   "region": "head",
+   "cells": {
+    "L0": {
+     "score": 75.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 6"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "C10",
+      "R02"
+     ]
+    },
+    "L4": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    },
+    "L5": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    },
+    "L6": null,
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-025",
+   "label": "Synthetic brain MRI demo",
+   "region": "head",
+   "cells": {
+    "L0": {
+     "score": 91.9,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2"
+     ],
+     "failedCritical": []
+    },
+    "L1": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
+     "failedCritical": []
+    },
+    "L2": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
+     "failedCritical": []
+    },
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "R02"
+     ]
+    },
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "Q17",
+      "R02"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-026",
+   "label": "Synthetic brain MRI demo",
+   "region": "head",
+   "cells": {
+    "L0": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": null,
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "Q17"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-027",
+   "label": "Synthetic brain CT demo (critical)",
+   "region": "head",
+   "cells": {
+    "L0": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "C10",
+      "R02"
+     ]
+    },
+    "L4": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "R02"
+     ]
+    },
+    "L5": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    },
+    "L6": null,
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-028",
+   "label": "Synthetic spine MRI demo (critical)",
+   "region": "spine",
+   "cells": {
+    "L0": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": null,
+    "L4": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17"
+     ]
+    },
+    "L5": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17"
+     ]
+    },
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-029",
+   "label": "Synthetic spine MRI demo",
+   "region": "spine",
+   "cells": {
+    "L0": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "Q17",
+      "R02"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-030",
+   "label": "Synthetic spine MRI demo",
+   "region": "spine",
+   "cells": {
+    "L0": {
+     "score": 96.3,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": null,
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": null
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-031",
+   "label": "Synthetic abdomen US demo",
+   "region": "abdomen",
+   "cells": {
+    "L0": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
+     "failedCritical": []
+    },
+    "L1": {
+     "score": 75.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 6"
+     ],
+     "failedCritical": []
+    },
+    "L2": {
+     "score": 67.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 8"
+     ],
+     "failedCritical": []
+    },
+    "L3": null,
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C07",
+      "Q17",
+      "R05"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-032",
+   "label": "Synthetic abdomen US demo",
+   "region": "abdomen",
+   "cells": {
+    "L0": {
+     "score": 91.9,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": null,
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C07",
+      "R05"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-033",
+   "label": "Synthetic abdomen US demo (critical)",
+   "region": "abdomen",
+   "cells": {
+    "L0": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
+     "failedCritical": []
+    },
+    "L1": {
+     "score": 75.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 6"
+     ],
+     "failedCritical": []
+    },
+    "L2": null,
+    "L3": null,
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "Q17"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-034",
+   "label": "Synthetic abdomen US demo",
+   "region": "other",
+   "cells": {
+    "L0": {
+     "score": 91.9,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "R02"
+     ]
+    },
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C07",
+      "Q17",
+      "R02",
+      "R05"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-035",
+   "label": "Synthetic abdomen US demo",
+   "region": "abdomen",
+   "cells": {
+    "L0": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": null,
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C07",
+      "Q17",
+      "R05"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-036",
+   "label": "Synthetic thyroid US demo",
+   "region": "thyroid",
+   "cells": {
+    "L0": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
+     ],
+     "failedCritical": []
+    },
+    "L1": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
+     "failedCritical": []
+    },
+    "L2": null,
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "R02"
+     ]
+    },
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "Q17"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-037",
+   "label": "Synthetic thyroid US demo",
+   "region": "thyroid",
+   "cells": {
+    "L0": {
+     "score": 96.3,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": null,
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": null
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-038",
+   "label": "Synthetic breast Mammography demo (critical)",
+   "region": "breast",
+   "cells": {
+    "L0": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
+     ],
+     "failedCritical": []
+    },
+    "L1": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
+     "failedCritical": []
+    },
+    "L2": null,
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "R02"
+     ]
+    },
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "Q17",
+      "R02"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-039",
+   "label": "Synthetic breast Mammography demo",
+   "region": "breast",
+   "cells": {
+    "L0": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: deterministic dimension failure"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": null,
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
+     "failedCritical": []
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-040",
+   "label": "Synthetic breast Mammography demo",
+   "region": "breast",
+   "cells": {
+    "L0": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "R02"
+     ]
+    },
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "Q17",
+      "R02"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-041",
+   "label": "Synthetic chest XR demo (critical)",
+   "region": "chest",
+   "cells": {
+    "L0": {
+     "score": 91.9,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "C10",
+      "R02"
+     ]
+    },
+    "L4": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    },
+    "L5": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    },
+    "L6": null,
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-042",
+   "label": "Synthetic chest XR demo",
+   "region": "chest",
+   "cells": {
+    "L0": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "R02"
+     ]
+    },
+    "L4": null,
+    "L5": null,
+    "L6": null,
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C07",
+      "Q17",
+      "R02",
+      "R05"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-043",
+   "label": "Synthetic chest XR demo",
+   "region": "chest",
+   "cells": {
+    "L0": {
+     "score": 91.9,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "R02"
+     ]
+    },
+    "L4": null,
+    "L5": null,
+    "L6": null,
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "Q17",
+      "R02"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-044",
+   "label": "Synthetic chest XR demo",
+   "region": "chest",
+   "cells": {
+    "L0": {
+     "score": 75.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 6"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": null,
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C07",
+      "Q17",
+      "R02",
+      "R05"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-045",
+   "label": "Synthetic chest XR demo",
+   "region": "chest",
+   "cells": {
+    "L0": {
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L1": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
+     ],
+     "failedCritical": []
+    },
+    "L2": null,
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "R02"
+     ]
+    },
+    "L4": null,
+    "L5": null,
+    "L6": null,
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "Q17",
+      "R02"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-046",
+   "label": "Synthetic chest XR demo",
+   "region": "chest",
+   "cells": {
+    "L0": {
+     "score": 91.9,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "C10",
+      "R02"
+     ]
+    },
+    "L4": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    },
+    "L5": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    },
+    "L6": null,
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-047",
+   "label": "Synthetic chest CT demo",
+   "region": "chest",
+   "cells": {
+    "L0": {
+     "score": 91.9,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": null,
+    "L4": null,
+    "L5": null,
+    "L6": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C10"
+     ]
+    },
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C07",
+      "Q17",
+      "R02",
+      "R05"
+     ]
+    }
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-048",
+   "label": "Synthetic chest XR demo",
+   "region": "chest",
+   "cells": {
+    "L0": {
+     "score": 91.9,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2"
+     ],
+     "failedCritical": []
+    },
+    "L1": null,
+    "L2": null,
+    "L3": null,
+    "L4": null,
+    "L5": null,
+    "L6": null,
+    "L7": null
+   }
+  },
+  {
+   "id": "SYN-DEMO-EN-049",
+   "label": "Synthetic brain CT demo (critical)",
+   "region": "head",
+   "cells": {
+    "L0": {
+     "score": 91.9,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2"
+     ],
+     "failedCritical": []
+    },
+    "L1": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
+     "failedCritical": []
+    },
+    "L2": null,
+    "L3": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "C10",
+      "R02"
+     ]
+    },
+    "L4": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    },
+    "L5": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    },
+    "L6": null,
+    "L7": {
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
+     "gateReasons": [
+      "severity cap: critical failure",
+      "deterministic critical failure"
+     ],
+     "failedCritical": [
+      "C09",
+      "Q17",
+      "R02"
+     ]
+    }
+   }
+  }
+ ]
+}

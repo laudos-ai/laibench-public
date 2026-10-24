@@ -6,6 +6,8 @@
 
 import { getLocale } from "../locales/index.js";
 import { hasNegationCue, isFindingNegated } from "../extract.js";
+import { describeFabricated, describeSourceCriticalOutcomes, evaluateSourceCriticals } from "./source-critical.js";
+import { describeMissingFindings, evaluateSourceFindings } from "./source-findings.js";
 import { escapeRegExp, extractLateralityTokens, extractLevelTokens, extractMeasurements, matchAll, normalizeLoose, stripTags } from "../normalize.js";
 import type { Check, ExamMeta, LocaleKey, Severity } from "../types.js";
 
@@ -204,7 +206,8 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
     const hasBanned = rx.test(html);
     ck(checks, "CRIT", `C03${i}`, "No banned phrase", "critical", !hasBanned, hasBanned ? "found banned phrase" : "ok");
   }
-  ck(checks, "CRIT", "C04", "No markdown or foreign HTML/XML", "critical", matchAll(/^#{1,3}\s|^\*\*|```|<\/?(?:p|div|span|h[1-6]|ul|ol|li|em|strong|a)\b/gm, html).length === 0, "ok");
+  const foreignMarkup = matchAll(/^#{1,3}\s|^\*\*|```|<\/?(?:p|div|span|h[1-6]|ul|ol|li|em|strong|a)\b/gm, html);
+  ck(checks, "CRIT", "C04", "No markdown or foreign HTML/XML", "critical", foreignMarkup.length === 0, foreignMarkup.length ? `found: ${Array.from(new Set(foreignMarkup.map((m) => m.trim()))).slice(0, 4).join(" ")}` : "ok");
   ck(checks, "CRIT", "C05", "No measurements in conclusion", "major", matchAll(/\b\d+(?:[\.,]\d+)?\s*(?:cm|mm)\b|\b\d+\s*x\s*\d+\b/gi, conclusion).length === 0, "ok");
   if (meta.abnormalStudy) {
     const firstConclusionLine = firstLineFromSection(conclusion);
@@ -218,6 +221,60 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
     ck(checks, "CRIT", "C08", "No boilerplate filler in pathological conclusion", "major", !boilerplate.test(stripTags(conclusion)), boilerplate.test(stripTags(conclusion)) ? "boilerplate in pathological conclusion" : "ok");
   }
 
+  // C09 / C10 (v3.11.0): source-anchored critical gate. The input findings are
+  // the evidence; every critical they affirm must survive into the report with
+  // the same polarity and side, and the report may not affirm a critical the
+  // input does not back. Emitted only when there is something to check, so cases
+  // without criticals keep their v3.10 criterion counts. See
+  // evaluators/source-critical.ts for the rationale and the conservative rules.
+  const sourceCritical = evaluateSourceCriticals(html, findingsInput, localeKey);
+  if (sourceCritical.anchors.length > 0) {
+    ck(
+      checks,
+      "CRIT",
+      "C09",
+      "Input critical findings preserved (presence, polarity, laterality)",
+      "critical",
+      sourceCritical.missed.length === 0,
+      describeSourceCriticalOutcomes(sourceCritical.outcomes),
+    );
+  }
+  if (sourceCritical.reportAffirmedCount > 0 || sourceCritical.fabricated.length > 0) {
+    ck(
+      checks,
+      "CRIT",
+      "C10",
+      "No critical finding beyond the input (fabrication / wrong side)",
+      "critical",
+      sourceCritical.fabricated.length === 0,
+      describeFabricated(sourceCritical.fabricated),
+    );
+  }
+
+  // Q16 / Q17 (v3.11.0): abnormal input findings must be reflected; a report that
+  // reflects none of them on an abnormal study is unsupported normalcy. See
+  // evaluators/source-findings.ts (paraphrase-tolerant, polarity-aware).
+  const sourceFindings = evaluateSourceFindings(html, findingsInput, localeKey);
+  if (sourceFindings.clauses.length > 0) {
+    if (sourceFindings.missing.length === 0) {
+      ck(checks, "QUAL", "Q16", "Abnormal input findings reflected in the report", "major", true, `${sourceFindings.clauses.length} reflected`);
+    } else {
+      // One failing check per missing finding: two omissions cost more than one.
+      sourceFindings.missing.forEach((m, i) => {
+        ck(checks, "QUAL", `Q16-${i + 1}`, "Abnormal input finding reflected in the report", "major", false, describeMissingFindings([m]));
+      });
+    }
+    ck(
+      checks,
+      "QUAL",
+      "Q17",
+      "No unsupported normalcy (abnormal input, report reflects none of it)",
+      "critical",
+      !sourceFindings.unsupportedNormalcy,
+      sourceFindings.unsupportedNormalcy ? `none of ${sourceFindings.clauses.length} abnormal input finding(s) reflected` : "ok",
+    );
+  }
+
   // QUAL - Structural quality checks
   ck(checks, "QUAL", "Q01", "Has bold title", "minor", /^(?:\s|<br\s*\/?>)*<center><b>/i.test(html), html.slice(0, 40));
   // Title abbreviation is a style preference, not a safety issue: standard
@@ -227,12 +284,13 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
   // Whitespace/line-break preferences are not clinical safety failures. Keep
   // them visible for rendering polish, but never let them become HealthBench-
   // style arbitrary gates.
-  ck(checks, "QUAL", "Q03", "No <br><br> inside analysis", "minor", !analysis.includes("<br><br>"), "ok");
-  ck(checks, "QUAL", "Q04", "No <br><br> inside conclusion", "minor", !conclusion.includes("<br><br>"), "ok");
-  ck(checks, "QUAL", "Q05", "Has section separators", "major", /<br><br><b>/i.test(html), "ok");
-  ck(checks, "QUAL", "Q06", "Only allowed tags", "major", hasAllowedTagsOnly(html), "ok");
-  ck(checks, "QUAL", "Q07", "No placeholders", "critical", matchAll(/\[[A-Z_]{2,}\]|_{3,}|(?<!\w)XXX(?!\w)|####/g, html).length === 0, "ok");
-  ck(checks, "QUAL", "Q08", "Analysis section present", "critical", locale.sections.analysis.test(html), "ok");
+  ck(checks, "QUAL", "Q03", "No <br><br> inside analysis", "minor", !analysis.includes("<br><br>"), analysis.includes("<br><br>") ? "blank line inside analysis" : "ok");
+  ck(checks, "QUAL", "Q04", "No <br><br> inside conclusion", "minor", !conclusion.includes("<br><br>"), conclusion.includes("<br><br>") ? "blank line inside conclusion" : "ok");
+  ck(checks, "QUAL", "Q05", "Has section separators", "major", /<br><br><b>/i.test(html), /<br><br><b>/i.test(html) ? "ok" : "no <br><br><b> section separator");
+  ck(checks, "QUAL", "Q06", "Only allowed tags", "major", hasAllowedTagsOnly(html), hasAllowedTagsOnly(html) ? "ok" : "tags outside <center>, <b>, <br>");
+  const placeholders = matchAll(/\[[A-Z_]{2,}\]|_{3,}|(?<!\w)XXX(?!\w)|####/g, html);
+  ck(checks, "QUAL", "Q07", "No placeholders", "critical", placeholders.length === 0, placeholders.length ? `found: ${placeholders.slice(0, 3).join(" ")}` : "ok");
+  ck(checks, "QUAL", "Q08", "Analysis section present", "critical", locale.sections.analysis.test(html), locale.sections.analysis.test(html) ? "ok" : `missing "${locale.sectionLabels.analysis}" section`);
   if (meta.modality === "US") {
     const hasTechniqueSection = nonGlobal(locale.sections.technique).test(html);
     ck(
@@ -360,7 +418,7 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
     for (const sentence of findingSentences) {
       const sn = normalizeLoose(sentence);
       // Extract key finding nouns from the sentence for context matching
-      const findingNouns = sn.match(/\b(?:hematoma|nodulo|cisto|massa|lesao|derrame|consolidacao|hernia|estenose|calcul|fratura|pneumotorax|atelectasia|efusao|luxacao|adenopatia|linfonodomegalia|hidronefrose|nefrolitiase|hemorrhage|hematoma|nodule|cyst|mass|lesion|effusion|consolidation|hernia|stenosis|calculus|fracture|collection|abscess|disc|tumor)\b/g) ?? [];
+      const findingNouns = sn.match(/\b(?:hematoma|nodulo|cisto|massa|lesao|derrame|consolidacao|hernia|estenose|calcul|fratura|pneumotorax|atelectasia|efusao|luxacao|adenopatia|linfonodomegalia|hidronefrose|nefrolitiase|infarto|contusao|laceracao|opacidade|pneumonia|torcao|hemorrhage|hematoma|nodule|cyst|mass|lesion|effusion|consolidation|hernia|stenosis|calculus|fracture|collection|abscess|disc|tumor|pneumothorax|atelectasis|dislocation|lymphadenopathy|adenopathy|hydronephrosis|nephrolithiasis|infarct|contusion|laceration|opacity|torsion|occlusion|oclusao|thrombus|thrombosis|trombose|aneurysm|aneurisma|tear|rotura|extrusion|extrusao|protrusion|protrusao|embolism|embolia|knee|joelho|shoulder|ombro|hip|quadril|ankle|tornozelo|wrist|punho|elbow|cotovelo)\b/g) ?? [];
 
       for (const noun of findingNouns) {
         if (!inputLateralityMap.has(noun)) inputLateralityMap.set(noun, new Set());

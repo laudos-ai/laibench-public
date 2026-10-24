@@ -14,8 +14,8 @@
 <p align="center">
   <a href="https://github.com/laudos-ai/laibench-public/actions/workflows/ci.yml"><img src="https://github.com/laudos-ai/laibench-public/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-111111.svg" alt="License: MIT"></a>
-  <img src="https://img.shields.io/badge/benchmarkVersion-3.10.0-0e7c7b" alt="benchmark version 3.10.0">
-  <img src="https://img.shields.io/badge/tests-444%20passing-2ea44f" alt="444 tests passing">
+  <img src="https://img.shields.io/badge/benchmarkVersion-3.11.0-0e7c7b" alt="benchmark version 3.11.0">
+  <img src="https://img.shields.io/badge/tests-565%20passing-2ea44f" alt="565 tests passing">
   <img src="https://img.shields.io/badge/node-20%20%7C%2022-111111" alt="Node 20 | 22">
   <img src="https://img.shields.io/badge/dependencies-zero%20runtime-0e7c7b" alt="zero runtime dependencies">
 </p>
@@ -44,6 +44,7 @@ Most "report quality" benchmarks reward fluent prose. A confidently-written repo
 - **Conservative combination.** The combined dimension score is `MIN(deterministic, judge)` — an optional LLM judge can lower a score but never inflate past the deterministic gate.
 - **Anti-compensation.** Strong terminology/coverage cannot lift a clinically weak report into a PASS band.
 - **Tamper-resistant numbers.** Every loaded run is re-scored through the gated combiner; a run whose stored verdict disagrees with the re-derived one is rejected, so a relabeled critical-miss can never inflate the public leaderboard.
+- **Source-anchored gates without answer keys.** On the input-only path the input findings are the evidence: every critical they affirm must survive with the same polarity and side (C09), no critical may be invented (C10), abnormal findings must be reflected (Q16), and an abnormal study cannot be reported as normal (Q17).
 - **Provenance.** A `scoringHash` (over the gate-deciding source files) and a cases-only `suiteHash` pin exactly what produced each number.
 
 Pure TypeScript, **zero runtime dependencies**, deterministic checks, optional frozen judging, bootstrap CIs, McNemar / Cohen's *h*.
@@ -75,7 +76,13 @@ npm test
 npm run guard:public        # public-release safety gate
 npm run smoke:mock          # run the synthetic en-US suite with a bundled mock agent
 npm run smoke:leaderboard   # build a leaderboard from the run
+npm run smoke:reference     # template reference agent on the en-US suite (31 PASS / 18 PARTIAL / 0 FAIL)
+npm run ladder              # public discrimination ladder → site/ladder.json + docs/public-ladder.md
 ```
+
+### Does the score fall when the report gets worse?
+
+`npm run ladder` degrades a template reference report by exactly one error per rung on the 49 public cases — no answer keys needed — and scores every version with the real harness. Under v3.11.0 every critical rung (critical denied, omitted or fabricated, and a "No acute abnormality." null report) is vetoed, and no critical rung passes. Full table, including the same ladder under v3.10.0: [docs/public-ladder.md](docs/public-ladder.md).
 
 Run the synthetic public en-US suite with a local command adapter:
 

@@ -28,7 +28,9 @@ export const enUS: LocaleSpec = {
   bannedPhrases: [/no other significant findings/gi],
   normalPatterns: [/^normal$/i, /^no\s+acute\s+abnormality/i, /^unremarkable$/i],
   modalityVocab: {
-    US_forbidden: /\battenuation\b|\bdensity\b|\bsignal\s+intensity\b|\benhancement\b/gi,
+    // v3.11: "posterior / acoustic / beam attenuation" is correct ultrasound
+    // vocabulary (e.g. hepatic steatosis); only CT-style attenuation is wrong in US.
+    US_forbidden: /\b(?<!(?:beam|acoustic|sound|posterior|ultrasound|through-transmission)\s)attenuation\b|\bdensity\b|\bsignal\s+intensity\b|\benhancement\b/gi,
     MRI_forbidden: /\bechogenicity\b|\bhypoechoic\b|\banechoic\b|\bechogenic\b/gi,
     CT_forbidden: /\bsignal\s+intensity\b/gi,
     CT_fix: "signal intensity→attenuation",
@@ -46,7 +48,8 @@ export const enUS: LocaleSpec = {
   },
   titleRegionTokens: {
     head: ["head", "brain", "cranial"],
-    chest: ["chest", "thorax"],
+    // v3.11: chest studies titled "thoracic aorta" / "pulmonary angiography".
+    chest: ["chest", "thorax", "thoracic", "pulmonary", "lung", "mediastin"],
     abdomen: ["abdomen", "abdominal"],
     spine: ["spine", "lumbar", "cervical", "thoracic"],
     urinary: ["urinary", "urogra", "urinary tract"],
@@ -107,7 +110,11 @@ export const enUS: LocaleSpec = {
     if (/urinary|uro|urolog/.test(exam)) return "urinary";
     if (/pelv/.test(exam)) return "pelvis";
     if (/head|brain|cranial/.test(exam)) return "head";
-    if (/chest|thorax|lung/.test(exam)) return "chest";
+    // v3.11: "thoracic aorta" / "pulmonary angiography" are chest studies. They
+    // previously fell through to the spine rule ("thoracic") or to "unknown",
+    // so an aortic CTA was graded on vertebral/canal coverage. Mirrors pt-BR,
+    // which already maps torac/pulm to chest. "thoracic spine" still maps to spine.
+    if (/chest|thorax|lung|pulmonary|mediastin|thoracic\s+aort/.test(exam)) return "chest";
     if (/abd/.test(exam)) return "abdomen";
     if (/spine|lumbar|cervical|thoracic/.test(exam)) return "spine";
     if (/neck/.test(exam)) return "neck";

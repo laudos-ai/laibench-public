@@ -1,6 +1,6 @@
 {
   "benchmarkName": "laibench-pro",
-  "benchmarkVersion": "3.10.0",
+  "benchmarkVersion": "3.11.0",
   "id": "lite-public.en-US",
   "label": "Synthetic Public Pro (en-US)",
   "description": "Synthetic-only public suite for harness verification and the public Pro leaderboard: normals, critical findings, negation/laterality/measurement traps, guideline classification and hallucination bait. Not a clinical corpus.",

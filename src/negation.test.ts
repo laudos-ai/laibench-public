@@ -201,3 +201,38 @@ describe("R02 pt-BR laterality swap (vowel-ending stems)", () => {
     assert.match(String(r02!.evidence), /SWAP/);
   });
 });
+
+// ---- v3.11.0: list-scoped negation ----
+// "No effusion, consolidation, or pneumothorax" denies every item. v3.10 closed
+// the clause window at the comma and read later items as AFFIRMED, fabricating a
+// critical in a correct report and crediting a report that denied a gold
+// critical. The extension must stay narrow: an affirmed critical after a comma
+// ("No effusion, small right pneumothorax") must remain affirmed.
+describe("isFindingNegated: list-scoped negation (v3.11.0)", () => {
+  const NEG: Array<[string, string, "en-US" | "pt-BR"]> = [
+    ["No effusion, consolidation, or pneumothorax", "pneumothorax", "en-US"],
+    ["No effusion, consolidation, or pneumothorax", "consolidation", "en-US"],
+    ["No effusion, consolidation or pneumothorax", "pneumothorax", "en-US"],
+    ["No suspicious mass, architectural distortion, or microcalcifications", "microcalcifications", "en-US"],
+    ["No acute intracranial hemorrhage, mass effect, or midline shift", "midline shift", "en-US"],
+    ["Lungs clear without effusion, consolidation, or pneumothorax", "pneumothorax", "en-US"],
+    ["Sem derrame, consolidação ou pneumotórax", "pneumotórax", "pt-BR"],
+    ["Sem derrame pleural, consolidação, ou pneumotórax", "pneumotórax", "pt-BR"],
+    ["Não há derrame, consolidação ou pneumotórax", "pneumotórax", "pt-BR"],
+  ];
+  for (const [sentence, term, locale] of NEG) {
+    it(`negated: "${sentence}" → ${term}`, () => assert.equal(isFindingNegated(sentence, term, locale), true));
+  }
+  const AFF: Array<[string, string, "en-US" | "pt-BR"]> = [
+    ["No effusion, small right pneumothorax", "pneumothorax", "en-US"],
+    ["No effusion, large right pneumothorax with partial collapse", "pneumothorax", "en-US"],
+    ["No effusion, small right pneumothorax and rib fracture", "pneumothorax", "en-US"],
+    ["No midline shift, acute subdural hematoma along the left convexity", "hematoma", "en-US"],
+    ["Without pleural effusion, with right pneumothorax", "pneumothorax", "en-US"],
+    ["Sem derrame, pneumotórax volumoso à direita", "pneumotórax", "pt-BR"],
+    ["Sem derrame pleural, com pneumotórax à esquerda", "pneumotórax", "pt-BR"],
+  ];
+  for (const [sentence, term, locale] of AFF) {
+    it(`affirmed: "${sentence}" → ${term}`, () => assert.equal(isFindingNegated(sentence, term, locale), false));
+  }
+});

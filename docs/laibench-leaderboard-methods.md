@@ -94,12 +94,30 @@ Leaderboard generation is not allowed to trust edited summary fields. The CLI re
 
 Do not expose private routes, prompts, provider configuration, credentials, private file paths, raw validation ID lists, private case content, hidden judge implementation, or other implementation details that are not required for benchmark reproducibility. Do not report superiority without paired testing on the same suite hash.
 
+## Input-Only (No-Gold) Path: Source-Anchored Gates (v3.11.0)
+
+Public synthetic cases ship without answer keys, and so do most cases a lab writes for its own agent. On that path the **input findings are the evidence**, and since v3.11.0 four structural checks anchor the score to them:
+
+| Check | Dim | Severity | Rule |
+| --- | --- | --- | --- |
+| C09 | CRIT | critical | Every critical finding the input affirms is preserved in the report body: present, affirmed (not denied) and on the same side. Side must be stated for side-defining criticals (pneumothorax, fracture, bleed, torsion, stroke); a contradicted side always fails; sides are ignored for non-lateral criticals (free air, obstruction, dissection, midline shift). |
+| C10 | CRIT | critical | The report affirms no critical finding the input does not back — neither a new critical nor a critical moved to the other side. Recommendation and differential sentences are not counted; an entailed broader finding (midline shift ⇒ mass effect, tension pneumothorax ⇒ pneumothorax) is allowed. |
+| Q16 | QUAL | major | Each abnormal input finding is reflected in the report body (paraphrase-tolerant: whole clause ≥ 40%, a sub-clause ≥ 60%, or its diagnosis ≥ 50% lexical coverage, and not denied). One failing check per missing finding. |
+| Q17 | QUAL | critical | Unsupported normalcy: the input is abnormal but the report reflects none of its abnormal findings. |
+
+The report **title and Technique section are excluded** from these checks because they restate the exam, which often names the clinical question ("CT angiography *for pulmonary embolism*"). Negation is clause-scoped and, since v3.11.0, **list-scoped**: "No effusion, consolidation, or pneumothorax" / "Sem derrame, consolidação ou pneumotórax" denies every item, but "No effusion, small right pneumothorax" stays affirmed.
+
+On the gold path the CRIT and QUAL evaluators own those dimensions and these four checks are not in the structural gate allowlist, so they never reach a gold-labelled verdict (tested). The list-scoped negation fix and the extended critical vocabulary do apply to both paths.
+
+**Public discrimination ladder.** `scripts/public-ladder.ts` measures, on the 49 public cases and without answer keys, whether the score falls as a report gets worse: a template reference report is degraded by exactly one error per rung (measurement drift, non-critical omission, laterality swap, critical denied, critical omitted, critical fabricated, null report) and every report is scored against the original case. Results are published in [`public-ladder.md`](public-ladder.md) and on the website; under v3.11.0 every critical rung is vetoed in 100% of applicable cases and the null report never passes.
+
 ## Limitations
 
 - Gold findings are heuristically derived from reports, not fully radiologist-adjudicated labels.
 - The privacy filter is deterministic pattern filtering, not a formal de-identification certification.
 - The controlled private split is designed for daily regression monitoring, not as a final public benchmark.
-- Critical findings are identified by keyword heuristics and can miss phrasing variants.
+- Critical findings are identified by keyword heuristics and can miss phrasing variants. v3.11.0 widens the common paraphrases (e.g. "dissection of the descending aorta", "acute left MCA territory infarct") and freezes 20 paraphrased correct reports as a regression test, but the matcher remains lexical.
+- On the input-only path, finding preservation (Q16) is lexical coverage, not entity matching; a correct report that paraphrases a purely descriptive finding into an unrelated term can still be flagged (major, never a veto on its own).
 - The benchmark evaluates generated text, not downstream clinical outcomes.
 
 ## Future Work Before Stronger Public Claims

@@ -82,3 +82,11 @@ describe("report language contract (T-LANG)", () => {
     assert.equal(enLang!.passed, true);
   });
 });
+
+describe("deriveExamMeta region (v3.11.0)", () => {
+  it("en-US: thoracic-aorta CTA and pulmonary angiography are chest, thoracic spine stays spine", () => {
+    assert.equal(deriveExamMeta("CT angiography of the thoracic aorta, with contrast.", "Intimal flap.", "en-US").region, "chest");
+    assert.equal(deriveExamMeta("CT pulmonary angiography, with contrast.", "Filling defect.", "en-US").region, "chest");
+    assert.equal(deriveExamMeta("MRI of the thoracic spine, without contrast.", "Normal.", "en-US").region, "spine");
+  });
+});

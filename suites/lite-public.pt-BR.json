@@ -1,6 +1,6 @@
 {
   "benchmarkName": "laibench-pro",
-  "benchmarkVersion": "3.10.0",
+  "benchmarkVersion": "3.11.0",
   "id": "lite-public.pt-BR",
   "label": "Controlled Pro Aggregate (pt-BR)",
   "description": "Controlled pt-BR report-generation benchmark with 120 gated text fixtures. The public repository exposes methodology and aggregate leaderboard results only; case JSON, answer keys and frozen predictions are not distributed.",

@@ -31,7 +31,8 @@ for (let i = 0; i < argv.length; i += 1) {
   }
 }
 
-const data = { generatedAt: null, locales: {} };
+const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+const data = { generatedAt: null, currentBenchmarkVersion: pkg.version, locales: {} };
 
 for (const [locale, files] of Object.entries(boards)) {
   const runs = files.map((f) => JSON.parse(readFileSync(f, "utf8")));
@@ -57,6 +58,9 @@ for (const [locale, files] of Object.entries(boards)) {
     cases: first.results.length,
     track: first.manifest.track,
     scoring: first.manifest.scoreMode,
+    // Scoring version(s) that produced this board. Rows from a version older than
+    // the current harness are shown as such on the site, never silently compared.
+    scoredWith: Array.from(new Set(runs.map((r) => r.manifest.benchmarkVersion).filter(Boolean))).join(", ") || null,
     entries,
     reliability: rel,
     reliabilityRuns: relRuns,

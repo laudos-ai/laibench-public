@@ -83,7 +83,13 @@ export const DEFAULT_SCORING_FILES = [
   "src/evaluators/guide.ts",
   "src/evaluators/rag.ts",
   "src/evaluators/structural.ts",
+  "src/evaluators/source-critical.ts",
+  "src/evaluators/source-findings.ts",
   "src/extractors/critical-extractor.ts",
+  // benchmark.ts owns the GATE_STRUCTURAL allowlist (which structural criticals
+  // still gate when an evaluator owns a dimension) and the evaluator-overlay
+  // decision, so it decides verdicts and must move the scoringHash (v3.11.0).
+  "src/benchmark.ts",
   "src/locales/index.ts",
   "src/locales/types.ts",
   "src/locales/en-US.ts",

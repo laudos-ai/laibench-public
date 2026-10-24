@@ -61,7 +61,7 @@ export const ptBR: LocaleSpec = {
   },
   titleRegionTokens: {
     head: ["cranio", "encefalo", "intracrani"],
-    chest: ["torax"],
+    chest: ["torax", "torac", "pulmon", "mediastin"],
     abdomen: ["abdome", "abdominal"],
     spine: ["coluna", "lombar", "cervical", "toracica"],
     urinary: ["vias urinarias", "uro", "urinario"],

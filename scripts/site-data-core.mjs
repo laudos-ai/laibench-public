@@ -68,6 +68,9 @@ export function entryFromRun(run) {
   const group = groupForRun(m);
   return {
     system: m.entityName || m.modelLabel || m.runName,
+    // v3.11: every row states the scoring version that produced it, so rows from
+    // different scoring versions are never silently read as comparable.
+    benchmarkVersion: m.benchmarkVersion ?? null,
     kind: group === "calibration" ? "Harness fixture" : group === "model" ? "Free/open model" : (m.systemType || "agent"),
     group,
     score: clinicalScore / 100,

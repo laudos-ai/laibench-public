@@ -1,5 +1,6 @@
 window.LAIBENCH_DATA = {
  "generatedAt": null,
+ "currentBenchmarkVersion": "3.11.0",
  "locales": {
   "pt-BR": {
    "suite": "lite-public.pt-BR",
@@ -26,13 +27,16 @@ window.LAIBENCH_DATA = {
      },
      "latencyMs": 16991.1,
      "track": "agent",
-     "suiteHash": "b7f412e25a71352072d525c9bee9d7630818eb09996d172e9c2664224d7b2217"
+     "suiteHash": "b7f412e25a71352072d525c9bee9d7630818eb09996d172e9c2664224d7b2217",
+     "benchmarkVersion": "3.10.0"
     }
    ],
    "reliability": null,
    "reliabilityRuns": 0,
    "disclosure": "Disclosure: the ranked production agent (Laudos.AI) is a first-party system built by the same team that maintains LAIBench Pro. Free and open model rows are diagnostic comparisons only and are never ranked against the first-party production agent. Calibration fixtures are harness sanity checks, not product claims. The public demonstration cases are synthetic and input-only; they were not clinically reviewed and must not be used to claim clinical validation. The controlled pt-BR suite is synthetic and was authored and reviewed by senior radiologists in Sao Paulo, SP, Brazil as an internal data-quality process; this is not an independent third-party validation, and the suite is aggregate-only and is not an open-download benchmark. Independent external adjudication (vendor-versus-external inter-rater kappa) is tracked as future work and is not claimed here.",
-   "note": "Controlled benchmark preview. Production agents are ranked separately from free/open model comparisons and calibration fixtures. The public board excludes case JSON, answer keys, frozen predictions and corpus provenance. The pt-BR controlled suite is gated and must not be treated as an open-download benchmark. Score is weighted clinical fidelity score. Strict all-pass means zero-failure cases: every criterion in a case passes simultaneously, and any critical failure forces FAIL instead of being averaged into PASS. Runs are reproducible only inside the controlled adjudication environment. <a href=\"#methods\">Methods</a>."
+   "note": "Controlled benchmark preview. Production agents are ranked separately from free/open model comparisons and calibration fixtures. The public board excludes case JSON, answer keys, frozen predictions and corpus provenance. The pt-BR controlled suite is gated and must not be treated as an open-download benchmark. Score is weighted clinical fidelity score. Strict all-pass means zero-failure cases: every criterion in a case passes simultaneously, and any critical failure forces FAIL instead of being averaged into PASS. Runs are reproducible only inside the controlled adjudication environment. <a href=\"#methods\">Methods</a>.",
+   "scoredWith": "3.10.0",
+   "rescoreNote": "Scored with LAIBench 3.10.0. v3.11.0 changes scoring on both paths (source-anchored critical gate, unsupported-normalcy gate and list-scoped negation; see CHANGELOG), so these numbers are not v3.11.0 results until re-run; they are shown under the version that produced them."
   },
   "en-US": {
    "suite": "lite-public.en-US",
@@ -58,7 +62,8 @@ window.LAIBENCH_DATA = {
       "RAG": 0.8220000000000001
      },
      "latencyMs": null,
-     "track": "model"
+     "track": "model",
+     "benchmarkVersion": "≤ 3.10.0"
     },
     {
      "system": "Nemotron 3 Nano Omni 30B · NVIDIA",
@@ -77,7 +82,8 @@ window.LAIBENCH_DATA = {
       "RAG": 0.8590000000000001
      },
      "latencyMs": null,
-     "track": "model"
+     "track": "model",
+     "benchmarkVersion": "≤ 3.10.0"
     },
     {
      "system": "North Mini Code · Cohere",
@@ -96,7 +102,8 @@ window.LAIBENCH_DATA = {
       "RAG": 0.899
      },
      "latencyMs": null,
-     "track": "model"
+     "track": "model",
+     "benchmarkVersion": "≤ 3.10.0"
     },
     {
      "system": "Laguna M.1 · Poolside",
@@ -115,7 +122,8 @@ window.LAIBENCH_DATA = {
       "RAG": 0.693
      },
      "latencyMs": null,
-     "track": "model"
+     "track": "model",
+     "benchmarkVersion": "≤ 3.10.0"
     },
     {
      "system": "Nemotron 3 Ultra 550B · NVIDIA",
@@ -134,7 +142,8 @@ window.LAIBENCH_DATA = {
       "RAG": 0.825
      },
      "latencyMs": null,
-     "track": "model"
+     "track": "model",
+     "benchmarkVersion": "≤ 3.10.0"
     },
     {
      "system": "gpt-oss-120b · OpenAI",
@@ -153,7 +162,8 @@ window.LAIBENCH_DATA = {
       "RAG": 0.667
      },
      "latencyMs": null,
-     "track": "model"
+     "track": "model",
+     "benchmarkVersion": "≤ 3.10.0"
     },
     {
      "system": "Gemma 4 31B · Google",
@@ -172,7 +182,8 @@ window.LAIBENCH_DATA = {
       "RAG": 0.882
      },
      "latencyMs": null,
-     "track": "model"
+     "track": "model",
+     "benchmarkVersion": "≤ 3.10.0"
     },
     {
      "system": "gpt-oss-20b · OpenAI",
@@ -191,13 +202,16 @@ window.LAIBENCH_DATA = {
       "RAG": 0.8540000000000001
      },
      "latencyMs": null,
-     "track": "model"
+     "track": "model",
+     "benchmarkVersion": "≤ 3.10.0"
     }
    ],
    "reliability": null,
    "reliabilityRuns": 0,
    "disclosure": "Disclosure: the ranked production agent (Laudos.AI) is a first-party system built by the same team that maintains LAIBench Pro. Free and open model rows are diagnostic comparisons only and are never ranked against the first-party production agent. Calibration fixtures are harness sanity checks, not product claims. The public demonstration cases are synthetic and input-only; they were not clinically reviewed and must not be used to claim clinical validation. The controlled pt-BR suite is synthetic and was authored and reviewed by senior radiologists in Sao Paulo, SP, Brazil as an internal data-quality process; this is not an independent third-party validation, and the suite is aggregate-only and is not an open-download benchmark. Independent external adjudication (vendor-versus-external inter-rater kappa) is tracked as future work and is not claimed here.",
-   "note": "Controlled benchmark preview. Production agents are ranked separately from free/open model comparisons and calibration fixtures. The public board excludes case JSON, answer keys, frozen predictions and corpus provenance. The pt-BR controlled suite is gated and must not be treated as an open-download benchmark. Score is weighted clinical fidelity score. Strict all-pass means zero-failure cases: every criterion in a case passes simultaneously, and any critical failure forces FAIL instead of being averaged into PASS. Runs are reproducible only inside the controlled adjudication environment. <a href=\"#methods\">Methods</a>."
+   "note": "Controlled benchmark preview. Production agents are ranked separately from free/open model comparisons and calibration fixtures. The public board excludes case JSON, answer keys, frozen predictions and corpus provenance. The pt-BR controlled suite is gated and must not be treated as an open-download benchmark. Score is weighted clinical fidelity score. Strict all-pass means zero-failure cases: every criterion in a case passes simultaneously, and any critical failure forces FAIL instead of being averaged into PASS. Runs are reproducible only inside the controlled adjudication environment. <a href=\"#methods\">Methods</a>.",
+   "scoredWith": "pre-3.11 (≤ 3.10.0)",
+   "rescoreNote": "Scored with LAIBench ≤ 3.10.0. v3.11.0 changes scoring on both paths (source-anchored critical gate, unsupported-normalcy gate and list-scoped negation; see CHANGELOG), so these numbers are not v3.11.0 results until re-run; they are shown under the version that produced them."
   }
  }
 };

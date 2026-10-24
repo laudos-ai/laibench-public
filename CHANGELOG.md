@@ -1,5 +1,85 @@
 # Changelog
 
+## v3.11.0 — LAIBench Pro — source-anchored critical gate, unsupported normalcy, list-scoped negation (affects scores)
+
+The prime directive — *a beautiful report that misses a pneumothorax must fail* —
+was not enforced on the **input-only (no-gold) path**, which is the path every
+public synthetic case and every lab's own unlabelled cases run on. A polished
+report that omitted a stated "large pneumothorax" scored **PASS 100**; omitting
+free intraperitoneal air scored PASS 91.9; a right→left pneumothorax swap scored
+PASS 98.1; and a "No acute abnormality." report for a complete ACL tear scored
+PASS 91.9. A list-negation bug affected **both** paths. CLI contract and run
+schema are backward compatible (additive). Scoring changes, so `benchmarkVersion`
+moves to `3.11.0` and `scoringHash` updates.
+
+### Added (input-only path — affects scores, safety direction)
+- **C09 — input critical findings preserved** (CRIT, critical): every critical the
+  input affirms must be present in the report body, affirmed, and on the same
+  side. Side is required for side-defining criticals, a contradicted side always
+  fails, sides are ignored for non-lateral criticals. `evaluators/source-critical.ts`.
+- **C10 — no critical beyond the input** (CRIT, critical): no affirmed critical
+  the input does not back, including a critical moved to the contralateral side.
+  Recommendation/differential sentences are skipped; entailed broader findings
+  (midline shift ⇒ mass effect) are allowed.
+- **Q16 — abnormal input findings reflected** (QUAL, major, one check per missing
+  finding) and **Q17 — no unsupported normalcy** (QUAL, critical).
+  Paraphrase-tolerant (clause / sub-clause / diagnosis coverage) and
+  polarity-aware. `evaluators/source-findings.ts`.
+- The report **title and Technique section are excluded** from C09/C10/Q16/Q17:
+  they restate the exam ("CT angiography *for pulmonary embolism*"), which
+  otherwise credited an omitted critical.
+- All four are structural checks outside the gate allowlist, so they never reach
+  a gold-labelled verdict (regression-tested).
+
+### Fixed (both paths — affects scores)
+- **List-scoped negation.** "No effusion, consolidation, or pneumothorax" /
+  "Sem derrame, consolidação ou pneumotórax" read later items as AFFIRMED: a
+  correct report using the most common negation list could be force-FAILed with
+  a fabricated critical, and a report that **denied** a gold critical inside such
+  a list was credited with reporting it (unsafe direction). Negation now carries
+  across a coordinated list of bare items; "No effusion, small right
+  pneumothorax" stays affirmed. Tests prove both gold-path cases fail on v3.10.0.
+- **Critical vocabulary.** Extracted as criticals (keyword anchors kept in sync):
+  free intraperitoneal air, hemoperitoneum / hemothorax / hemopericardium,
+  "acute … infarct" (up to four words between), and common paraphrases of aortic
+  dissection, bowel obstruction, cord compression, perforation, midline shift and
+  appendicitis — so a correct paraphrase is no longer a false omission.
+- **R02 laterality swap** missed English nouns (it listed pt "pneumotorax" but
+  not "pneumothorax"); added pneumothorax, atelectasis, infarct, occlusion,
+  thrombus, aneurysm, tear, extrusion and joints in both locales.
+- **en-US region map**: "CT angiography of the thoracic aorta" mapped to *spine*
+  (graded on vertebral coverage) and "CT pulmonary angiography" to *unknown*; both
+  are chest now, with matching chest title tokens in both locales.
+- **Ultrasound vocabulary gate (TM1)** flagged "posterior/acoustic/beam
+  attenuation", correct ultrasound terminology.
+- Anatomical abbreviations (ACL, PCL, MCL, MCA, UVJ, UPJ, CBD, AAA, RLQ, RUQ; pt
+  LCA, ACM) expand in the clinical matcher.
+- Failing checks now print truthful evidence (C04, Q03–Q08 printed "ok" on failure).
+
+### Provenance
+- `src/evaluators/source-critical.ts`, `src/evaluators/source-findings.ts` and
+  `src/benchmark.ts` (owner of the gate allowlist) are pinned in the scoringHash.
+- Site rows now carry the scoring version that produced them; rows scored before
+  v3.11.0 are shown as such and are not v3.11.0 results until re-run.
+
+### Tooling
+- `examples/reference-agent.mjs`: deterministic, locale-aware template reference
+  agent (the bundled mocks write Portuguese headers into the English suite and
+  FAIL every case). On the public en-US suite: 31 PASS / 18 PARTIAL / 0 FAIL.
+- `scripts/public-ladder.ts` + `docs/public-ladder.md` + `site/ladder.json`:
+  public discrimination ladder. v3.10.0 → v3.11.0 PASS rate on the same reports:
+  critical fabricated 48.6% → 0%, critical denied/omitted 21.4% → 0%, null report
+  6.7% → 0%; critical veto on every critical rung 100%.
+- Tests: 496 → 565 (source-critical gate, list negation in both locales,
+  gold-path isolation, 20 frozen paraphrased correct reports, region map).
+
+### Published numbers
+The controlled pt-BR row (v3.10.0) and the public-smoke rows (≤ 3.10.0) were not
+re-derived here: case JSON and frozen predictions are not in this repository.
+The list-negation fix can move controlled pt-BR results in **either** direction
+(fewer false fabricated criticals; no credit for denied criticals). Re-run before
+citing any number under v3.11.0.
+
 ## v3.10.0 — LAIBench Pro — judge-parse anti-inflation, gate completeness, critical-keyword coverage (affects scores)
 
 Second hardening pass over the medium-severity audit tail (prime-directive-relevant

@@ -590,7 +590,7 @@ function initLeaderboard(data) {
         ? `<th class="gap">${label}<br><span style="font-size:11.5px;font-weight:400">○ every check, ● clinical</span></th>`
         : `<th${sortAttr(k)}><button type="button" data-k="${k}">${label}</button></th>`).join("");
       const tr = entries.map((e) => `<tr>
-        <td class="l sys">${esc(e.system)}<span class="tag">${b.prod ? "product agent" : "open model"}</span></td>
+        <td class="l sys">${esc(e.system)}<span class="tag${b.prod ? " prod" : ""}">${b.prod ? "product agent" : "open model"}</span></td>
         <td class="big">${pct(e.clinicalScore)}</td>
         <td>${pct(e.strictPass)}</td>
         <td>${pct(e.allPass)}</td>

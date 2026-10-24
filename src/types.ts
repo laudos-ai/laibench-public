@@ -69,6 +69,8 @@ export type JudgeResult = {
 
 export type ExamMeta = {
   modality: Modality;
+  /** False when neither the exam nor the dictation's first sentence names a modality. */
+  modalityKnown?: boolean;
   contrast: boolean;
   region: Region;
   normalizedExam: string;

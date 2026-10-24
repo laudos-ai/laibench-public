@@ -43,8 +43,19 @@ import type { LocaleKey } from "../types.js";
 export function clinicalReportBody(html: string, locale: LocaleKey): string {
   const technique = getLocale(locale).sections.technique;
   let body = html.replace(/<center>[\s\S]*?<\/center>/gi, " ");
-  body = body.replace(/<b>([^<]*)<\/b>([\s\S]*?)(?=<b>|$)/gi, (full, label: string) =>
-    new RegExp(technique.source, technique.flags.replace("g", "")).test(label) ? " " : full);
+  // Technique and clinical-information sections are not findings: "Indicação:
+  // suspeita de apendicite" restates the request, it does not report appendicitis.
+  const notFindings = new RegExp(`^\\s*(?:${technique.source}|indica[çc][ãa]o|hist[óo]ria cl[íi]nica|dados cl[íi]nicos|clinical (?:indication|history)|indication|history)`, "i");
+  // Such a section ends at the next bold label, a blank line, or after two lines:
+  // when the next header is not bold ("DESCRIÇÃO") or missing, the findings that
+  // follow must not be swallowed with it.
+  body = body.replace(/<b>([^<]*)<\/b>((?:(?!<br><br>|<b>)[\s\S])*?)(?=<b>|<br><br>|$)/gi, (full, label: string, content: string) => {
+    if (!notFindings.test(label)) return full;
+    const lines = content.split("<br>");
+    // More than two lines with no break: only the first is technique.
+    const kept = lines.filter((l) => l.trim()).length > 2 ? lines.slice(lines.findIndex((l) => l.trim()) + 1).join("<br>") : "";
+    return ` <br>${kept}`;
+  });
   return body;
 }
 
@@ -136,8 +147,9 @@ const RAW_SIDE_RX: Array<{ rx: RegExp; side: Side }> = [
 // critical (C09) nor fabricates one (C10). Management verbs ("recommend",
 // "suggest", "communicated") do NOT make a finding hypothetical.
 const HYPOTHETICAL_RX: Record<LocaleKey, RegExp> = {
-  "en-US": /\b(?:evaluate|evaluation|assess|assessment|screen)\s+for\b|\bto\s+(?:exclude|rule\s+out)\b|\brule\s+out\b|\br\/o\b|\bquestion\s+of\b|\bclinical\s+(?:question|indication|history|concern)\b|\bindication\b|\bhistory\s+of\b|\bif\s+(?:clinically\s+)?(?:concern|indicated|suspected)\b/,
-  "pt-BR": /\b(?:para\s+(?:afastar|excluir|descartar|avaliar|investigar)|afastar|descartar|investigacao\s+de|pesquisa\s+de|indicacao|historia\s+(?:clinica|de)|hipotese\s+de|suspeita\s+clinica\s+de)\b/,
+  "en-US": /\b(?:evaluate|evaluation|assess|assessment|screen)\s+for\b|\bto\s+(?:exclude|rule\s+out)\b|\brule\s+out\b|\br\/o\b|\bquestion\s+of\b|\bclinical\s+(?:question|indication|history|concern)\b|\bindication\b|\bhistory\s+of\b|\bif\s+(?:clinically\s+)?(?:concern|indicated|suspected)\b|\b(?:does|do)\s+not\s+(?:exclude|rule\s+out)\b|\bcannot\s+(?:be\s+)?(?:exclude|excluded|ruled\s+out)\b|\bnot\s+excluded\b/,
+  // "não exclui (completamente) apendicite" states that it is NOT ruled out: no assertion.
+  "pt-BR": /\b(?:para\s+(?:afastar|excluir|descartar|avaliar|investigar)|afastar|descartar|investigacao\s+de|pesquisa\s+de|indicacao|historia\s+(?:clinica|de)|hipotese\s+de|suspeita\s+clinica\s+de|nao\s+(?:se\s+)?(?:pode\s+)?(?:exclui|excluir|excluem|afasta|afastar|descarta|descartar)|sem\s+(?:excluir|afastar))\b/,
 };
 // Differential phrasing is also not counted as a fabrication (C10 only).
 const DIFFERENTIAL_RX = /\b(?:differential|versus|vs|diagnostico\s+diferencial)\b/;

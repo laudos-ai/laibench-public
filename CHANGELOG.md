@@ -124,6 +124,37 @@ regression test (`src/evaluators/review-v311.test.ts`).
   "raízes da cauda equina" / "cauda equina nerve roots" is no longer read as the
   cauda equina syndrome; pt-BR "contexto de paciente" and plural "sintéticos"
   harness lines are not abnormal findings.
+- **Real radiologist dictations** (found by a private pilot on de-identified
+  production inputs, which are short, untidy and often speech-to-text): every
+  remaining flag on correct reports came from the scorer, so:
+  - An input clause is an abnormal finding only when it carries a pathology
+    signal (lexicon, diagnosis suffixes such as -ite/-ose/-oma/-patia/-cele,
+    "compatível com"/"sugestivos de", or a measurement). Exam names, technique
+    ("Com contraste venoso"), instructions ("Pode tirar a indicação") and
+    global-normal lines ("Radiografia de tórax normal", "Restante do exame para
+    idoso") no longer have to be "reflected". pt-BR "normais?" never matched the
+    singular "normal"; a normal cue now clears a clause only when nothing
+    abnormal precedes it. A one-word diagnosis between commas is a sub-clause.
+  - Modality comes from the exam, else from the dictation's first sentence
+    ("Colangiorressonância magnética, ..."); when neither names one (a template
+    called "PUNHO", nuclear medicine) the title check does not demand one and
+    C01 does not run. R01 is critical only when the title names another exam;
+    a missing or generic title ("LAUDO") is minor.
+  - "Opinião" is a conclusion header; "Descrição", "Relatório" and "Laudo:"
+    are analysis headers; the centred title is never a section; a technique
+    section ends at a blank line or the next bold label, so an unbolded
+    "DESCRIÇÃO" or findings written under the technique line are not dropped.
+  - Hedges ("não exclui apendicite", "cannot be excluded") and the report's
+    Indicação section are not fabricated criticals; the side of a complaint in
+    the indication is not a finding side; "com contraste" / "contraste venoso"
+    in the dictation make it a contrast exam.
+  - Dimension lists ("10,7 x 1,5 cm") carry the unit to every number for R04;
+    the "normalidade" preservation pattern accepts "normal/habitual/preservado".
+  - Signature placeholders ("CRM: [UF] ____") are a new minor Q18; Q07 stays
+    critical for placeholders in the clinical text and now also catches
+    bracketed instructions left in it ("[Completar: padrão e extensão]").
+  The discrimination ladder is unchanged: reference 100% PASS, every critical
+  rung 100% vetoed.
 
 ### Provenance
 - `src/evaluators/source-critical.ts`, `src/evaluators/source-findings.ts` and

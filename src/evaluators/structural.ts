@@ -5,6 +5,7 @@
  */
 
 import { getLocale } from "../locales/index.js";
+import { detectModality } from "../classify.js";
 import { hasNegationCue, isFindingNegated } from "../extract.js";
 import { describeFabricated, describeSourceCriticalOutcomes, evaluateSourceCriticals } from "./source-critical.js";
 import { describeMissingFindings, evaluateSourceFindings } from "./source-findings.js";
@@ -99,8 +100,15 @@ function normalizeMeasurementValue(value: string): string {
     .replace(/(\d+)\.0+(?=\D|$)/g, "$1");
 }
 
+// "10,7 x 1,5 cm" states 10,7 cm and 1,5 cm: give every number of a dimension list
+// its unit so each dictated measurement can be found.
+function expandDimensionLists(text: string): string {
+  return text.replace(/\d+(?:[.,]\d+)?(?:\s*(?:x|×|por)\s*\d+(?:[.,]\d+)?)+\s*(mm|cm)\b/gi, (list, unit: string) =>
+    list.replace(/\s*(mm|cm)\b\s*$/i, "").split(/\s*(?:x|×|por)\s*/i).map((n) => `${n} ${unit}`).join(" x "));
+}
+
 function measurementPresent(reportText: string, measurement: string): boolean {
-  const normalizedReport = normalizeMeasurementValue(reportText);
+  const normalizedReport = normalizeMeasurementValue(expandDimensionLists(reportText));
   const normalizedMeasurement = normalizeMeasurementValue(measurement);
   if (normalizedMeasurement.length === 0) return true;
   // Exact-boundary match, NOT naive substring. A digit or decimal point
@@ -124,7 +132,8 @@ function getSectionContent(html: string, rx: RegExp, stop?: RegExp): string {
     pattern = new RegExp(`<b>(?:${rx.source})[^<]*<\\/b>([\\s\\S]*?)(?=${end}|$)`, "i");
     _sectionContentRegexCache.set(key, pattern);
   }
-  return pattern.exec(html)?.[1] ?? "";
+  // The centred title is not a section ("RELATÓRIO DE EXAME RADIOGRÁFICO").
+  return pattern.exec(html.replace(/<center>[\s\S]*?<\/center>/i, ""))?.[1] ?? "";
 }
 
 function firstLineFromSection(sectionHtml: string): string {
@@ -262,17 +271,23 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
     const afterTitle = html.replace(/^[\s\S]*?<\/center>/i, "");
     const m = new RegExp(`<b>(?:${locale.sections.conclusion.source})`, "i").exec(afterTitle);
     const body = m ? afterTitle.slice(0, m.index) : afterTitle;
-    const noTechnique = body.replace(new RegExp(`<b>(?:${locale.sections.technique.source})[^<]*<\\/b>[\\s\\S]*?(?=<br><br><b>|$)`, "i"), "");
+    // Technique ends at a blank line or the next bold label, not at the next
+    // bold SECTION: an unbolded "DESCRIÇÃO" must not vanish with it.
+    const noTechnique = body.replace(new RegExp(`<b>(?:${locale.sections.technique.source})[^<]*<\\/b>(?:(?!<br><br>|<b>)[\\s\\S]){0,400}`, "i"), "");
     return stripTags(noTechnique.replace(/<br>/g, " ")).trim().split(/\s+/).filter(Boolean).length;
   })();
   const normalizedHtml = normalizeLoose(stripTags(html));
   const preservation = extractFindingsPreservation(locale.preservationPatterns, findingsInput, html, localeKey);
-  const laterality = extractLateralityTokens(findingsInput);
+  // The side of a complaint in the indication ("dor na fossa ilíaca direita") is
+  // not a finding whose side the report must carry.
+  const laterality = extractLateralityTokens(findingsInput.replace(/(?:^|(?<=[.\n;]))\s*(?:indica[çc][ãa]o(?:\s+cl[íi]nica)?|clinical indication|indication|hist[óo]ria cl[íi]nica|clinical history)\s*:[^.\n;]*/gi, " "));
   const levels = extractLevelTokens(findingsInput);
   const measures = extractMeasurements(findingsInput);
 
   // CRIT - Structural critical checks
-  if (!meta.contrast) {
+  // Unknown modality (nuclear medicine, a template called "PUNHO"): "fase tardia"
+  // of a bone scan is not contrast language, so the check has nothing to stand on.
+  if (!meta.contrast && meta.modalityKnown !== false) {
     const hits = matchAll(locale.contrastTerms, html);
     ck(checks, "CRIT", "C01", "No contrast language in non-contrast exam", "critical", hits.length === 0, hits.length ? hits.join(", ") : "ok");
   }
@@ -373,8 +388,17 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
   ck(checks, "QUAL", "Q04", "No <br><br> inside conclusion", "minor", !conclusion.includes("<br><br>"), conclusion.includes("<br><br>") ? "blank line inside conclusion" : "ok");
   ck(checks, "QUAL", "Q05", "Has section separators", "major", /<br><br><b>/i.test(html), /<br><br><b>/i.test(html) ? "ok" : "no <br><br><b> section separator");
   ck(checks, "QUAL", "Q06", "Only allowed tags", "major", hasAllowedTagsOnly(html), hasAllowedTagsOnly(html) ? "ok" : "tags outside <center>, <b>, <br>");
-  const placeholders = matchAll(/\[[A-Z_]{2,}\]|_{3,}|(?<!\w)XXX(?!\w)|####/g, html);
+  // Signature lines ("CRM: [UF] ____", "Médico radiologista: ____") are layout to
+  // delete, not missing clinical data: they are reported as Q18 (minor).
+  const SIGNATURE_LINE = /\b(?:crm|assinatura|m[ée]dic[oa]\s+(?:radiologista|respons[áa]vel|laudador)|radiologista\s+respons[áa]vel|dr\.?a?\s|signature|attending|radiologist\s*:)/i;
+  const lines = html.split("<br>");
+  const contentHtml = lines.filter((l) => !SIGNATURE_LINE.test(stripTags(l))).join("<br>");
+  const signatureHtml = lines.filter((l) => SIGNATURE_LINE.test(stripTags(l))).join("<br>");
+  // Also bracketed instructions left in the text ("[Completar: padrão e extensão]").
+  const placeholders = matchAll(/\[[A-Z_]{2,}\]|\[\s*(?:completar|preencher|inserir|especificar|descrever|informar|medida|valor|data|nome|lado|achados?|fill in|insert|specify|describe|measurement|value|date|name|side|findings?)\b[^\]<]{0,120}\]|(?<!\w)XXX(?!\w)|####/gi, contentHtml);
   ck(checks, "QUAL", "Q07", "No placeholders", "critical", placeholders.length === 0, placeholders.length ? `found: ${placeholders.slice(0, 3).join(" ")}` : "ok");
+  const blanks = [...matchAll(/_{3,}/g, html), ...matchAll(/\[[^\]<]{1,24}\]/g, signatureHtml)];
+  ck(checks, "QUAL", "Q18", "No blank fill-in or signature placeholders", "minor", blanks.length === 0, blanks.length ? `found: ${blanks.length} line(s)` : "ok");
   const analysisPresent = locale.sections.analysis.test(html) || bodyWords >= 15;
   ck(checks, "QUAL", "Q08", "Analysis section present", "critical", analysisPresent, locale.sections.analysis.test(html) ? "ok" : analysisPresent ? "findings described without a section header" : `missing "${locale.sectionLabels.analysis}" section`);
   if (meta.modality === "US") {
@@ -396,7 +420,10 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
 
   ck(checks, "QUAL", "Q11", "Conclusion section present and non-empty", "critical", conclusion.length > 0 && stripTags(conclusion).trim().length > 10, conclusion.length === 0 ? "missing" : `${stripTags(conclusion).trim().length} chars`);
 
-  const analysisWordCount = Math.max(stripTags(analysis).trim().split(/\s+/).filter(Boolean).length, locale.sections.analysis.test(html) ? 0 : bodyWords);
+  // Fall back to the whole body only when there is no analysis HEADER: the word
+  // "achados" inside the text is not a section.
+  const hasAnalysisHeader = new RegExp(`<b>\\s*(?:${locale.sections.analysis.source})[^<]*<\\/b>`, "i").test(html);
+  const analysisWordCount = Math.max(stripTags(analysis).trim().split(/\s+/).filter(Boolean).length, hasAnalysisHeader ? 0 : bodyWords);
   // A normal study can be described in a few words; only a near-empty analysis is a real gap.
   ck(checks, "QUAL", "Q12", "Analysis has substantive content", analysisWordCount < 5 ? "major" : "minor", analysisWordCount >= 15, `${analysisWordCount} words`);
 
@@ -483,13 +510,25 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
   }
 
   // RAG - Retrieval/preservation checks (structural)
+  // R01: a title naming ANOTHER exam (CT for an MRI, chest for an abdomen) is a
+  // safety error; a missing or generic title ("LAUDO") is a format problem.
+  const titleN = normalizeLoose(title);
+  const modalityOk = meta.modalityKnown === false || isTitleMatch(title, meta.expectedTitleTokens);
+  const regionOk = meta.expectedRegionTokens.length === 0 || meta.expectedRegionTokens.some((token) => titleN.includes(normalizeLoose(token)));
+  const titleModality = title ? detectModality(titleN) : null;
+  const sameModality = (a: string, b: string) => a === b || (/^M[GX]$/.test(a) && /^M[GX]$/.test(b));
+  const titleRegion = title ? locale.regionMap(titleN) : "unknown";
+  const wrongExam = !!title && (
+    (meta.modalityKnown !== false && titleModality !== null && !sameModality(titleModality, meta.modality)) ||
+    (meta.region !== "unknown" && titleRegion !== "unknown" && titleRegion !== meta.region)
+  );
   ck(
     checks,
     "RAG",
     "R01",
     "Title preserves modality and region",
-    "critical",
-    isTitleMatch(title, meta.expectedTitleTokens) && (meta.expectedRegionTokens.length === 0 || meta.expectedRegionTokens.some((token) => normalizeLoose(title).includes(normalizeLoose(token)))),
+    wrongExam ? "critical" : "minor",
+    !!title && modalityOk && regionOk,
     title || "missing title",
   );
 

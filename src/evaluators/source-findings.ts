@@ -46,9 +46,50 @@ const NEG_LEAD: Record<LocaleKey, RegExp> = {
 };
 
 const NORMAL_RX: Record<LocaleKey, RegExp> = {
-  "en-US": /\b(?:normal study|unremarkable|within (?:normal|expected) limits|normal in size|normal (?:caliber|appearance|morphology)|preserved|intact|not dilated|homogeneous|stable|clear(?: bilaterally)?$|scattered fibroglandular|no acute abnormality)\b/,
-  "pt-BR": /\b(?:exame normal|sem alteracoes|dentro dos limites|preservad[oa]s?|habitua(?:l|is)|normais?|integr[oa]s?|nao dilatad[oa]s?|homogene[oa]|sem anormalidades)\b/,
+  "en-US": /\b(?:normal study|unremarkable|within (?:normal|expected) limits|normal in size|normal (?:caliber|appearance|morphology)|preserved|intact|not dilated|homogeneous|stable|clear(?: bilaterally)?$|scattered fibroglandular|no acute abnormality|normal|unchanged|rest (?:is )?(?:normal|unremarkable)|normal for age|age[- ]appropriate)\b/,
+  // "normais?" never matched the singular "normal" ("Radiografia de tórax normal").
+  "pt-BR": /\b(?:exame normal|sem alteracoes|dentro dos limites|preservad[oa]s?|habitua(?:l|is)|normal|normais|integr[oa]s?|nao dilatad[oa]s?|homogene[oa]|sem anormalidades|inalterad[oa]s?|tudo igual|restante (?:do exame )?(?:para|igual|sem)|para (?:a )?(?:idade|faixa etaria)|para idos[oa]s?|compativel com a faixa etaria|modelo (?:de laudo )?normal)\b/,
 };
+
+// A clause is an abnormal FINDING only when it carries a pathology signal. Real
+// dictations also hold exam names ("Ultrassonografia pélvica transvaginal"),
+// technique ("Com contraste venoso"), instructions ("Pode tirar a indicação"),
+// global normal statements and, sometimes, captured chatter; none of those is a
+// finding the report must "reflect". Measurements alone are checked by R04.
+const EXTRA_SIGNAL_RX: Record<LocaleKey, RegExp> = {
+  "en-US": /(?:lithiasis|nephrolith|cholelith|hemoperitone|haemoperitone|embol|neoplas|spiculat|distortion|asymmetr|reflux|spondyl|atheroma|atheroscl|steatosis|cirrhosis|granuloma|lacun|gliosis|demyelin|elongat|tortuous|borderline|amputat|\bscar|sequela|\binsult|secretion|obliterat|uptake|ectopi|calcific|osteopen|osteoporo|scleros|\blytic|blastic|ground[- ]glass|bronchiectas|\bbulla|cavitat|wedg|collaps|fissure|nodular|expansile|acoustic shadow|heterogene|increased|reduced|decreased|\bfluid\b|free air|abnormal|sprain|dislocat|subluxat|prominen|covid|bi-?rads\s*[3-6]|pi-?rads\s*[3-5]|ti-?rads\s*[3-5]|grade\s+(?:[1-5]|i{1,3}|iv|v)\b)/,
+  "pt-BR": /(?:litias|nefrolit|colelit|hemoperitoni|hemotorax|hidrotorax|embol|neoplas|espiculad|distorca|assimetri|refluxo|espondil|ateroma|esteatos|cirros|granulom|lacuna|gliose|desmielin|alongad|tortuos|limitrofe|amputa|cicatri|sequela|insulto|secrec|oblitera|captacao|\bestase|ectopi|deslocad|calcific|retificac|osteopen|osteoporo|esclero|\blise\b|\blitic|blastic|vidro fosco|bronquiectas|\bbolha|cavita|achatament|acunhament|colapso|fissura|imagem nodular|formacao expansiva|sombra acustica|heterogene|aumentad|reduzid|diminuid|liquido livre|\bliquido\b|ar livre|anormal|alterac|estiramento|luxac|entorse|proeminen|atitude (?:de|em)|topografia baixa|covid|bi-?rads\s*[3-6]|pi-?rads\s*[3-5]|ti-?rads\s*[3-5]|grau\s+(?:[1-5]|i{1,3}|iv|v)\b)/,
+};
+// Diagnosis words by suffix: apendicite, cirrose, meningioma, broncopatia, varicocele...
+const DX_SUFFIX_RX: Record<LocaleKey, RegExp> = {
+  "en-US": /\b[a-z]{3,}(?:itis|osis|omas?|pathy|pathies|celes?|megaly|ectasis|listhesis|lithiasis)\b/g,
+  "pt-BR": /\b[a-z]{3,}(?:ites?|oses?|omas?|patias?|celes?|megalias?|ectasias?|listeses?|litiases?)\b/g,
+};
+const DX_SUFFIX_NOT: ReadonlySet<string> = new Set([
+  "limite", "limites", "permite", "admite", "evite", "convite", "apetite", "elite", "palpite", "noite", "noites",
+  "dose", "doses", "glicose", "sintoma", "sintomas", "idioma", "diploma", "aroma", "genoma", "soma", "somas",
+  "toma", "tomas", "simpatia", "empatia", "apatia", "excele", "symptoma", "diplomas", "stomas", "stoma",
+]);
+
+// A dictated measurement is content the report must carry ("Appendix measuring 9 mm").
+const MEASURE_RX = /\d+(?:[.,]\d+)?\s*(?:mm|cm|cm3|cm³|ml|cc|centimetros?(?: cubicos)?|milimetros?|millimet\w*|centimet\w*)\b|\b(?:mede|medem|medindo|measur\w*)\b/;
+
+function hasPathologySignal(n: string, locale: LocaleKey): boolean {
+  if (PATHOLOGY_RX[locale].test(n) || DIAGNOSIS_RX[locale].test(n) || EXTRA_SIGNAL_RX[locale].test(n)) return true;
+  return (n.match(DX_SUFFIX_RX[locale]) ?? []).some((w) => !DX_SUFFIX_NOT.has(w));
+}
+
+export function hasAbnormalSignal(n: string, locale: LocaleKey): boolean {
+  return hasPathologySignal(n, locale) || MEASURE_RX.test(n);
+}
+
+// "Rim esquerdo 11,7 cm, normal" / "Radiografia de tórax normal" are normal
+// statements; "Cisto simples no rim direito, restante normal" is not: the normal
+// cue only clears the clause when nothing abnormal is said before it.
+function isNormalStatement(n: string, locale: LocaleKey): boolean {
+  const m = NORMAL_RX[locale].exec(n);
+  return !!m && !hasPathologySignal(n.slice(0, m.index), locale);
+}
 
 // Postfix negation: "Left lobe and isthmus without nodules", "Gallbladder without
 // stones" are normal statements even though they do not START with a negation.
@@ -78,7 +119,7 @@ const MANAGEMENT_RX: Record<LocaleKey, RegExp> = {
 
 const DIAGNOSIS_RX: Record<LocaleKey, RegExp> = {
   "en-US": /\b(?:most\s+)?(?:consistent with|compatible with|suggestive of|in keeping with|representing|likely)\s+/,
-  "pt-BR": /\b(?:compativel com|sugestiv[oa] de|aspecto (?:sugestivo|compativel) (?:de|com)|provavelmente|representando)\s+/,
+  "pt-BR": /\b(?:compativel com|compativeis com|sugestiv[oa]s? de|aspecto (?:sugestivo|compativel) (?:de|com)|provavelmente|representando|podendo (?:corresponder|representar) a)\s+/,
 };
 
 const SIDE_TOKEN_RX = /^(?:left|right|bilateral|bilaterally|both|esquerd[ao]s?|direit[ao]s?|bilaterais)$/;
@@ -106,12 +147,13 @@ export function abnormalInputClauses(findingsInput: string, locale: LocaleKey): 
     if (HARNESS_RX.test(n)) return false;
     if (NEG_LEAD[locale].test(n)) return false;
     if (isPostfixNormal(n, locale)) return false;
-    if (NORMAL_RX[locale].test(n)) return false;
+    if (isNormalStatement(n, locale)) return false;
     if (MANAGEMENT_RX[locale].test(n)) return false;
     if (NOT_A_FINDING_RX[locale].test(n)) return false;
-    // Location headers such as "Left knee." carry fewer than two clinical tokens
-    // once laterality words are set aside.
-    return clinicalTokens(clause).filter((t) => !SIDE_TOKEN_RX.test(t)).length >= 2;
+    if (!hasAbnormalSignal(n, locale)) return false;
+    // Location headers such as "Left knee." carry no pathology signal (above); a
+    // one-word diagnosis with a side ("Varicocele bilateral") is still a finding.
+    return clinicalTokens(clause).filter((t) => !SIDE_TOKEN_RX.test(t)).length >= 1;
   });
 }
 
@@ -120,7 +162,8 @@ function parts(clause: string, locale: LocaleKey): { whole: string; subClauses: 
   const m = DIAGNOSIS_RX[locale].exec(n);
   return {
     whole: clause,
-    subClauses: clause.split(",").map((s) => s.trim()).filter((s) => clinicalTokens(s).length >= 2),
+    // A one-word diagnosis between commas ("..., broncopatia") is a sub-clause too.
+    subClauses: clause.split(",").map((s) => s.trim()).filter((s) => clinicalTokens(s).length >= 2 || (clinicalTokens(s).length === 1 && hasPathologySignal(normalizeLoose(s), locale))),
     diagnosis: m ? n.slice(m.index + m[0].length) : null,
   };
 }

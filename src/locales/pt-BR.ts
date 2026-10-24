@@ -5,8 +5,8 @@ export const ptBR: LocaleSpec = {
   key: "pt-BR",
   name: "Portuguese (Brazil)",
   sections: {
-    analysis: /An[áa]lise|Achados/i,
-    conclusion: /Conclus[ãa]o|Impress[ãa]o/i,
+    analysis: /An[áa]lise|Achados|Descri[çc][ãa]o|Relat[óo]rio|Laudo(?=\s*:)/i,
+    conclusion: /Conclus[ãa]o|Impress[ãa]o|Opini[ãa]o/i,
     technique: /T[ée]cnica|M[ée]todo/i,
   },
   sectionLabels: {
@@ -116,7 +116,7 @@ export const ptBR: LocaleSpec = {
     { id: "hydronephrosis", input: /hidronefrose/i, report: /hidronefrose/i, label: "hidronefrose" },
     { id: "umbilicalHernia", input: /h[eé]rnia\s+umbilical/i, report: /h[eé]rnia\s+umbilical/i, label: "hérnia umbilical" },
     { id: "calculus", input: /c[aá]lculo/i, report: /c[aá]lculo/i, label: "cálculo" },
-    { id: "normal", input: /^normal$/i, report: /sem\s+alteracoes|sem\s+alterações|dentro\s+dos\s+limites|sem\s+achados/i, label: "normalidade" }
+    { id: "normal", input: /^normal$/i, report: /sem\s+alteracoes|sem\s+alterações|dentro\s+dos\s+limites|sem\s+achados|\bnorma(?:l|is)\b|habitua(?:l|is)\b|preservad[oa]s?/i, label: "normalidade" }
   ],
   regionMap: (exam) => {
     if (/tireoid/.test(exam)) return "thyroid";

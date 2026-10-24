@@ -1,6 +1,6 @@
 {
  "benchmarkVersion": "3.11.0",
- "scoringHash": "40e30a17196389c5ce6e71cf2fe902bb620a562b8e13ad90482b0bbe87e3f016",
+ "scoringHash": "d31aa54a033de36c8c0c542f8226e3debb58cfb22abc9d58fe812766b25feca9",
  "scoringFiles": [
   {
    "path": "src/benchmark.ts",
@@ -12,7 +12,7 @@
   },
   {
    "path": "src/classify.ts",
-   "sha256": "7b70fa3b0a43f81021a15858798040928600b6959d718007850b5fbe802cc27c"
+   "sha256": "a3de3fce52dbc514ea8b999663cab2c83ea1668c175ae4992af5c189bce7c882"
   },
   {
    "path": "src/clinical-match.ts",
@@ -36,15 +36,15 @@
   },
   {
    "path": "src/evaluators/source-critical.ts",
-   "sha256": "072ad6197ac0957a308ab5a60ca5d41d22d73c31733b6f2bfdddb9193994d6d4"
+   "sha256": "5ec67ba8bb8e12e8d668dabea883046e87513db41cbc4c5e95376dfecf643f35"
   },
   {
    "path": "src/evaluators/source-findings.ts",
-   "sha256": "1bfcb1d20b9180db3b3066a9039931df3e941ec35d39ae7bbf25acf4f25aa77d"
+   "sha256": "b18f4e1b93be47b17ac25b1f849aadaa2031facce9387fa60f7981a57d47e066"
   },
   {
    "path": "src/evaluators/structural.ts",
-   "sha256": "b3779064f0f6a6879962008a43967a2f765798b8f381b32d3b043e9b31346bea"
+   "sha256": "e1e75634fb890dd26cf9c9595e45d7e6964cf5fbdcbf6c740716f2c264bfc1fa"
   },
   {
    "path": "src/extract.ts",
@@ -68,7 +68,7 @@
   },
   {
    "path": "src/locales/en-US.ts",
-   "sha256": "03534d75346895ce482e325bae7b4411719a514e87310966aaaba85eb3b8b164"
+   "sha256": "20cbde7d575e4b82486fc8867b2edde81b65d5fe49136e171ec805c71d8c9a39"
   },
   {
    "path": "src/locales/index.ts",
@@ -76,7 +76,7 @@
   },
   {
    "path": "src/locales/pt-BR.ts",
-   "sha256": "1ca27142a0dbda9b644635ae4429a4a4d69149bf5df872b0860d9cf275d1d5e8"
+   "sha256": "b236d8db170558346c8eea9b66043d415acfffd55e9ac464e524dcec4d7a60dd"
   },
   {
    "path": "src/locales/types.ts",

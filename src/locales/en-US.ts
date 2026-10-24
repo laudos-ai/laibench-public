@@ -6,7 +6,7 @@ export const enUS: LocaleSpec = {
   name: "English (US)",
   sections: {
     analysis: /Findings|Analysis/i,
-    conclusion: /Impression|Conclusion/i,
+    conclusion: /Impression|Conclusion|Opinion/i,
     technique: /Technique/i,
   },
   sectionLabels: {
@@ -102,7 +102,7 @@ export const enUS: LocaleSpec = {
     { id: "hydronephrosis", input: /hydronephrosis/gi, report: /hydronephrosis/gi, label: "hydronephrosis" },
     { id: "umbilicalHernia", input: /umbilical hernia/gi, report: /umbilical hernia/gi, label: "umbilical hernia" },
     { id: "calculus", input: /calculus|stone/gi, report: /calculus|stone/gi, label: "calculus" },
-    { id: "normal", input: /^normal$/i, report: /no acute abnormality|unremarkable|within normal limits/i, label: "normality" }
+    { id: "normal", input: /^normal$/i, report: /no acute abnormality|unremarkable|within normal limits|\bnormal\b/i, label: "normality" }
   ],
   regionMap: (exam) => {
     if (/thyroid/.test(exam)) return "thyroid";

@@ -432,3 +432,86 @@ describe("pilot audit 6: conventions never block PASS", () => {
     assert.equal(r.verdict, "PASS", r.gateReasons.join("; "));
   });
 });
+
+describe("real-input audit: dictations as radiologists actually send them", () => {
+  // Phrasings modelled on real (de-identified) inputs; none is copied from a user.
+  it("exam names, technique, global-normal lines and instructions are not findings", () => {
+    for (const s of [
+      "Radiografia de tórax normal.",
+      "Ultrassonografia pélvica transvaginal.",
+      "Restante do exame para idoso.",
+      "Com contraste venoso.",
+      "Laudo de crânio normal.",
+      "O restante tudo igual.",
+      "Pode tirar a indicação clínica.",
+      "E daqui a pouco passo mais.",
+    ]) assert.deepEqual(abnormalInputClauses(s, "pt-BR"), [], s);
+  });
+  it("a finding before a normal cue stays a finding; suffix diagnoses count", () => {
+    assert.equal(abnormalInputClauses("Cisto simples no rim direito, restante normal.", "pt-BR").length, 1);
+    for (const s of ["Apendicite aguda.", "Varicocele bilateral.", "Cirrose hepática.", "Sinais de espondilose torácica.", "Broncopatia inflamatória."]) {
+      assert.equal(abnormalInputClauses(s, "pt-BR").length, 1, s);
+    }
+    assert.equal(abnormalInputClauses("Rim esquerdo mede 11,7 cm, normal.", "pt-BR").length, 0);
+  });
+  it("modality comes from the exam, else from the dictation's first sentence, else is unknown", async () => {
+    const { deriveExamMeta } = await import("../classify.js");
+    const m1 = deriveExamMeta("", "Colangiorressonância magnética, coledocolitíase distal.", "pt-BR");
+    assert.equal(m1.modality, "MRI");
+    assert.equal(m1.modalityKnown, true);
+    assert.equal(deriveExamMeta("PUNHO", "Tenossinovite de De Quervain.", "pt-BR").modalityKnown, false);
+  });
+  it("a missing or generic title is minor; a title naming another exam is critical", async () => {
+    const body = "<br><br><b>Técnica</b><br>Sequências multiplanares.<br><br><b>Análise</b><br>Rotura completa do ligamento cruzado anterior. Meniscos íntegros. Derrame articular pequeno.<br><br><b>Conclusão</b><br>Rotura completa do LCA.";
+    const c = { exam: "Ressonância magnética do joelho esquerdo.", findings: "Rotura completa do ligamento cruzado anterior. Derrame articular pequeno.", locale: "pt-BR" as const };
+    const generic = await run(c, `<center><b>LAUDO</b></center>${body}`);
+    assert.equal(failed(generic, /^R01$/)[0]?.severity, "minor");
+    const wrong = await run(c, `<center><b>TOMOGRAFIA COMPUTADORIZADA DO TÓRAX</b></center>${body}`);
+    assert.equal(failed(wrong, /^R01$/)[0]?.severity, "critical");
+    const unknownExam = await run({ ...c, exam: "PUNHO", findings: "Tenossinovite de De Quervain." }, `<center><b>ULTRASSONOGRAFIA DO PUNHO</b></center><br><br><b>Análise</b><br>Tenossinovite de De Quervain.<br><br><b>Conclusão</b><br>Tenossinovite de De Quervain.`);
+    assert.deepEqual(failed(unknownExam, /^R01$/), []);
+  });
+  it("'Opinião' is a conclusion section", async () => {
+    const r = await run({ exam: "Ultrassonografia de bolsas escrotais com Doppler.", findings: "Varicocele bilateral com refluxo à manobra de Valsalva.", locale: "pt-BR" },
+      "<center><b>ULTRASSONOGRAFIA DE BOLSAS ESCROTAIS COM DOPPLER</b></center><br><br><b>Relatório</b><br>Testículos tópicos e homogêneos. Plexo pampiniforme ectasiado bilateralmente, com refluxo à manobra de Valsalva.<br><br><b>Opinião:</b><br>Varicocele bilateral.");
+    assert.deepEqual(failed(r, /^Q11$/), []);
+  });
+});
+
+describe("real-input audit 2: report layouts general models actually produce", () => {
+  const C = { exam: "Tomografia computadorizada do tórax.", findings: "Leve enfisema pulmonar apical à direita. Ateromatose aórtica.", locale: "pt-BR" as const };
+  it("an unbolded DESCRIÇÃO after the technique is still the report body", async () => {
+    const r = await run(C, "<center><b>TOMOGRAFIA COMPUTADORIZADA DO TÓRAX</b></center><br><br><b>Técnica</b><br>Aquisição volumétrica sem contraste.<br><br>Descrição:<br>Leve enfisema pulmonar apical à direita. Traqueia e brônquios pérvios. Mediastino sem linfonodomegalias. Ateromatose aórtica. Sem derrame pleural.<br><br><b>Conclusão</b><br>Leve enfisema apical à direita. Ateromatose aórtica.");
+    assert.deepEqual(failed(r, /^(Q16|Q17|Q08)/), []);
+  });
+  it("findings written right under the technique line, with no header, are the body", async () => {
+    const r = await run(C, "<center><b>TOMOGRAFIA COMPUTADORIZADA DO TÓRAX</b></center><br><br><b>Técnica</b><br>Aquisição volumétrica sem contraste.<br>Leve enfisema pulmonar apical à direita.<br>Ateromatose aórtica.<br>Sem derrame pleural.<br><br><b>Conclusão</b><br>Leve enfisema apical à direita. Ateromatose aórtica.");
+    assert.deepEqual(failed(r, /^(Q16|Q17)/), []);
+  });
+  it("'não exclui apendicite' and an indication line are not fabricated criticals", async () => {
+    const r = await run({ exam: "Tomografia computadorizada do abdome.", findings: "Indicação: dor na fossa ilíaca direita. Apêndice cecal não caracterizado.", locale: "pt-BR" },
+      "<center><b>TOMOGRAFIA COMPUTADORIZADA DO ABDOME</b></center><br><br><b>Indicação</b><br>Dor na fossa ilíaca direita. Suspeita de apendicite aguda.<br><br><b>Análise</b><br>Apêndice cecal não caracterizado. Fígado, baço e rins sem alterações. Ausência de líquido livre.<br><br><b>Conclusão</b><br>Apêndice não caracterizado; isso não exclui apendicite em fase inicial.");
+    assert.deepEqual(failed(r, /^C10$/), []);
+    assert.deepEqual(failed(r, /^R02$/), [], "the side of the complaint is not a finding side");
+  });
+  it("'Com contraste venoso' in the dictation makes it a contrast exam", async () => {
+    const r = await run({ exam: "Crânio.", findings: "Com contraste venoso. Pequeno espessamento mucoso no seio maxilar esquerdo.", locale: "pt-BR" },
+      "<center><b>TOMOGRAFIA COMPUTADORIZADA DO CRÂNIO</b></center><br><br><b>Técnica</b><br>Após contraste iodado endovenoso.<br><br><b>Análise</b><br>Sem áreas de realce anômalo. Pequeno espessamento mucoso no seio maxilar esquerdo.<br><br><b>Conclusão</b><br>Pequeno espessamento mucoso no seio maxilar esquerdo.");
+    assert.deepEqual(failed(r, /^C01$/), []);
+  });
+  it("signature placeholders are minor; a placeholder in the findings is critical", async () => {
+    const base = "<center><b>TOMOGRAFIA COMPUTADORIZADA DO TÓRAX</b></center><br><br><b>Técnica</b><br>Sem contraste.<br><br><b>Análise</b><br>Leve enfisema pulmonar apical à direita. Ateromatose aórtica. Sem derrame pleural. Mediastino sem linfonodomegalias.<br><br><b>Conclusão</b><br>Leve enfisema apical à direita. Ateromatose aórtica.";
+    const sig = await run(C, `${base}<br><br>Médico radiologista: ____________<br>CRM: [UF] [Número]`);
+    assert.deepEqual(failed(sig, /^Q07$/), []);
+    assert.equal(failed(sig, /^Q18$/)[0]?.severity, "minor");
+    const hole = await run(C, base.replace("Ateromatose aórtica. Sem", "Nódulo de [MEDIDA] mm. Ateromatose aórtica. Sem"));
+    assert.equal(failed(hole, /^Q07$/)[0]?.severity, "critical");
+    const todo = await run(C, base.replace("Ateromatose aórtica. Sem", "[Completar: padrão, distribuição e extensão.] Ateromatose aórtica. Sem"));
+    assert.equal(failed(todo, /^Q07$/)[0]?.severity, "critical", "a bracketed instruction left in the findings is unfinished");
+  });
+  it("a centred title that contains a section word is not that section", async () => {
+    const r = await run({ exam: "Radiografia das mãos.", findings: "Mão esquerda sem alterações. Amputação da falange distal do segundo raio à direita.", locale: "pt-BR" },
+      "<center><b>RELATÓRIO DE EXAME RADIOGRÁFICO</b></center><br><br><b>Técnica</b><br>Incidências de rotina.<br><br><b>Descrição</b><br>Mão esquerda sem alterações. Mão direita com amputação da falange distal do segundo raio. Demais estruturas ósseas preservadas. Partes moles sem alterações.<br><br><b>Conclusão</b><br>Amputação da falange distal do segundo raio à direita.");
+    assert.deepEqual(failed(r, /^Q12$/), []);
+  });
+});

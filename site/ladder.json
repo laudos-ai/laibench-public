@@ -53,13 +53,13 @@
    "label": "Laterality swap",
    "description": "The first right/left in an abnormal finding is swapped.",
    "critical": false,
-   "n": 26,
-   "meanScore": 66.1,
-   "passRate": 15.4,
-   "failRate": 84.6,
-   "criticalVetoRate": 84.6,
-   "meanDrop": 31.6,
-   "detectedRate": 84.6
+   "n": 25,
+   "meanScore": 66.3,
+   "passRate": 16,
+   "failRate": 84,
+   "criticalVetoRate": 84,
+   "meanDrop": 31.2,
+   "detectedRate": 84
   },
   {
    "id": "L4",
@@ -105,7 +105,7 @@
    "label": "Null report",
    "description": "\"No acute abnormality.\" written for an abnormal study.",
    "critical": true,
-   "n": 42,
+   "n": 41,
    "meanScore": 59.9,
    "passRate": 0,
    "failRate": 100,
@@ -304,7 +304,7 @@
    "region": "head",
    "cells": {
     "L0": {
-     "score": 95,
+     "score": 95.1,
      "verdict": "PASS",
      "criticalVeto": false,
      "gateReasons": [],
@@ -716,7 +716,7 @@
    "region": "thyroid",
    "cells": {
     "L0": {
-     "score": 94.7,
+     "score": 94.8,
      "verdict": "PASS",
      "criticalVeto": false,
      "gateReasons": [],
@@ -2078,7 +2078,7 @@
    "region": "other",
    "cells": {
     "L0": {
-     "score": 98.2,
+     "score": 98.3,
      "verdict": "PASS",
      "criticalVeto": false,
      "gateReasons": [],
@@ -2652,34 +2652,11 @@
      "failedCritical": []
     },
     "L2": null,
-    "L3": {
-     "score": 59.9,
-     "verdict": "FAIL",
-     "criticalVeto": true,
-     "gateReasons": [
-      "severity cap: critical failure",
-      "deterministic critical failure"
-     ],
-     "failedCritical": [
-      "R02"
-     ]
-    },
+    "L3": null,
     "L4": null,
     "L5": null,
     "L6": null,
-    "L7": {
-     "score": 59.9,
-     "verdict": "FAIL",
-     "criticalVeto": true,
-     "gateReasons": [
-      "severity cap: critical failure",
-      "deterministic critical failure"
-     ],
-     "failedCritical": [
-      "Q17",
-      "R02"
-     ]
-    }
+    "L7": null
    }
   },
   {

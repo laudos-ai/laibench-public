@@ -93,7 +93,7 @@ regression test (`src/evaluators/review-v311.test.ts`).
 - **Conventions are not clinical errors** (found by the same pilot, where a
   radiologist reviewed every flagged error): on the input-only path the
   anatomical-coverage checklist (G), preferred-term and opener lists (T/TO),
-  conclusion copy-over (Q10), measurements in the conclusion (C05) and a short
+  conclusion copy-over (Q10), an umbrella phrase in the conclusion (C02), measurements in the conclusion (C05) and a short
   analysis of a normal study (Q12, still major when near-empty) are `minor`, so
   they lower their dimension but never cap a correct report into FAIL. Standard
   anatomical synonyms count as coverage ("estruturas ósseas", "silhueta
@@ -105,6 +105,11 @@ regression test (`src/evaluators/review-v311.test.ts`).
   precoces" / "early ischemic changes" anchor an acute stroke, so "isquemia
   aguda" is not a fabrication. The ladder injects its null report only into
   studies the scorer itself calls abnormal.
+- **Denied "ou"/"nem" lists** ("sem evidências de opacidade focal, derrame
+  pleural ou pneumotórax", "… nem de desvio da linha média") deny every
+  disjunct, modifiers included; lists closed with "e"/"and" stay affirmed. A
+  section now runs to the next section header, so organ labels ("<b>Baço:</b>")
+  and numbered conclusion items stay inside it.
 - **Correct radiology read as a fabrication** (found by a private pt-BR pilot):
   a hyperattenuating extra-axial / subdural / epidural collection is now an
   acute-bleed anchor, so a report that names it "hematoma subdural agudo" is not
@@ -130,7 +135,7 @@ regression test (`src/evaluators/review-v311.test.ts`).
   public discrimination ladder. Under v3.11.0 every critical rung (denied,
   omitted, fabricated, null report) is vetoed in 100% of applicable cases and no
   faithful reference report is vetoed.
-- Tests: 496 → 650 (source-critical gate, list negation in both locales,
+- Tests: 496 → 662 (source-critical gate, list negation in both locales,
   gold-path isolation, 20 frozen paraphrased correct reports, region map,
   adversarial-review regressions, browser-bundle parity).
 

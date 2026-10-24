@@ -605,7 +605,42 @@ export function isFindingNegated(sentence: string, matchText: string, locale: Lo
   const prefixRx = locale === "pt-BR" ? NEGATION_PREFIX_PT : NEGATION_PREFIX_EN;
   const suffixRx = locale === "pt-BR" ? NEGATION_SUFFIX_PT : NEGATION_SUFFIX_EN;
   if (COLON_DENIAL_RX.test(normSentence.slice(matchEnd))) return true;
-  return prefixRx.test(prefix) || suffixRx.test(suffix) || isListNegated(normSentence, idx, matchEnd, prefixRx);
+  return prefixRx.test(prefix) || suffixRx.test(suffix) || isListNegated(normSentence, idx, matchEnd, prefixRx) || isDisjunctNegated(normSentence, idx, matchEnd, locale);
+}
+
+// ---- disjunctive negated lists (pilot audit) ----
+//
+// "Sem evidências de opacidade focal, derrame pleural ou pneumotórax", "não há
+// sinais de hemorragia ... ou de trauma associado com fratura", "nem de desvio da
+// linha média": a negation that runs into an "ou"/"nem" ("or"/"nor") list denies
+// every disjunct, modifiers included. Affirmed lists are coordinated with "e"/"and"
+// ("Sem derrame pleural, pneumotórax volumoso à direita e enfisema"), so they stay
+// affirmed; a comma after the "or" ("No effusion or consolidation, apical
+// pneumothorax and …") closes the denied list.
+const DISJ_CUE_RX: Record<LocaleKey, RegExp> = {
+  "pt-BR": /\b(?:sem|nao ha|nao se (?:identifica|observa|evidencia|caracteriza|nota|visualiza|detecta)m?|nao (?:foram|foi|sao|e) (?:observad|identificad|caracterizad|evidenciad|visualizad|detectad)\w*|ausencia de|nenhum|nenhuma|negativ[oa] para|livres? de)\b/g,
+  "en-US": /\b(?:no|without|absence of|negative for|free of|no evidence of)\b/g,
+};
+const DISJ_BREAK_RX = /[.;:]|\b(?:mas|porem|contudo|entretanto|exceto|observa\w*|nota-se|notam-se|identifica-se|evidencia-se|visualiza-se|presenca|but|however|except|there (?:is|are)|shows?|showing|demonstrat\w*|seen|noted|present)\b/;
+const DISJ_COORD_RX = /\b(ou|nem|or|nor|e|and)\b/g;
+const isDisjunction = (w: string) => w === "ou" || w === "nem" || w === "or" || w === "nor";
+
+function isDisjunctNegated(n: string, idx: number, end: number, locale: LocaleKey): boolean {
+  const cueRx = new RegExp(DISJ_CUE_RX[locale].source, "g");
+  let cueEnd = -1;
+  for (let m = cueRx.exec(n); m && m.index < idx; m = cueRx.exec(n)) cueEnd = m.index + m[0].length;
+  if (cueEnd < 0 || idx - cueEnd > 200) return false;
+  const between = n.slice(cueEnd, idx);
+  if (DISJ_BREAK_RX.test(between)) return false;
+  const coords = [...between.matchAll(new RegExp(DISJ_COORD_RX.source, "g"))];
+  const last = coords[coords.length - 1];
+  // The term sits in the final disjunct: "… ou [de] TERM".
+  if (last && isDisjunction(last[1]) && !between.slice(last.index! + last[0].length).includes(",")) return true;
+  // The term opens a disjunction: "… TERM ou …", with no "e/and" before it.
+  if (coords.some((c) => !isDisjunction(c[1]))) return false;
+  const after = n.slice(end).split(/[.;:]/)[0];
+  const next = new RegExp(DISJ_COORD_RX.source).exec(after);
+  return !!next && isDisjunction(next[1]) && !after.slice(0, next.index).includes(",");
 }
 
 // ---- list-scoped negation (v3.11.0) ----

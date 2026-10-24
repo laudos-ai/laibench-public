@@ -371,3 +371,29 @@ describe("pilot audit 3: pertinent negatives and brief normal reports", () => {
     assert.equal(r.verdict, "FAIL");
   });
 });
+
+describe("pilot audit 4: denied lists with 'ou'/'nem', and organ-labelled sections", () => {
+  const NEG: Array<[string, string]> = [
+    ["Sem evidências de opacidade pulmonar focal, derrame pleural ou pneumotórax", "pneumotórax"],
+    ["Não foram observados sinais de ruptura contida, tais como contraste extravasado, hematoma mediastinal focal ou sinais de sangramento ativo", "hematoma"],
+    ["Espessamento parietal do sigmoide, sem evidência de abscesso, fístula ou perfuração", "perfuração"],
+    ["Ausência de edema com desvio da linha média ou efeito de massa", "desvio da linha média"],
+    ["Ausência de edema com desvio da linha média ou efeito de massa", "efeito de massa"],
+    ["Não se identificam sinais de invasão parenquimatosa, de compressão do tecido cerebral nem de desvio da linha média", "desvio da linha média"],
+    ["Não há sinais de hemorragia intraparenquimatosa, intraventricular ou de trauma craniano associado com fratura", "fratura"],
+  ];
+  for (const [s, t] of NEG) it(`denied: "${t}" in "${s.slice(0, 60)}…"`, () => assert.equal(isFindingNegated(s, t, "pt-BR"), true));
+  const AFF: Array<[string, string, LocaleKey]> = [
+    ["Sem derrame pleural, pneumotórax volumoso à direita ou à esquerda e enfisema", "enfisema", "pt-BR"],
+    ["No effusion or consolidation, apical pneumothorax and rib fracture on the right", "pneumothorax", "en-US"],
+    ["Sem derrame pleural, pneumotórax volumoso à direita e enfisema subcutâneo", "pneumotórax", "pt-BR"],
+    ["Sem derrame pleural; pneumotórax ou hidropneumotórax à direita", "pneumotórax", "pt-BR"],
+  ];
+  for (const [s, t, l] of AFF) it(`affirmed: "${t}" in "${s}"`, () => assert.equal(isFindingNegated(s, t, l), false));
+  it("organ labels inside 'Análise' and numbered conclusion items keep their sections", async () => {
+    const r = await run(
+      { exam: "Tomografia computadorizada do abdome com contraste.", findings: "Laceração esplênica grau III com profundidade de 4,2 cm. Hemoperitônio moderado.", locale: "pt-BR" },
+      "<center><b>TOMOGRAFIA COMPUTADORIZADA DO ABDOME</b></center><br><br><b>Análise:</b><br><br><b>Baço:</b> laceração parenquimatosa grau III, com profundidade de 4,2 cm.<br><br><b>Espaços peritoneais:</b> hemoperitônio de volume moderado.<br><br><b>Conclusão:</b><br><br><b>1.</b> Laceração esplênica grau III.<br><br><b>2.</b> Hemoperitônio moderado.");
+    assert.deepEqual(failed(r, /^(Q11|Q12|Q08)$/), []);
+  });
+});

@@ -114,11 +114,15 @@ function measurementPresent(reportText: string, measurement: string): boolean {
 // handful of locale section regexes), so they compile once.
 const _sectionContentRegexCache = new Map<string, RegExp>();
 
-function getSectionContent(html: string, rx: RegExp): string {
-  let pattern = _sectionContentRegexCache.get(rx.source);
+// A section runs to the next SECTION header, not to the next bold: organ labels
+// ("<b>Baço:</b>") and numbered conclusion items ("<b>1.</b>") stay inside it.
+function getSectionContent(html: string, rx: RegExp, stop?: RegExp): string {
+  const key = `${rx.source}||${stop?.source ?? ""}`;
+  let pattern = _sectionContentRegexCache.get(key);
   if (!pattern) {
-    pattern = new RegExp(`<b>(?:${rx.source})[^<]*<\\/b>([\\s\\S]*?)(?:<br><br><b>|$)`, "i");
-    _sectionContentRegexCache.set(rx.source, pattern);
+    const end = stop ? `<br><br><b>\\s*(?:${stop.source})[^<]*<\\/b>` : "<br><br><b>";
+    pattern = new RegExp(`<b>(?:${rx.source})[^<]*<\\/b>([\\s\\S]*?)(?=${end}|$)`, "i");
+    _sectionContentRegexCache.set(key, pattern);
   }
   return pattern.exec(html)?.[1] ?? "";
 }
@@ -248,8 +252,9 @@ function ck(checks: Check[], dim: Check["dim"], id: string, name: string, severi
 export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput: string, localeKey: LocaleKey): Check[] {
   const locale = getLocale(localeKey);
   const checks: Check[] = [];
-  const analysis = getSectionContent(html, locale.sections.analysis);
-  const conclusion = getSectionContent(html, locale.sections.conclusion);
+  const sectionHeaders = new RegExp(`${locale.sections.technique.source}|${locale.sections.analysis.source}|${locale.sections.conclusion.source}`, "i");
+  const analysis = getSectionContent(html, locale.sections.analysis, sectionHeaders);
+  const conclusion = getSectionContent(html, locale.sections.conclusion, sectionHeaders);
   const title = getTitle(html);
   // Words between the title and the conclusion header: the findings body, whatever
   // headers (organ names, none) the report uses.
@@ -277,7 +282,7 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
     // Reset lastIndex before each .test() call on global regexes to avoid stale state
     locale.umbrellaTerms.lastIndex = 0;
     const hasUmbrella = locale.umbrellaTerms.test(conclusion);
-    ck(checks, "CRIT", "C02", "No umbrella phrase in conclusion", "major", !hasUmbrella, hasUmbrella ? "umbrella phrase in conclusion" : "ok");
+    ck(checks, "CRIT", "C02", "No umbrella phrase in conclusion", "minor", !hasUmbrella, hasUmbrella ? "umbrella phrase in conclusion" : "ok");
   }
   for (let i = 0; i < locale.bannedPhrases.length; i += 1) {
     const rx = locale.bannedPhrases[i];

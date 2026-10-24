@@ -219,7 +219,9 @@ describe("DEFAULT_SCORING_FILES covers the scoring import graph", () => {
   });
 
   it("every runtime module reachable from scoring entrypoints is pinned in DEFAULT_SCORING_FILES", () => {
-    const entrypoints = ["src/scoring.ts", ...evaluatorEntrypoints()];
+    // benchmark.ts orchestrates scoring (gate allowlist, retrieval ids the RAG
+    // evaluator sees, frozen-prediction handling), so its graph is pinned too.
+    const entrypoints = ["src/scoring.ts", "src/benchmark.ts", ...evaluatorEntrypoints()];
     const reachable = walk(entrypoints);
 
     const pinned = new Set(DEFAULT_SCORING_FILES.map((p) => p.split("\\").join("/")));

@@ -34,6 +34,11 @@ import { clinicalReportBody } from "./source-critical.js";
 // Harness / context lines are not findings: the public synthetic cases carry
 // "Synthetic text for ... testing" and "High-risk patient context" sentences.
 const HARNESS_RX = /\b(?:synthetic|harness|for testing|testing\b|texto sintetico|sintetic[oa]|in the example|for the example|patient context|clinical context|contexto clinico)\b/;
+// Indications, questions and resolved/old findings are not current abnormal findings.
+const NOT_A_FINDING_RX: Record<LocaleKey, RegExp> = {
+  "en-US": /\b(?:clinical\s+(?:indication|question|history)|indication|history\s+of|rule\s+out|r\/o|evaluate\s+for|to\s+exclude|has\s+resolved|resolved|no\s+longer)\b/,
+  "pt-BR": /\b(?:indicacao|historia\s+clinica|para\s+afastar|descartar|investigacao\s+de|resolvid[oa]s?|nao\s+mais)\b/,
+};
 
 const NEG_LEAD: Record<LocaleKey, RegExp> = {
   "en-US": /^(?:no|without|negative for|absent|there is no|there are no)\b/,
@@ -44,6 +49,27 @@ const NORMAL_RX: Record<LocaleKey, RegExp> = {
   "en-US": /\b(?:normal study|unremarkable|within (?:normal|expected) limits|normal in size|normal (?:caliber|appearance|morphology)|preserved|intact|not dilated|homogeneous|stable|clear(?: bilaterally)?$|scattered fibroglandular|no acute abnormality)\b/,
   "pt-BR": /\b(?:exame normal|sem alteracoes|dentro dos limites|preservad[oa]s?|habitua(?:l|is)|normais?|integr[oa]s?|nao dilatad[oa]s?|homogene[oa]|sem anormalidades)\b/,
 };
+
+// Postfix negation: "Left lobe and isthmus without nodules", "Gallbladder without
+// stones" are normal statements even though they do not START with a negation.
+// The clause is normal when everything before the cue is anatomy: no pathology
+// noun and no measurement ("Solid nodule without calcification" and "Appendix
+// measuring 9 mm without stranding" stay abnormal).
+const POSTFIX_NEG_RX: Record<LocaleKey, RegExp> = {
+  "en-US": /\b(?:without|free of|negative for|with no)\b/,
+  "pt-BR": /\b(?:sem|livres? de|ausencia de)\b/,
+};
+const PATHOLOGY_RX: Record<LocaleKey, RegExp> = {
+  "en-US": /\b(?:nodul\w*|mass(?:es)?|lesions?|cyst\w*|tear|tears|fractur\w*|effusions?|collections?|hematomas?|hemorrhag\w*|thicken\w*|opacit\w*|consolidat\w*|stenos[ie]s|occlu\w*|thromb\w*|aneurysm\w*|dilat\w*|edema\w*|enlarg\w*|calcif\w*|stones?|calcul\w*|polyps?|tumou?rs?|carcinoma\w*|metasta\w*|infarct\w*|abscess\w*|herniat\w*|extrusions?|protrusions?|bulg\w*|deform\w*|displac\w*|erosi\w*|osteophyt\w*|degenerat\w*|atroph\w*|ectasi\w*|ruptur\w*|distens\w*|lymphadenopath\w*|adenopath\w*|pneumo\w*|emphysem\w*|fibros\w*|atelecta\w*|irregular\w*|hypo(?:echoic|dense|attenuat\w*|intens\w*)|hyper(?:echoic|dense|attenuat\w*|intens\w*)|enhanc\w*|ischemi\w*|injur\w*|lacerat\w*|contusion\w*|obstruct\w*|perforat\w*|dissect\w*|spondylolisthesis|scoliosis|kyphosis)\b/,
+  "pt-BR": /\b(?:nodul\w*|massas?|lesao|lesoes|cist\w*|ruptura\w*|rotura\w*|fratura\w*|derrames?|colec\w*|hematomas?|hemorrag\w*|espessad\w*|espessament\w*|opacidad\w*|consolida\w*|estenose\w*|oclus\w*|tromb\w*|aneurism\w*|dilata\w*|edema\w*|aument\w*|calcifica\w*|calculo\w*|litiase\w*|polipo\w*|tumor\w*|carcinoma\w*|metasta\w*|infarto\w*|abscess\w*|hernia\w*|extrusao|protrusao|abaulament\w*|deformid\w*|desvio\w*|erosa\w*|osteofit\w*|degenera\w*|atrofi\w*|ectasi\w*|distens\w*|linfonodomegalia\w*|adenomegalia\w*|pneumo\w*|enfisema\w*|fibrose\w*|atelectasi\w*|irregular\w*|hipo(?:ecoic|dens|atenua|ssinal)\w*|hiper(?:ecoic|dens|atenua|sinal)\w*|realce\w*|isquemi\w*|lacera\w*|contus\w*|obstru\w*|perfura\w*|dissec\w*|espondilolistese|escoliose|cifose)\b/,
+};
+
+function isPostfixNormal(n: string, locale: LocaleKey): boolean {
+  const m = POSTFIX_NEG_RX[locale].exec(n);
+  if (!m) return false;
+  const lead = n.slice(0, m.index);
+  return !/\d/.test(lead) && !PATHOLOGY_RX[locale].test(lead);
+}
 
 const MANAGEMENT_RX: Record<LocaleKey, RegExp> = {
   "en-US": /\b(?:recommend\w*|advised|advise|suggest\w*|consider\w*|correlat\w*|follow[- ]?up|biopsy recommended|if clinically)\b/,
@@ -79,8 +105,10 @@ export function abnormalInputClauses(findingsInput: string, locale: LocaleKey): 
     const n = normalizeLoose(clause);
     if (HARNESS_RX.test(n)) return false;
     if (NEG_LEAD[locale].test(n)) return false;
+    if (isPostfixNormal(n, locale)) return false;
     if (NORMAL_RX[locale].test(n)) return false;
     if (MANAGEMENT_RX[locale].test(n)) return false;
+    if (NOT_A_FINDING_RX[locale].test(n)) return false;
     // Location headers such as "Left knee." carry fewer than two clinical tokens
     // once laterality words are set aside.
     return clinicalTokens(clause).filter((t) => !SIDE_TOKEN_RX.test(t)).length >= 2;
@@ -97,13 +125,19 @@ function parts(clause: string, locale: LocaleKey): { whole: string; subClauses: 
   };
 }
 
-function bestSentence(needle: string, sentences: string[]): { sentence: string; coverage: number } {
-  let best = { sentence: "", coverage: 0 };
-  for (const sentence of sentences) {
-    const coverage = clinicalTokenCoverage(needle, sentence);
-    if (coverage > best.coverage) best = { sentence, coverage };
+const SUBCLAUSE_SPLIT_RX = /,|;|\b(?:but|however|whereas|porem|mas|entretanto|contudo)\b/;
+
+function subClauses(sentence: string): string[] {
+  return sentence.split(SUBCLAUSE_SPLIT_RX).map((s) => s.trim()).filter(Boolean);
+}
+
+function bestSubClause(needle: string, sentences: string[]): string | null {
+  let best: { text: string; coverage: number } | null = null;
+  for (const sub of sentences.flatMap(subClauses)) {
+    const coverage = clinicalTokenCoverage(needle, sub);
+    if (!best || coverage > best.coverage) best = { text: sub, coverage };
   }
-  return best;
+  return best && best.coverage > 0 ? best.text : null;
 }
 
 export function evaluateSourceFindings(reportHtml: string, findingsInput: string, locale: LocaleKey): {
@@ -125,11 +159,15 @@ export function evaluateSourceFindings(reportHtml: string, findingsInput: string
     let reflected = wholeCov >= 0.4 || subCov >= 0.6 || dxCov >= 0.5;
     if (reflected) {
       // Polarity: the best-matching report sentence must not DENY an affirmed finding.
-      const needle = dxCov >= 0.5 && p.diagnosis ? p.diagnosis : p.whole;
-      const best = bestSentence(needle, sentences);
-      if (best.sentence && headIsNegated(best.sentence, locale) && !headIsNegated(clause, locale)) {
-        // Only treat it as denied when no OTHER sentence affirms it.
-        const affirmed = sentences.some((s) => s !== best.sentence && !headIsNegated(s, locale) && clinicalTokenCoverage(needle, s) >= 0.5);
+      // Anchor polarity on the finding's head (or its diagnosis), not on trailing
+      // descriptors such as "with fibers not visualized".
+      const needle = dxCov >= 0.5 && p.diagnosis ? p.diagnosis : clause.split(",")[0];
+      // Polarity is judged on the report sub-clause that carries the finding
+      // ("No pneumothorax, but moderate right pleural effusion" affirms the
+      // effusion), and on the head of the input clause.
+      const best = bestSubClause(needle, sentences);
+      if (best && hasNegationCue(best, locale) && !headIsNegated(clause, locale)) {
+        const affirmed = sentences.flatMap(subClauses).some((s) => s !== best && !hasNegationCue(s, locale) && clinicalTokenCoverage(needle, s) >= 0.5);
         if (!affirmed) reflected = false;
       }
     }

@@ -105,13 +105,13 @@
    "label": "Null report",
    "description": "\"No acute abnormality.\" written for an abnormal study.",
    "critical": true,
-   "n": 45,
-   "meanScore": 60.6,
+   "n": 44,
+   "meanScore": 59.9,
    "passRate": 0,
-   "failRate": 95.6,
-   "criticalVetoRate": 95.6,
-   "meanDrop": 29.9,
-   "detectedRate": 97.8
+   "failRate": 100,
+   "criticalVetoRate": 100,
+   "meanDrop": 30.8,
+   "detectedRate": 100
   }
  ],
  "previous": {
@@ -213,13 +213,13 @@
     "label": "Null report",
     "description": "\"No acute abnormality.\" written for an abnormal study.",
     "critical": true,
-    "n": 45,
-    "meanScore": 67.7,
-    "passRate": 6.7,
-    "failRate": 68.9,
-    "criticalVetoRate": 68.9,
-    "meanDrop": 21.5,
-    "detectedRate": 86.7
+    "n": 44,
+    "meanScore": 67.4,
+    "passRate": 6.8,
+    "failRate": 70.5,
+    "criticalVetoRate": 70.5,
+    "meanDrop": 22,
+    "detectedRate": 88.6
    }
   ]
  },
@@ -254,7 +254,6 @@
      ],
      "failedCritical": [
       "C07",
-      "Q17",
       "R05"
      ]
     }
@@ -737,7 +736,8 @@
       "deterministic critical failure"
      ],
      "failedCritical": [
-      "C09"
+      "C09",
+      "Q17"
      ]
     }
    }
@@ -915,13 +915,16 @@
      ]
     },
     "L7": {
-     "score": 67.9,
-     "verdict": "PARTIAL",
-     "criticalVeto": false,
+     "score": 59.9,
+     "verdict": "FAIL",
+     "criticalVeto": true,
      "gateReasons": [
-      "severity cap: severe failure weight 8"
+      "severity cap: critical failure",
+      "deterministic critical failure"
      ],
-     "failedCritical": []
+     "failedCritical": [
+      "Q17"
+     ]
     }
    }
   },
@@ -2573,15 +2576,7 @@
       "C10"
      ]
     },
-    "L7": {
-     "score": 83.9,
-     "verdict": "PARTIAL",
-     "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 4"
-     ],
-     "failedCritical": []
-    }
+    "L7": null
    }
   },
   {

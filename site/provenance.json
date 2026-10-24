@@ -1,10 +1,10 @@
 {
  "benchmarkVersion": "3.11.0",
- "scoringHash": "81c88e64f49fed746ca87d25a498fb4e7a862571a496068bc5d706fdf0d5025f",
+ "scoringHash": "0075296b735332d404366c13e478739cc61732949d94c164670c133471600816",
  "scoringFiles": [
   {
    "path": "src/benchmark.ts",
-   "sha256": "ff3e0af406d2e881e5f0aa9a8f90d013ee6225e6c363a957ebbda22a728375b1"
+   "sha256": "07cdd1e48e2e9188ef6ee1da2d766ff6d10ccbfdc5604dfaff3458780f364df7"
   },
   {
    "path": "src/checks.ts",
@@ -36,11 +36,11 @@
   },
   {
    "path": "src/evaluators/source-critical.ts",
-   "sha256": "414b6797c68d6e38501c6fc624c4242754253eed74b47fc7b4c296ce0b3184d4"
+   "sha256": "072ad6197ac0957a308ab5a60ca5d41d22d73c31733b6f2bfdddb9193994d6d4"
   },
   {
    "path": "src/evaluators/source-findings.ts",
-   "sha256": "483f97b7bd53288263651061ff96e88316b3309155c158ffbcb9db6ce0050c39"
+   "sha256": "d6a59f84b6a385e3bdf37e62c4a96b7df6063fe448da52c8b0e41ed0fa92626f"
   },
   {
    "path": "src/evaluators/structural.ts",
@@ -48,11 +48,19 @@
   },
   {
    "path": "src/extract.ts",
-   "sha256": "d94d777aba6ab3b33a9207682aafbd039f67652b269a1e074f70e22d4abf2ac1"
+   "sha256": "eac10de3386d97f2108416a3e6e5710d114162afcfb608f633f585efce0c64c6"
   },
   {
    "path": "src/extractors/critical-extractor.ts",
    "sha256": "a7c23054149ddebaaead6abde6a91283036140b71bdb6b1cb65a5bd86b2c5f20"
+  },
+  {
+   "path": "src/hash.ts",
+   "sha256": "9578714e620655ed0a9fe2b30ef0734443e3d43cf17f4048e9e42a335c6aa1d5"
+  },
+  {
+   "path": "src/io.ts",
+   "sha256": "38558577e0bc3d57f982e7c0bb690e2667304dc5a4467b1efd47201c35a2206b"
   },
   {
    "path": "src/judge.ts",
@@ -75,6 +83,14 @@
    "sha256": "7e4f022f49ba761c3a088071ad93f8ce8b746fb34ef42ba0c6a3c6e846a1c42e"
   },
   {
+   "path": "src/log.ts",
+   "sha256": "3715ce254d3a8113b9968adae99f62bbb972edcda026ac5c48d631000b6cde82"
+  },
+  {
+   "path": "src/manifests.ts",
+   "sha256": "b5aad60010eead5266a04f08f3132421434efb8239b19a339da39ca9e3622383"
+  },
+  {
    "path": "src/normalize.ts",
    "sha256": "88486b5c1bc37a88a573fa0ea0f17f44d7105c2b3a3c1c0db30a6e15027a0a92"
   },
@@ -83,12 +99,28 @@
    "sha256": "c010967eccdbfd0c65c9c5ca6391d7c3649927b89b8976760224ce7fb14a5017"
   },
   {
+   "path": "src/provenance.ts",
+   "sha256": "639c8a86397cb7f7230c510af6caf749334f7fad24e54232ac179f8d2a8c2faa"
+  },
+  {
+   "path": "src/retrieval-metadata.ts",
+   "sha256": "ce6dac95299ed3044bf5468e60d11e47498e6d1a3cc2c1d9d746c71473f1809e"
+  },
+  {
    "path": "src/sanitize.ts",
    "sha256": "c1242fda537577fe354fae26d71b40f4923878f1ba1f0552e6d60d233f88c4a5"
   },
   {
    "path": "src/scoring.ts",
    "sha256": "06a826e5d53e1c648731643202570dc29691fd0d066b993db05e318a9cd40589"
+  },
+  {
+   "path": "src/submission.ts",
+   "sha256": "eb55a7c89fb94ff883593b4fa73511d6e4024b62cb77f39039c797e5b9dbb6b6"
+  },
+  {
+   "path": "src/tracks.ts",
+   "sha256": "b4d6d89ded5a076e5aec3111aeeed96fda1aeeb201ab33b4d609ce6175c50eda"
   }
  ],
  "suites": [

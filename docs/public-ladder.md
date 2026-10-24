@@ -11,7 +11,7 @@ Suite `lite-public.en-US` (49 synthetic cases, suiteHash `013cfb0d91d7ec0a…`).
 | L4 | Critical denied | 14 | 59.9 | 0% | 100% | 100% | 100% |
 | L5 | Critical omitted | 14 | 59.9 | 0% | 100% | 100% | 100% |
 | L6 | Critical fabricated | 35 | 59.9 | 0% | 100% | 100% | 100% |
-| L7 | Null report | 45 | 60.6 | 0% | 95.6% | 95.6% | 97.8% |
+| L7 | Null report | 44 | 59.9 | 0% | 100% | 100% | 100% |
 
 ## Same ladder under the previous scorer (3.10.0)
 
@@ -24,6 +24,6 @@ Suite `lite-public.en-US` (49 synthetic cases, suiteHash `013cfb0d91d7ec0a…`).
 | L4 | Critical denied | 21.4% | 0% | 50% | 100% |
 | L5 | Critical omitted | 21.4% | 0% | 50% | 100% |
 | L6 | Critical fabricated | 48.6% | 0% | 2.9% | 100% |
-| L7 | Null report | 6.7% | 0% | 68.9% | 95.6% |
+| L7 | Null report | 6.8% | 0% | 70.5% | 100% |
 
 Synthetic public cases, input-only (no answer keys). Each rung injects one error into the reference report; drops are paired against the same case's reference score. Not a clinical validation.

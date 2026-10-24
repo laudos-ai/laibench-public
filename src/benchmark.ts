@@ -50,6 +50,9 @@ function hasRichGoldData(benchCase: BenchCase): boolean {
   );
 }
 
+/** Input-only gates from evaluators/source-critical.ts and source-findings.ts. */
+const SOURCE_ANCHORED_CHECK = (id: string): boolean => /^(?:C09|C10|Q16|Q17)(?:-|$)/.test(id);
+
 function isOperationalFailure(metadata: Record<string, unknown> | undefined): boolean {
   return metadata?.operationalFailure === true;
 }
@@ -264,6 +267,11 @@ export async function benchmarkCase(args: {
         allChecks.push(...evalResult.checks);
       }
     }
+    // v3.11: the source-anchored input-only gates (C09/C10/Q16/Q17) never reach a
+    // gold-labelled verdict. Evaluators that fall back to structural checks for a
+    // dimension without gold (e.g. a case with only guidelineExpectations) would
+    // otherwise re-admit them through their returned checks.
+    allChecks = allChecks.filter((c) => !SOURCE_ANCHORED_CHECK(c.id));
 
     trace.push({ step: "evaluators", ms: Date.now() - evalStarted });
   }

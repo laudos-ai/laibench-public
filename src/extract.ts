@@ -85,8 +85,8 @@ function extractMeasurementsFromText(text: string): string[] {
 // / intestinal ischemia, cauda equina, testicular / ovarian torsion, necrotizing
 // fasciitis, acute appendicitis, intussusception, ectopic pregnancy, contrast
 // extravasation, and subarachnoid hemorrhage.
-export const CRITICAL_KEYWORDS_PT = /hematoma|hemorragia|embolia|tromboembolismo|pneumotorax|pneumot[oó]rax|fratura|luxação|isquemia aguda|\bavc\b|acidente vascular|oclusão|dissecção|hernia[çc]ão cerebral|ruptura|tamponamento|efeito de massa|desvio da linha m[eé]dia|obstru[çc][ãa]o\s+intestinal|[ií]leo\s+(?:mec[âa]nico|obstrutivo)|perfura[çc][ãa]o|pneumoperit[oô]nio|compress[ãa]o\s+(?:medular|da\s+medula)|isquemia\s+mesent[eé]rica|isquemia\s+intestinal|cauda\s+equina|tor[çc][ãa]o\s+testicular|tor[çc][ãa]o\s+ovariana|fasci[ií]te\s+necrotizante|apendicite|perfurad[oa]|mielopatia\s+compressiva|invagina[çc][ãa]o\s+intestinal|intussuscep[çc][ãa]o|gravidez\s+ect[óo]pica|prenhez\s+ect[óo]pica|extravasamento|hemorragia\s+subaracn[óo]idea|subaracn[óo]ide[ao]|hemoperit[oô]nio|hemot[oó]rax|hemopericárdio|hemopericardio|infarto\s+(?:cerebral\s+|isqu[eê]mico\s+)?agudo|\bar\s+livre\s+(?:na\s+cavidade|intraperitoneal|subdiafragm)/i;
-export const CRITICAL_KEYWORDS_EN = /hemorrhage|hematoma|embolism|thromboembol|pneumothorax|fracture|dislocation|acute ischemi|stroke|occlusion|dissection|herniation|rupture|tamponade|acute bleed|mass effect|midline shift|bowel\s+obstruction|perforation|pneumoperitoneum|free\s+(?:intraperitoneal\s+)?air|(?:cord|spinal)\s+compression|mesenteric\s+ischemia|intestinal\s+ischemia|cauda\s+equina|testicular\s+torsion|ovarian\s+torsion|necrotizing\s+fasciitis|appendicitis|intussusception|ectopic\s+pregnancy|extravasation|subarachnoid|hemoperitoneum|hemothorax|hemopericardium|acute\s+(?:[\w/-]+\s+){0,4}?infarct|free\s+(?:intra-abdominal|subdiaphragmatic)\s+air|perforated|intimal\s+flap|compressive\s+myelopathy/i;
+export const CRITICAL_KEYWORDS_PT = /hematoma|hemorragia|embolia|tromboembolismo|pneumotorax|pneumot[oó]rax|fratura|luxação|isquemia aguda|\bavc\b|acidente vascular|oclusão|dissecção|hernia[çc]ão cerebral|ruptura|tamponamento|efeito de massa|desvio da linha m[eé]dia|obstru[çc][ãa]o\s+intestinal|[ií]leo\s+(?:mec[âa]nico|obstrutivo)|perfura[çc][ãa]o|pneumoperit[oô]nio|compress[ãa]o\s+(?:medular|da\s+medula)|isquemia\s+mesent[eé]rica|isquemia\s+intestinal|cauda\s+equina|tor[çc][ãa]o\s+testicular|tor[çc][ãa]o\s+ovariana|fasci[ií]te\s+necrotizante|apendicite|mielopatia\s+compressiva|[êe]mbolo\s+pulmonar|pneumomediastino|invagina[çc][ãa]o\s+intestinal|intussuscep[çc][ãa]o|gravidez\s+ect[óo]pica|prenhez\s+ect[óo]pica|extravasamento|hemorragia\s+subaracn[óo]idea|subaracn[óo]ide[ao]|hemoperit[oô]nio|hemot[oó]rax|hemopericárdio|hemopericardio|infarto\s+(?:cerebral\s+|isqu[eê]mico\s+|lacunar\s+)?agudo(?!\s+d[oe]\s+mioc)|\bar\s+livre\s+(?:na\s+cavidade|intraperitoneal|subdiafragm)/i;
+export const CRITICAL_KEYWORDS_EN = /hemorrhage|hematoma|embolism|thromboembol|pneumothorax|fracture|dislocation|acute ischemi|stroke|occlusion|dissection|herniation|rupture|tamponade|acute bleed|mass effect|midline shift|bowel\s+obstruction|perforation|pneumoperitoneum|free\s+(?:intraperitoneal\s+)?air|(?:cord|spinal)\s+compression|mesenteric\s+ischemia|intestinal\s+ischemia|cauda\s+equina|testicular\s+torsion|ovarian\s+torsion|necrotizing\s+fasciitis|appendicitis|intussusception|ectopic\s+pregnancy|extravasation|subarachnoid|hemoperitoneum|hemothorax|hemopericardium|acute\s+(?:(?:left|right|bilateral|mca|aca|pca|ica|middle|anterior|posterior|cerebral|cerebellar|cortical|subcortical|lacunar|embolic|ischemic|territorial|territory|watershed|frontal|parietal|temporal|occipital|insular|thalamic|pontine|brainstem|basal|ganglia|ganglionic|multifocal|punctate|small|large|vessel|artery|arterial|lobe|lobar|hemispheric|periventricular|corona|radiata|capsular|internal|external|deep|white|matter)[\s/-]+){0,4}infarct|free\s+(?:intra-abdominal|subdiaphragmatic)\s+air|perforated\s+(?:\w+\s+){0,2}?(?:viscus|bowel|ulcer|appendix|duoden\w*|gastric|colon)|(?:intimal|dissection)\s+flap\s+(?:in|within|of|involving|along)\s+the\s+(?:\w+\s+){0,3}?aort|aortic\s+(?:intimal\s+)?flap|compressive\s+myelopathy|pneumothoraces|\bptx\b|\bfx\b|embolus|pneumomediastinum/i;
 
 const MAJOR_KEYWORDS_PT = /nódulo|massa|neoplasia|tumor|metástase|lesão expansiva|coleção|abscesso|obstrução|hidronefrose|derrame pleural|consolidação|pneumonia|linfonodomegalia|estenose|trombose/i;
 const MAJOR_KEYWORDS_EN = /nodule|mass|neoplasm|tumor|metastas|lesion|collection|abscess|obstruction|hydronephrosis|pleural effusion|consolidation|pneumonia|lymphadenomegaly|stenosis|thrombosis/i;
@@ -332,14 +332,16 @@ const CRITICAL_CATEGORIES: CriticalCategory[] = [
   },
   {
     category: "pulmonary-embolism",
-    rxPt: /embolia\s+pulmonar|tromboembolismo\s+pulmonar/i,
-    rxEn: /pulmonary\s+emboli|thromboemboli/i,
+    // v3.11: "embolus" (singular) and "saddle embolus" were not recognized.
+    rxPt: /embolia\s+pulmonar|tromboembolismo\s+pulmonar|[êe]mbolo\s+(?:pulmonar|em\s+sela)/i,
+    rxEn: /pulmonary\s+embol(?:i|us|ism)|thromboemboli|saddle\s+embol(?:us|ism|i)/i,
     abbrPt: /\bTEP\b/,
     abbrEn: /\bPE\b/,
   },
   {
     category: "stroke",
-    rxPt: /(?:acidente\s+vascular|isquemia\s+(?:cerebral|aguda)|infarto\s+(?:[\wçãáéíóúâêô/-]+\s+){0,4}?agudo|isquemia\s+(?:[\wçãáéíóúâêô/-]+\s+){0,3}?aguda)/i,
+    // v3.11: "infarto (cerebral|isquêmico|lacunar) agudo"; never the myocardium.
+    rxPt: /(?:acidente\s+vascular|isquemia\s+(?:cerebral|aguda)|infarto\s+(?:cerebral\s+|isqu[eê]mico\s+|lacunar\s+)?agudo(?!\s+d[oe]\s+mioc[áa]rdio))/i,
     // Bare "stroke" excludes non-clinical collocations (golf/swimming/sun/back/
     // breast/brush/key + stroke, "stroke of luck"); clinical "stroke"/"acute
     // stroke"/"prior stroke" still match. (Single-word forms like "heatstroke" are
@@ -347,27 +349,30 @@ const CRITICAL_CATEGORIES: CriticalCategory[] = [
     // v3.11: "acute infarct(ion)" (e.g. "restricted diffusion ... consistent with
     // acute infarct") is a stroke; it was not recognized. Chronic/old infarcts stay
     // out because the adjective "acute" is required.
-    rxEn: /(?:(?<!\b(?:golf|swimming|sun|back|breast|butterfly|brush|key|gentle|finishing)\s)\bstroke\b(?!\s+of\s+(?:luck|genius|midnight))|acute\s+(?:[\w/-]+\s+){0,4}?(?:ischemi|infarct))/i,
+    rxEn: /(?:(?<!\b(?:golf|swimming|sun|back|breast|butterfly|brush|key|gentle|finishing)\s)\bstroke\b(?!\s+of\s+(?:luck|genius|midnight))|acute\s+(?:(?:left|right|bilateral|mca|aca|pca|ica|middle|anterior|posterior|cerebral|cerebellar|cortical|subcortical|lacunar|embolic|ischemic|territorial|territory|watershed|frontal|parietal|temporal|occipital|insular|thalamic|pontine|brainstem|basal|ganglia|ganglionic|multifocal|punctate|small|large|vessel|artery|arterial|lobe|lobar|hemispheric|periventricular|corona|radiata|capsular|internal|external|deep|white|matter)[\s/-]+){0,4}(?:ischemi|infarct))/i,
     abbrPt: /\bAVC\b/,
     abbrEn: /\bCVA\b/,
   },
   {
     category: "pneumothorax",
     rxPt: /pneumot[oó]rax/i,
-    rxEn: /pneumothorax/i,
+    rxEn: /pneumothora(?:x|ces)/i,
+    abbrEn: /\bPTX\b/,
   },
   {
     category: "aortic-dissection",
     // v3.11: common paraphrases ("dissection of the descending aorta", "type B
     // dissection", "dissection flap") — a correct report must not be scored as
     // omitting the dissection.
-    rxPt: /dissec[çc][ãa]o\s+(?:de\s+|da\s+)?(?:[\wçãáéíóúâêô]+\s+){0,3}?aort|dissec[çc][ãa]o\s+a[óo]rtica|dissec[çc][ãa]o\s+(?:tipo|stanford)|flap\s+(?:intimal|de\s+dissec)/i,
-    rxEn: /aortic\s+dissection|dissection\s+of\s+the\s+(?:\w+\s+){0,3}?aorta|(?:stanford\s+|debakey\s+)?type\s+(?:[ab]|i{1,3})\s+(?:aortic\s+)?dissection|dissection\s+flap|intimal\s+flap/i,
+    rxPt: /dissec[çc][ãa]o\s+(?:de\s+|da\s+)?(?:[\wçãáéíóúâêô]+\s+){0,3}?aort|dissec[çc][ãa]o\s+a[óo]rtica|dissec[çc][ãa]o\s+(?:tipo|stanford)|flap\s+(?:intimal\s+)?(?:na|da)\s+(?:\S+\s+){0,2}?aorta/i,
+    // A flap is an aortic dissection only with aortic context (a carotid or
+    // vertebral flap is a different, non-aortic dissection).
+    rxEn: /aortic\s+dissection|dissection\s+of\s+the\s+(?:\w+\s+){0,3}?aorta|(?:stanford\s+|debakey\s+)?type\s+(?:[ab]|i{1,3})\s+(?:aortic\s+)?dissection|(?:intimal|dissection)\s+flap\s+(?:in|within|of|involving|along)\s+the\s+(?:\w+\s+){0,3}?aort|aortic\s+(?:intimal\s+|dissection\s+)?flap/i,
   },
   {
     category: "tension-pneumothorax",
     rxPt: /pneumot[oó]rax\s+(?:hipertensivo|sob\s+tensão)/i,
-    rxEn: /tension\s+pneumothorax/i,
+    rxEn: /tension\s+pneumothora(?:x|ces)/i,
   },
   {
     category: "midline-shift",
@@ -394,13 +399,14 @@ const CRITICAL_CATEGORIES: CriticalCategory[] = [
     // v3.10 but never extracted as a critical mention, so a report that omitted or
     // fabricated free air was invisible to the critical channel. Additive, safe
     // direction.
-    rxPt: /perfura[çc][ãa]o|perfurad[oa]|pneumoperit[oô]nio|\bar\s+livre\s+(?:na\s+cavidade\s+(?:abdominal|peritoneal)|intraperitoneal|subdiafragm[aá]tico)/i,
-    rxEn: /perforat(?:ion|ed)|pneumoperitoneum|\bfree\s+(?:intraperitoneal\s+|intra-abdominal\s+|subdiaphragmatic\s+)?air\b/i,
+    rxPt: /(?<!septal\s|timp[âa]nica\s)perfura[çc][ãa]o(?!\s+(?:septal|do\s+septo|timp[âa]nica|da\s+membrana))|pneumoperit[oô]nio|\bar\s+livre\s+(?:na\s+cavidade\s+(?:abdominal|peritoneal)|intraperitoneal|subdiafragm[aá]tico)/i,
+    rxEn: /(?<!(?:septal|septum|tympanic|membrane|nasal)\s)perforation(?!\s+of\s+the\s+(?:nasal|tympanic|septum))|perforated\s+(?:\w+\s+){0,2}?(?:viscus|bowel|ulcer|appendix|appendicitis|duoden\w*|gastric|stomach|colon|sigmoid|cec\w*|jejun\w*|ile\w*|diverticul\w*|hollow)|pneumoperitoneum|\bfree\s+(?:intraperitoneal\s+|intra-abdominal\s+|subdiaphragmatic\s+)?air\b/i,
   },
   {
     category: "fracture",
     rxPt: /\bfratura/i,
     rxEn: /\bfracture/i,
+    abbrEn: /\b[Ff]x\b/,
   },
   {
     category: "cord-compression",
@@ -415,7 +421,7 @@ const CRITICAL_CATEGORIES: CriticalCategory[] = [
   {
     category: "ruptured-aaa",
     rxPt: /aneurisma\s+roto|ruptura\s+de\s+aneurisma/i,
-    rxEn: /ruptured\s+aortic\s+aneurysm|ruptured\s+AAA/i,
+    rxEn: /ruptured\s+(?:(?:abdominal|infrarenal|juxtarenal|suprarenal|thoracoabdominal|thoracic)\s+)?aortic\s+aneurysm|ruptured\s+AAA|aortic\s+aneurysm\s+(?:with\s+)?(?:contained\s+)?rupture/i,
   },
   {
     category: "mesenteric-ischemia",
@@ -448,6 +454,12 @@ const CRITICAL_CATEGORIES: CriticalCategory[] = [
     rxEn: /necrotizing\s+fasciitis/i,
   },
   {
+    // v3.11: pneumomediastinum was not recognized at all.
+    category: "pneumomediastinum",
+    rxPt: /pneumomediastino/i,
+    rxEn: /pneumomediastinum/i,
+  },
+  {
     category: "acute-appendicitis",
     // v3.11: "appendicitis" alone (and "acute uncomplicated appendicitis") is the
     // same critical; only chronic appendicitis is excluded.
@@ -474,7 +486,9 @@ const NEGATION_PREFIX_PT = /\b(?:sem|nao\s+(?:ha|foram?|foi|se|mais\s+se|existe(
 // the suffix form ("X cannot be excluded") which the SUFFIX regex already negates,
 // so detection is order-independent. "no evidence" is an explicit denial.
 const NEGATION_PREFIX_EN = /\b(?:no|without|absent|negative for|ruled out|excluded|no\s+evidence|cannot\s+(?:be\s+)?(?:exclud\w*|ruled?\s+out)|not\s+(?:identified|seen|detected|demonstrated|observed|present|visualized))\b/;
-const NEGATION_SUFFIX_PT = /\b(?:ausentes?|nao (?:caracterizad|identificad|evidenciad|observad|detectad)|descartad[oa]s?)\b/;
+// v3.11: the PT participles were stem-only followed by \b, so "não identificado"
+// never matched; the full forms are spelled out.
+const NEGATION_SUFFIX_PT = /\b(?:ausentes?|nao (?:caracterizad|identificad|evidenciad|observad|detectad|visualizad)[oa]s?|descartad[oa]s?)\b/;
 const NEGATION_SUFFIX_EN = /\b(?:absent|not (?:identified|seen|detected|demonstrated|observed|present)|excluded|ruled out)\b/;
 
 /**
@@ -538,10 +552,22 @@ function firstConjunctionBoundaryFrom(text: string, from: number): number {
   return m ? m.index : -1;
 }
 
-export function isFindingNegated(sentence: string, matchText: string, locale: LocaleKey): boolean {
+// "Pneumothorax: none." / "Pneumotórax: ausente." — a structured-report denial
+// whose cue follows a colon (the clause window below stops at the colon).
+const COLON_DENIAL_RX = /^\s*:\s*(?:none|no|absent|negative|not seen|not identified|nenhum[a]?|ausentes?|nao|negativo|nao identificad[oa]s?|nao caracterizad[oa]s?)\b/;
+
+export function isFindingNegated(sentence: string, matchText: string, locale: LocaleKey, occurrence = 0): boolean {
   const normSentence = normalizeLoose(sentence);
   const normMatch = normalizeLoose(matchText);
-  const idx = normSentence.indexOf(normMatch);
+  // `occurrence` selects the n-th appearance of the term (0 = first). Callers that
+  // know which mention they mean pass it, so a repeated term — or two terms of the
+  // same family — is judged in its own clause with the leading negation intact.
+  let idx = -1;
+  for (let k = 0, from = 0; k <= occurrence; k += 1) {
+    idx = normSentence.indexOf(normMatch, from);
+    if (idx < 0) break;
+    from = idx + 1;
+  }
   // When the (often multi-token) match is not a literal substring, scope on the
   // whole sentence using the SAME clause-level cues (NEGATION_PREFIX/SUFFIX, via
   // hasNegationCue) rather than the weaker isNegated, whose locale patterns omit
@@ -572,6 +598,7 @@ export function isFindingNegated(sentence: string, matchText: string, locale: Lo
   const suffix = normSentence.slice(matchEnd, clauseEnd);
   const prefixRx = locale === "pt-BR" ? NEGATION_PREFIX_PT : NEGATION_PREFIX_EN;
   const suffixRx = locale === "pt-BR" ? NEGATION_SUFFIX_PT : NEGATION_SUFFIX_EN;
+  if (COLON_DENIAL_RX.test(normSentence.slice(matchEnd))) return true;
   return prefixRx.test(prefix) || suffixRx.test(suffix) || isListNegated(normSentence, idx, matchEnd, prefixRx);
 }
 
@@ -592,16 +619,35 @@ export function isFindingNegated(sentence: string, matchText: string, locale: Lo
 // pneumothorax" stays affirmed.
 const LIST_COORD_RX = /\b(?:or|and|nor|ou|e|nem)\b/;
 const LIST_COORD_SPLIT_RX = /\b(?:or|and|nor|ou|e|nem)\b/g;
-const LIST_MODIFIER_RX = /\d|\b(?:small|large|moderate|mild|severe|tiny|massive|marked|acute|subacute|chronic|new|right|left|bilateral|pequen[oa]s?|grandes?|volumos[oa]s?|leves?|moderad[oa]s?|acentuad[oa]s?|discret[oa]s?|agud[oa]s?|cronic[oa]s?|direit[ao]s?|esquerd[ao]s?|bilaterai?s?)\b/;
-const LIST_CLAUSE_RX = /\b(?:but|with|while|mas|com|porem|contudo|entretanto|enquanto|is|are|was|were|ha|esta|estao)\b/;
+const LIST_LEADING_COORD_RX = /^\s*(?:or|and|nor|ou|e|nem)\b/;
+const LIST_MODIFIER_RX = /\d|\b(?:small|large|moderate|mild|severe|tiny|massive|marked|acute|subacute|chronic|new|right|left|bilateral|apical|basal|pequen[oa]s?|grandes?|volumos[oa]s?|leves?|moderad[oa]s?|acentuad[oa]s?|discret[oa]s?|agud[oa]s?|cronic[oa]s?|direit[ao]s?|esquerd[ao]s?|bilaterai?s?|apicais?|basais?)\b/;
+// Words that open a new assertion inside a comma list ("…, evidence of
+// pneumothorax and …", "…, observa-se pneumotórax …"): an item carrying one is
+// affirmed, never part of the negated list.
+const LIST_CLAUSE_RX = /\b(?:but|with|while|is|are|was|were|evidence|interval|persistent|persists|increased|increasing|decreased|residual|seen|noted|present|demonstrat\w*|shows?|showing|mas|com|porem|contudo|entretanto|enquanto|ha|esta|estao|observa\w*|nota-se|notam-se|identifica\w*|evidencia\w*|visualiza\w*|caracteriza\w*|presenca|persiste\w*|novo|nova|aumento|residua\w*)\b/;
 
 function countWords(s: string): number {
   return s.trim().split(/\s+/).filter(Boolean).length;
 }
 
-function isBareListSegment(segment: string): boolean {
-  if (LIST_CLAUSE_RX.test(segment) || LIST_MODIFIER_RX.test(segment)) return false;
-  return segment.split(LIST_COORD_SPLIT_RX).every((item) => countWords(item) <= 4);
+/** A list item: at most four words, no modifier, digit or assertion opener. */
+function isBareListItem(text: string): boolean {
+  if (LIST_CLAUSE_RX.test(text) || LIST_MODIFIER_RX.test(text)) return false;
+  return text.split(LIST_COORD_SPLIT_RX).every((item) => countWords(item) <= 4);
+}
+
+/**
+ * The text after the matched term up to the next comma: the rest of the term's
+ * own phrase must be bare (≤ 2 words, no modifier — Portuguese puts "volumoso à
+ * direita" after the noun), and anything after a coordinator must be a further
+ * bare list item. "pneumotórax volumoso à direita" and "hemorrhage layering in
+ * the basal cisterns and right sylvian fissure" therefore stay affirmed.
+ */
+function isBareListTail(tail: string): boolean {
+  const parts = tail.split(LIST_COORD_SPLIT_RX);
+  const own = parts[0] ?? "";
+  if (countWords(own) > 2 || LIST_CLAUSE_RX.test(own) || LIST_MODIFIER_RX.test(own)) return false;
+  return parts.slice(1).every((item) => isBareListItem(item));
 }
 
 function isListNegated(normSentence: string, idx: number, matchEnd: number, prefixRx: RegExp): boolean {
@@ -609,25 +655,37 @@ function isListNegated(normSentence: string, idx: number, matchEnd: number, pref
   const region = normSentence.slice(hardStart, idx);
   if (!region.includes(",")) return false;
   const segments = region.split(",");
-  // The match's own leading words (last segment) must be bare.
-  if (!isBareListSegment(segments[segments.length - 1])) return false;
+  const lead = segments[segments.length - 1];
+  if (!isBareListItem(lead)) return false;
+
+  let tailEnd = normSentence.length;
+  for (const sep of [",", ";", ":"]) {
+    const next = normSentence.indexOf(sep, matchEnd);
+    if (next >= 0 && next < tailEnd) tailEnd = next;
+  }
+  const tail = normSentence.slice(matchEnd, tailEnd);
+  if (!isBareListTail(tail)) return false;
+
   for (let i = segments.length - 2; i >= 0 && i >= segments.length - 7; i -= 1) {
     const seg = segments[i];
     const cue = seg.match(new RegExp(prefixRx.source, "g"));
     if (cue && cue.length > 0) {
       // Head found: the LAST negation cue must govern a short item that runs to
-      // the end of this segment (the cue negates the list head, not something
-      // earlier in a longer clause).
+      // the end of its segment (it negates the list head, not an earlier clause).
       const lastCue = cue[cue.length - 1];
       const after = seg.slice(seg.lastIndexOf(lastCue) + lastCue.length);
       if (countWords(after) > 5 || LIST_CLAUSE_RX.test(after)) return false;
-      const between = segments.slice(i + 1).join(",");
-      let lookahead = normSentence.slice(matchEnd);
-      const hardEnd = lookahead.search(/[;:]/);
-      if (hardEnd >= 0) lookahead = lookahead.slice(0, hardEnd);
-      return LIST_COORD_RX.test(between) || LIST_COORD_RX.test(lookahead);
+      // The list must be coordinated INSIDE the list: in the match's own item,
+      // an earlier item, the bare tail, or the very next bare comma item(s).
+      if (LIST_COORD_RX.test(lead) || segments.slice(i + 1, -1).some((x) => LIST_COORD_RX.test(x)) || LIST_COORD_RX.test(tail)) return true;
+      const following = normSentence.slice(tailEnd).split(/[;:]/)[0].split(",").slice(1);
+      for (const item of following) {
+        if (!isBareListItem(item)) return false;
+        if (LIST_LEADING_COORD_RX.test(item)) return true;
+      }
+      return false;
     }
-    if (!isBareListSegment(seg)) return false;
+    if (!isBareListItem(seg)) return false;
   }
   return false;
 }
@@ -697,6 +755,17 @@ export type CriticalOccurrence = {
  * reports a right AND a left fracture, or "pneumothorax" plus "tension
  * pneumothorax". Negation uses the same clause-scoped predicate as the gold path.
  */
+function countOccurrences(haystack: string, needle: string): number {
+  if (!needle) return 0;
+  let n = 0;
+  for (let i = haystack.indexOf(needle); i >= 0; i = haystack.indexOf(needle, i + 1)) n += 1;
+  return n;
+}
+
+// Negation and side are clause-local, so very long sentences are analysed in a
+// window around each mention; this keeps scoring linear on pathological input.
+const OCCURRENCE_WINDOW = 360;
+
 export function listCriticalOccurrences(html: string, locale: LocaleKey): CriticalOccurrence[] {
   const text = stripTags(html.replace(/<br\s*\/?>/gi, "\n"));
   // Sentence dots only — "3.0 x 2.4 cm" must not cut a sentence (and its side) apart.
@@ -709,20 +778,24 @@ export function listCriticalOccurrences(html: string, locale: LocaleKey): Critic
         if (!source) continue;
         const rx = new RegExp(source.source, source.flags.includes("g") ? source.flags : `${source.flags}g`);
         let m: RegExpExecArray | null;
-        let prevEnd = 0;
         while ((m = rx.exec(sentence)) !== null) {
-          // isFindingNegated locates the term with indexOf, i.e. its FIRST
-          // occurrence. For a repeated term, scope it to the text after the
-          // previous occurrence so polarity is judged for THIS mention.
-          const scoped = prevEnd > 0 ? sentence.slice(prevEnd) : sentence;
+          let win = sentence;
+          let off = 0;
+          if (sentence.length > OCCURRENCE_WINDOW * 2) {
+            off = Math.max(0, m.index - OCCURRENCE_WINDOW);
+            win = sentence.slice(off, Math.min(sentence.length, m.index + m[0].length + OCCURRENCE_WINDOW));
+          }
+          const local = m.index - off;
+          // Which appearance of this exact term is it? Judge THAT one, with the
+          // leading negation of its clause intact ("No hemorrhage or hematoma").
+          const ordinal = Math.max(0, countOccurrences(normalizeLoose(win.slice(0, local + m[0].length)), normalizeLoose(m[0])) - 1);
           out.push({
             category: cat.category,
             term: m[0],
-            sentence,
-            index: m.index,
-            negated: isFindingNegated(scoped, m[0], locale),
+            sentence: win,
+            index: local,
+            negated: isFindingNegated(win, m[0], locale, ordinal),
           });
-          prevEnd = m.index + m[0].length;
           if (rx.lastIndex === m.index) rx.lastIndex++;
         }
       }

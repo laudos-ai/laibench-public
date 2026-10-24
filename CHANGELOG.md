@@ -56,9 +56,49 @@ moves to `3.11.0` and `scoringHash` updates.
   LCA, ACM) expand in the clinical matcher.
 - Failing checks now print truthful evidence (C04, Q03–Q08 printed "ok" on failure).
 
+### Hardened after an independent adversarial review (before release)
+Every item below was reproduced against the first v3.11.0 draft and is now a
+regression test (`src/evaluators/review-v311.test.ts`).
+- **Gold-path isolation for every gold field.** A case with only
+  `guidelineExpectations` or `retrievalGold` let an evaluator fall back to
+  structural checks and re-admit C09/C10/Q16/Q17; they are now removed from any
+  gold-labelled verdict explicitly.
+- **Denial lists in the report.** "No intracranial hemorrhage or subdural
+  hematoma" / "No pneumoperitoneum or free intraperitoneal air" credited the
+  denied critical through the second term; occurrence-aware negation now FAILS
+  those reports and no longer reads the second term of a normal denial list as a
+  fabrication.
+- **List negation never negates an affirmed critical.** A list only carries its
+  negation across bare items; "No hydrocephalus, subarachnoid hemorrhage
+  layering in the basal cisterns" and "Sem derrame pleural, pneumotórax volumoso
+  à direita" stay affirmed in both locales.
+- **Side swaps** are caught even when the sentence names the other side ("left
+  pneumothorax with shift to the right"), and two same-category criticals
+  (right rib + left clavicle fractures) are matched one to one.
+- **Hypothetical and non-current mentions.** "to evaluate for…", "clinical
+  question:", "history of", resolved, old/healed and chronic findings neither
+  preserve an input critical nor become anchors; recommendation wording no
+  longer hides a fabricated critical in the same sentence.
+- **Q16/Q17 polarity** is judged on the clause that carries the finding ("No
+  pneumothorax, but moderate right pleural effusion"), and postfix negation
+  ("Left lobe and isthmus without nodules", "Gallbladder without stones") is a
+  normal statement, so a null report on a TI-RADS 5 nodule is unsupported
+  normalcy instead of PARTIAL.
+- **Vocabulary without false criticals.** Splenic/renal/myocardial infarcts,
+  carotid flaps and a perforated nasal septum are not stroke, aortic dissection
+  or GI perforation; added plural pneumothoraces, saddle embolus, ruptured AAA,
+  pneumomediastinum and the abbreviations PTX, fx and uppercase R/L.
+- Report-side denials "Pneumothorax: none", "Pneumotórax: ausente",
+  "Pneumotórax não identificado".
+- Linear-time analysis: a 36k-character single-sentence report scores in
+  milliseconds (was quadratic).
+
 ### Provenance
 - `src/evaluators/source-critical.ts`, `src/evaluators/source-findings.ts` and
-  `src/benchmark.ts` (owner of the gate allowlist) are pinned in the scoringHash.
+  `src/benchmark.ts` (owner of the gate allowlist) are pinned in the scoringHash,
+  together with every module `benchmark.ts` reaches (`submission.ts` decides
+  which HTML is scored, `retrieval-metadata.ts` feeds RAG). The staleness test
+  now walks the import graph from `benchmark.ts` too.
 - Site rows now carry the scoring version that produced them; rows scored before
   v3.11.0 are shown as such and are not v3.11.0 results until re-run.
 
@@ -69,9 +109,11 @@ moves to `3.11.0` and `scoringHash` updates.
 - `scripts/public-ladder.ts` + `docs/public-ladder.md` + `site/ladder.json`:
   public discrimination ladder. v3.10.0 → v3.11.0 PASS rate on the same reports:
   critical fabricated 48.6% → 0%, critical denied/omitted 21.4% → 0%, null report
-  6.7% → 0%; critical veto on every critical rung 100%.
-- Tests: 496 → 565 (source-critical gate, list negation in both locales,
-  gold-path isolation, 20 frozen paraphrased correct reports, region map).
+  6.8% → 0%; critical veto on every critical rung 100%; the reference report is
+  never vetoed (2.0% → 0%).
+- Tests: 496 → 634 (source-critical gate, list negation in both locales,
+  gold-path isolation, 20 frozen paraphrased correct reports, region map,
+  adversarial-review regressions, browser-bundle parity).
 
 ### Published numbers
 The controlled pt-BR row (v3.10.0) and the public-smoke rows (≤ 3.10.0) were not

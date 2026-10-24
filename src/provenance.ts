@@ -94,6 +94,19 @@ export const DEFAULT_SCORING_FILES = [
   "src/locales/types.ts",
   "src/locales/en-US.ts",
   "src/locales/pt-BR.ts",
+  // Reachable from benchmark.ts (v3.11.0). submission.ts decides which HTML is
+  // scored, retrieval-metadata.ts feeds RAG, tracks/manifests shape the run
+  // record; the rest are their transitive imports. Pinning the whole closure
+  // keeps the staleness test honest: nothing that runs during scoring can
+  // change without moving the scoringHash.
+  "src/hash.ts",
+  "src/io.ts",
+  "src/log.ts",
+  "src/manifests.ts",
+  "src/provenance.ts",
+  "src/retrieval-metadata.ts",
+  "src/submission.ts",
+  "src/tracks.ts",
 ];
 
 export function runHash(args: { suiteHash: string; manifest: Omit<RunManifest, "validation" | "createdAt">; scoringHash: string }): string {

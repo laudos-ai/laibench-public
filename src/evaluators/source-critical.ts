@@ -10,25 +10,24 @@
  * benchmark's prime directive ("a beautiful report that misses a pneumothorax
  * must fail").
  *
- * This module derives critical anchors from the INPUT (affirmed critical-category
- * mentions, with clause-level laterality) and checks the report against them:
+ * This module derives critical anchors from the INPUT (affirmed, current
+ * critical-category mentions, with clause-level laterality) and checks the
+ * report body against them:
  *
- *   C09  every affirmed input critical is preserved: present, affirmed (not
- *        negated) and on the same side.
- *   C10  the report affirms no critical finding the input does not back
- *        (fabricated critical, or a critical moved to the other side).
+ *   C09  every input critical is preserved: present, affirmed (not denied, not
+ *        merely hypothetical) and on the same side.
+ *   C10  the report affirms no critical finding the input does not back (a new
+ *        critical, or a critical moved to the other side).
  *
- * Both are `critical` severity, so either failure caps the case at 59.9 / FAIL
- * through the existing gate. On the gold path the CRIT evaluator owns the CRIT
- * dimension and these structural checks are not in benchmark.ts's gate
- * allowlist, so gold-labelled (controlled) scoring is unchanged by this module.
+ * Both are `critical` severity, so either failure caps the case at 59.9 / FAIL.
+ * They are structural checks: benchmark.ts strips them whenever a case carries
+ * any gold data, so gold-labelled (controlled) verdicts never see them.
  *
- * Design bias: C09 (omission) is strict; C10 (fabrication) is conservative —
- * recommendation / differential sentences are skipped and side ambiguity in the
- * source is resolved in the report's favour — because a false FAIL erodes trust
- * as much as a false PASS.
+ * Criticals are recognized from the fixed, versioned vocabulary in
+ * extract.ts (CRITICAL_CATEGORIES); a critical phrased outside it is not caught.
  */
 
+import { clinicalTokenCoverage, clinicalTokens } from "../clinical-match.js";
 import { listCriticalOccurrences, type CriticalOccurrence } from "../extract.js";
 import { getLocale } from "../locales/index.js";
 import { normalizeLoose } from "../normalize.js";
@@ -44,21 +43,23 @@ import type { LocaleKey } from "../types.js";
 export function clinicalReportBody(html: string, locale: LocaleKey): string {
   const technique = getLocale(locale).sections.technique;
   let body = html.replace(/<center>[\s\S]*?<\/center>/gi, " ");
-  // Drop a "<b>Technique</b> ... " block up to the next bold section label.
   body = body.replace(/<b>([^<]*)<\/b>([\s\S]*?)(?=<b>|$)/gi, (full, label: string) =>
     new RegExp(technique.source, technique.flags.replace("g", "")).test(label) ? " " : full);
   return body;
 }
 
 export type Side = "right" | "left" | "bilateral";
+type SideSource = "clause" | "sentence";
 
 export type SourceCriticalAnchor = {
   category: string;
   term: string;
-  /** Side stated in the same clause as the term, if any. */
   side: Side | undefined;
-  /** All sides mentioned anywhere in the source sentence (ambiguity guard). */
+  /** "clause": the side is stated next to the finding; "sentence": inherited. */
+  sideSource: SideSource | undefined;
   sentenceSides: Side[];
+  /** Anatomical context of the finding (e.g. "fifth rib", "clavicle"). */
+  context: string[];
   sentence: string;
 };
 
@@ -67,7 +68,6 @@ export type SourceCriticalStatus = "preserved" | "omitted" | "negated" | "latera
 export type SourceCriticalOutcome = {
   anchor: SourceCriticalAnchor;
   status: SourceCriticalStatus;
-  /** Report sentence that decided the status, when one exists. */
   reportSentence?: string;
   reportSide?: Side;
 };
@@ -84,7 +84,6 @@ export type SourceCriticalResult = {
   anchors: SourceCriticalAnchor[];
   outcomes: SourceCriticalOutcome[];
   missed: SourceCriticalOutcome[];
-  /** Affirmed critical occurrences in the report that were evaluated for C10. */
   reportAffirmedCount: number;
   fabricated: FabricatedCritical[];
 };
@@ -99,16 +98,13 @@ const IMPLIES: Record<string, string[]> = {
 };
 
 // Laterality policy per critical category.
-// - NON_LATERAL: side is not a property of the finding (free air, obstruction,
-//   tamponade, dissection, ...); sides are ignored entirely.
-// - SIDE_REQUIRED: a side stated in the input must also be stated in the report
-//   (wrong-side chest tube / fixation / surgery risk); omission of the side fails.
+// - NON_LATERAL: side is not a property of the finding; sides are ignored.
+// - SIDE_REQUIRED: a side stated in the input must be stated in the report.
 // - everything else: a contradicted side fails, an unstated side is tolerated.
 const NON_LATERAL = new Set([
   "perforation", "bowel-obstruction", "cardiac-tamponade", "ruptured-aaa", "mesenteric-ischemia",
-  "cauda-equina", "cord-compression", "aortic-dissection", "acute-appendicitis",
-  // Direction of a shift ("leftward midline shift") is not the side of the lesion
-  // that causes it; inheriting the sentence's side would mislabel it.
+  "cauda-equina", "cord-compression", "aortic-dissection", "acute-appendicitis", "pneumomediastinum",
+  // Direction of a shift ("leftward midline shift") is not the side of the lesion.
   "midline-shift", "mass-effect",
 ]);
 const SIDE_REQUIRED = new Set([
@@ -128,20 +124,42 @@ const SIDE_RX: Record<LocaleKey, Array<{ rx: RegExp; side: Side }>> = {
     { rx: /\b(?:bilaterai?s?|bilateralmente|ambos|ambas)\b/, side: "bilateral" },
   ],
 };
+// Uppercase single-letter sides ("R pneumothorax"), matched on the raw text so
+// "r/o" or "L4" never count.
+const RAW_SIDE_RX: Array<{ rx: RegExp; side: Side }> = [
+  { rx: /(?<![\w/])R(?![\w/])/, side: "right" },
+  { rx: /(?<![\w/])L(?![\w/\d-])/, side: "left" },
+];
 
-// Sentences that recommend, hedge toward exclusion or list a differential do not
-// AFFIRM a critical finding; C10 must not count them as fabrication.
-const NON_ASSERTIVE_RX: Record<LocaleKey, RegExp> = {
-  "en-US": /\b(?:recommend\w*|suggest\w*|consider\w*|correlat\w*|follow[- ]?up|evaluate\s+for|assess\s+for|to\s+(?:exclude|rule\s+out)|rule\s+out|r\/o|if\s+clinically|differential|versus|vs)\b/,
-  "pt-BR": /\b(?:recomend\w*|suger\w*|sugiro|consider\w*|correlac\w*|controle\s+evolutivo|seguimento|para\s+(?:afastar|excluir|descartar)|afastar|descartar|a\s+criterio|diagnostico\s+diferencial|versus)\b/,
+// A mention that only raises a question ("to evaluate for X", "clinical
+// question: X", "rule out X") affirms nothing: it neither preserves an input
+// critical (C09) nor fabricates one (C10). Management verbs ("recommend",
+// "suggest", "communicated") do NOT make a finding hypothetical.
+const HYPOTHETICAL_RX: Record<LocaleKey, RegExp> = {
+  "en-US": /\b(?:evaluate|evaluation|assess|assessment|screen)\s+for\b|\bto\s+(?:exclude|rule\s+out)\b|\brule\s+out\b|\br\/o\b|\bquestion\s+of\b|\bclinical\s+(?:question|indication|history|concern)\b|\bindication\b|\bhistory\s+of\b|\bif\s+(?:clinically\s+)?(?:concern|indicated|suspected)\b/,
+  "pt-BR": /\b(?:para\s+(?:afastar|excluir|descartar|avaliar|investigar)|afastar|descartar|investigacao\s+de|pesquisa\s+de|indicacao|historia\s+(?:clinica|de)|hipotese\s+de|suspeita\s+clinica\s+de)\b/,
 };
+// Differential phrasing is also not counted as a fabrication (C10 only).
+const DIFFERENTIAL_RX = /\b(?:differential|versus|vs|diagnostico\s+diferencial)\b/;
+
+// Input mentions that are not current findings: resolved, old/healed/chronic,
+// or prior. They describe history, not something the report must carry.
+const NOT_CURRENT_RX: Record<LocaleKey, RegExp> = {
+  "en-US": /\b(?:resolved|resolution|resolving|no\s+longer|previously\s+seen|prior|old|healed|healing|remote|chronic|status\s+post|s\/p)\b/,
+  "pt-BR": /\b(?:resolvid[oa]s?|resolucao|nao\s+mais|previ[oa]s?|antig[oa]s?|consolidad[oa]s?|cronic[oa]s?|sequela\w*|pos-operatori[oa])\b/,
+};
+const RESOLVED_SENTENCE_RX = /\b(?:has|have)\s+resolved\b|\bresolved\b|\bresolvid[oa]s?\b/;
 
 const CLAUSE_BOUNDARY_RX = /[,;:]|\b(?:and|with|but|while|e|com|mas|porem|enquanto)\b/g;
+const CONTEXT_STOP = new Set(["acute", "large", "small", "moderate", "mild", "severe", "tiny", "massive", "displaced", "nondisplaced",
+  "agudo", "aguda", "volumoso", "volumosa", "pequeno", "pequena", "moderado", "moderada", "discreto", "discreta", "extensive", "partial", "collapse"]);
+const SIDE_TOKEN_RX = /^(?:right|left|bilateral|bilaterally|both|direit\w*|esquerd\w*|bilatera\w*)$/;
 
 function sidesIn(text: string, locale: LocaleKey): Side[] {
   const n = normalizeLoose(text);
   const found = new Set<Side>();
   for (const { rx, side } of SIDE_RX[locale]) if (rx.test(n)) found.add(side);
+  if (locale === "en-US") for (const { rx, side } of RAW_SIDE_RX) if (rx.test(text)) found.add(side);
   if (found.has("right") && found.has("left")) found.add("bilateral");
   return [...found];
 }
@@ -169,28 +187,44 @@ function clauseAround(sentence: string, start: number, end: number): string {
   return sentence.slice(left, right);
 }
 
-/** Side for an occurrence: its own clause first, else the sentence if unambiguous. */
-function occurrenceSide(occ: CriticalOccurrence, locale: LocaleKey): { side: Side | undefined; sentenceSides: Side[] } {
-  if (NON_LATERAL.has(occ.category)) return { side: undefined, sentenceSides: [] };
+type SidedOccurrence = { occ: CriticalOccurrence; side: Side | undefined; sideSource: SideSource | undefined; sentenceSides: Side[]; clause: string };
+
+function analyse(occ: CriticalOccurrence, locale: LocaleKey): SidedOccurrence {
+  const clause = clauseAround(occ.sentence, occ.index, occ.index + occ.term.length);
+  if (NON_LATERAL.has(occ.category)) return { occ, side: undefined, sideSource: undefined, sentenceSides: [], clause };
   const sentenceSides = sidesIn(occ.sentence, locale);
-  const clauseSides = sidesIn(clauseAround(occ.sentence, occ.index, occ.index + occ.term.length), locale);
-  if (clauseSides.length > 0) return { side: collapse(clauseSides), sentenceSides };
-  // No side in the clause: inherit the sentence's side only when the sentence is
-  // single-sided ("Right hemithorax: large pneumothorax").
-  if (sentenceSides.length === 1) return { side: sentenceSides[0], sentenceSides };
-  return { side: undefined, sentenceSides };
+  const clauseSides = sidesIn(clause, locale);
+  if (clauseSides.length > 0) return { occ, side: collapse(clauseSides), sideSource: "clause", sentenceSides, clause };
+  if (sentenceSides.length === 1) return { occ, side: sentenceSides[0], sideSource: "sentence", sentenceSides, clause };
+  return { occ, side: undefined, sideSource: undefined, sentenceSides, clause };
+}
+
+function isHypothetical(occ: CriticalOccurrence, locale: LocaleKey): boolean {
+  return HYPOTHETICAL_RX[locale].test(normalizeLoose(occ.sentence.slice(0, occ.index)));
+}
+
+function isNotCurrent(a: SidedOccurrence, locale: LocaleKey): boolean {
+  const clause = normalizeLoose(a.clause);
+  if (/\bacute\s+on\s+chronic\b|\bagud[oa]\s+sobre\s+cronic/.test(clause)) return false;
+  return NOT_CURRENT_RX[locale].test(clause) || RESOLVED_SENTENCE_RX.test(normalizeLoose(a.occ.sentence));
+}
+
+function contextOf(a: SidedOccurrence): string[] {
+  const termTokens = new Set(clinicalTokens(a.occ.term));
+  return clinicalTokens(a.clause).filter((t) => !termTokens.has(t) && !CONTEXT_STOP.has(t) && !SIDE_TOKEN_RX.test(t));
 }
 
 export function sourceCriticalAnchors(findingsInput: string, locale: LocaleKey): SourceCriticalAnchor[] {
   const anchors: SourceCriticalAnchor[] = [];
   const seen = new Set<string>();
   for (const occ of listCriticalOccurrences(findingsInput, locale)) {
-    if (occ.negated) continue;
-    const { side, sentenceSides } = occurrenceSide(occ, locale);
-    const key = `${occ.category}|${side ?? "-"}`;
+    if (occ.negated || isHypothetical(occ, locale)) continue;
+    const a = analyse(occ, locale);
+    if (isNotCurrent(a, locale)) continue;
+    const key = `${occ.category}|${a.side ?? "-"}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    anchors.push({ category: occ.category, term: occ.term, side, sentenceSides, sentence: occ.sentence });
+    anchors.push({ category: occ.category, term: occ.term, side: a.side, sideSource: a.sideSource, sentenceSides: a.sentenceSides, context: contextOf(a), sentence: occ.sentence });
   }
   return anchors;
 }
@@ -201,11 +235,34 @@ function compareSide(anchor: SourceCriticalAnchor, reportSide: Side | undefined)
   if (!anchor.side) return "ok";
   if (!reportSide) return SIDE_REQUIRED.has(anchor.category) ? "missing" : "ok";
   if (reportSide === anchor.side) return "ok";
-  // Source sentence names more than one side: the clause parse may be wrong, so
-  // never call a swap the source sentence itself could support.
-  if (anchor.sentenceSides.includes(reportSide)) return "ok";
-  if (reportSide === "bilateral" && anchor.sentenceSides.includes("bilateral")) return "ok";
+  // A bilateral mention covers either side (an over-call is C10's job).
+  if (reportSide === "bilateral" && anchor.side !== "bilateral") return "ok";
+  // The input's side was only inherited from a sentence naming several sides:
+  // the parse is uncertain, so accept any side that sentence names.
+  if (anchor.sideSource === "sentence" && anchor.sentenceSides.includes(reportSide)) return "ok";
   return "swap";
+}
+
+/** Side word nearest (in characters) to any context token inside a sentence. */
+function nearestSideToContext(sentence: string, context: string[], locale: LocaleKey): Side | undefined {
+  const n = normalizeLoose(sentence);
+  const positions: number[] = [];
+  for (const t of context) {
+    const stem = t.slice(0, Math.max(4, Math.min(t.length, 6)));
+    for (let i = n.indexOf(stem); i >= 0; i = n.indexOf(stem, i + 1)) positions.push(i);
+  }
+  if (positions.length === 0) return undefined;
+  let best: { d: number; side: Side } | null = null;
+  for (const { rx, side } of SIDE_RX[locale]) {
+    const g = new RegExp(rx.source, "g");
+    let m: RegExpExecArray | null;
+    while ((m = g.exec(n)) !== null) {
+      const at = m.index;
+      const d = Math.min(...positions.map((p) => Math.abs(p - at)));
+      if (!best || d < best.d) best = { d, side };
+    }
+  }
+  return best?.side;
 }
 
 const STATUS_RANK: Record<SourceCriticalStatus, number> = {
@@ -218,22 +275,43 @@ const STATUS_RANK: Record<SourceCriticalStatus, number> = {
 
 export function evaluateSourceCriticals(reportHtml: string, findingsInput: string, locale: LocaleKey): SourceCriticalResult {
   const anchors = sourceCriticalAnchors(findingsInput, locale);
-  const reportOcc = listCriticalOccurrences(clinicalReportBody(reportHtml, locale), locale).map((occ) => ({ occ, ...occurrenceSide(occ, locale) }));
+  const reportOcc = listCriticalOccurrences(clinicalReportBody(reportHtml, locale), locale)
+    .map((occ) => ({ ...analyse(occ, locale), hypothetical: isHypothetical(occ, locale) }));
+  const anchorsByCategory = new Map<string, SourceCriticalAnchor[]>();
+  for (const a of anchors) anchorsByCategory.set(a.category, [...(anchorsByCategory.get(a.category) ?? []), a]);
 
   const outcomes: SourceCriticalOutcome[] = anchors.map((anchor) => {
+    const siblings = (anchorsByCategory.get(anchor.category) ?? []).filter((a) => a !== anchor);
+    // Two or more criticals of the same category with different sides ("right
+    // rib fracture", "left clavicle fracture"): a mention counts for THIS anchor
+    // only if it carries this anchor's anatomical context, and its side is read
+    // next to that context, so swapping both sides cannot pass.
+    const needsContext = siblings.some((s) => s.side !== anchor.side) && anchor.context.length > 0;
+    let candidates = reportOcc.filter((r) => r.occ.category === anchor.category && !r.hypothetical);
+    if (needsContext) {
+      const ctx = anchor.context.join(" ");
+      candidates = candidates.filter((r) => clinicalTokenCoverage(ctx, r.occ.sentence) > 0)
+        .map((r) => {
+          const inClause = clinicalTokenCoverage(ctx, r.clause) > 0;
+          const side = inClause ? r.side : nearestSideToContext(r.occ.sentence, anchor.context, locale) ?? r.side;
+          return { ...r, side, sideSource: "clause" as SideSource };
+        });
+    }
     let best: SourceCriticalOutcome = { anchor, status: "omitted" };
-    for (const r of reportOcc) {
-      if (r.occ.category !== anchor.category) continue;
+    for (const r of candidates) {
       let status: SourceCriticalStatus;
       if (r.occ.negated) status = "negated";
       else {
         const v = compareSide(anchor, r.side);
         status = v === "ok" ? "preserved" : v === "swap" ? "laterality-swap" : "laterality-missing";
       }
-      if (STATUS_RANK[status] < STATUS_RANK[best.status]) {
-        best = { anchor, status, reportSentence: r.occ.sentence, reportSide: r.side };
-      }
+      if (STATUS_RANK[status] < STATUS_RANK[best.status]) best = { anchor, status, reportSentence: r.occ.sentence, reportSide: r.side };
       if (best.status === "preserved") break;
+    }
+    // A bilateral input critical needs both sides somewhere in the report.
+    if (best.status === "preserved" && anchor.side === "bilateral") {
+      const sides = new Set(candidates.filter((r) => !r.occ.negated).flatMap((r) => (r.side ? [r.side] : [])));
+      if (!sides.has("bilateral") && !(sides.has("right") && sides.has("left"))) best = { ...best, status: "laterality-missing" };
     }
     return best;
   });
@@ -241,28 +319,31 @@ export function evaluateSourceCriticals(reportHtml: string, findingsInput: strin
   // ---- C10: fabricated criticals ----
   const licensed = new Map<string, SourceCriticalAnchor[]>();
   for (const a of anchors) {
-    for (const cat of [a.category, ...(IMPLIES[a.category] ?? [])]) {
-      if (!licensed.has(cat)) licensed.set(cat, []);
-      licensed.get(cat)!.push(a);
-    }
+    for (const cat of [a.category, ...(IMPLIES[a.category] ?? [])]) licensed.set(cat, [...(licensed.get(cat) ?? []), a]);
   }
-  const nonAssertive = NON_ASSERTIVE_RX[locale];
   const fabricated: FabricatedCritical[] = [];
   const seenFab = new Set<string>();
   let reportAffirmedCount = 0;
   for (const r of reportOcc) {
-    if (r.occ.negated) continue;
-    if (nonAssertive.test(normalizeLoose(r.occ.sentence))) continue;
+    if (r.occ.negated || r.hypothetical) continue;
+    if (DIFFERENTIAL_RX.test(normalizeLoose(r.clause))) continue;
     reportAffirmedCount += 1;
     const backers = licensed.get(r.occ.category);
     let reason: FabricatedCritical["reason"] | null = null;
     if (!backers || backers.length === 0) reason = "not-in-input";
     else if (r.side && backers.every((a) => a.side !== undefined)) {
-      const supported = backers.some((a) =>
-        a.side === r.side ||
-        a.sentenceSides.includes(r.side!) ||
-        (a.side === "bilateral" && r.side !== undefined),
-      );
+      const sides = new Set(backers.map((a) => a.side));
+      const lenient = (side: Side) => backers.some((a) => a.sideSource === "sentence" && a.sentenceSides.includes(side));
+      let supported = r.side === "bilateral"
+        ? sides.has("bilateral") || (sides.has("right") && sides.has("left")) || lenient("bilateral")
+        : sides.has(r.side) || sides.has("bilateral") || lenient(r.side);
+      // One critical word can serve two findings in the input ("fracture of the
+      // right fifth rib and of the left clavicle"): accept the report's side when
+      // the input puts that side next to the same anatomy.
+      if (!supported) {
+        const ctx = contextOf(r);
+        if (ctx.length > 0) supported = backers.some((a) => nearestSideToContext(a.sentence, ctx, locale) === r.side);
+      }
       if (!supported) reason = "contralateral";
     }
     if (reason) {
@@ -273,13 +354,7 @@ export function evaluateSourceCriticals(reportHtml: string, findingsInput: strin
     }
   }
 
-  return {
-    anchors,
-    outcomes,
-    missed: outcomes.filter((o) => o.status !== "preserved"),
-    reportAffirmedCount,
-    fabricated,
-  };
+  return { anchors, outcomes, missed: outcomes.filter((o) => o.status !== "preserved"), reportAffirmedCount, fabricated };
 }
 
 function label(term: string, side: Side | undefined): string {

@@ -131,6 +131,18 @@ npm run bench -- eval-submission \
 
 Each JSONL line follows the prediction record schema (`instance_id`, `model_output`). See [docs/public-submissions.md](docs/public-submissions.md).
 
+## Website
+
+[laibench.laudos.ai](https://laibench.laudos.ai) is a static site in `site/` that runs the **real scorer in the browser**: `scripts/build-site-scorer.mjs` bundles `src/` with esbuild (Node built-ins shimmed in `site-src/shims/`) and a test requires the bundle to return the same verdict, score, gate reasons and per-check outcomes as the CLI. The site has the pneumothorax test, a playground that marks up any report with the scorer's evidence, the discrimination ladder, the leaderboard (each row states the scoring version that produced it), the 49 public cases, and in-browser recomputation of the suiteHash and scoringHash.
+
+```bash
+npm run site:build   # bundle the scorer, copy the public cases, write site/provenance.json
+npm run ladder       # regenerate site/ladder.json
+npx serve site       # or any static server
+```
+
+`npm test` fails if `site/assets/laibench-scorer.js` or `site/provenance.json` is stale relative to the scoring source.
+
 ## Calibration controls
 
 The public stratified page is a **reference-vs-null sanity check**: it verifies the harness is not inverted by comparing public reference reports against a fixed unsafe null baseline. That is a sanity check, not a claim that the null baseline measures realistic model degradation. Dose-response controls require answer-key material and are generated only inside the controlled environment; public releases publish aggregate calibration summaries only — never case-level predictions or gold labels.

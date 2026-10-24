@@ -67,8 +67,8 @@ for (const [locale, files] of Object.entries(boards)) {
     disclosure: LEADERBOARD_DISCLOSURE,
     note:
       "Controlled benchmark preview. Production agents are ranked separately from free/open model comparisons and calibration fixtures. The public board excludes case JSON, answer keys, frozen predictions and corpus provenance. " +
-      "The pt-BR controlled suite is gated and must not be treated as an open-download benchmark. Score is weighted clinical fidelity score. Strict all-pass means zero-failure cases: every criterion in a case passes simultaneously, and any critical failure forces FAIL instead of being averaged into PASS. Runs are reproducible only inside the controlled adjudication environment. " +
-      "<a href=\"#methods\">Methods</a>.",
+      "The pt-BR controlled suite is gated and must not be treated as an open-download benchmark. Score is weighted clinical fidelity score. Strict pass is the share of cases with a PASS verdict; any critical failure forces FAIL instead of being averaged into PASS. All-pass is the stricter share of cases in which every criterion passes. Runs are reproducible only inside the controlled adjudication environment. " +
+      "<a href=\"#method\">Methods</a>.",
   };
 }
 

@@ -72,7 +72,7 @@ function sentences(text: string): string[] {
   return text.replace(/\s*(?:,\s*)?\b(?:in|for|of)\s+the\s+example\b/gi, "").split(/(?<=[a-z)\]]\.)\s+/i).map((s) => s.trim()).filter(Boolean);
 }
 const NEG_LEAD = /^(?:no|without|negative for|absent)\b/i;
-const NORMAL = /^normal study\b|^remaining\b|\b(?:unremarkable|within (?:normal|expected) limits|normal|preserved|intact|not dilated|homogeneous|stable|patent|clear|without (?:nodules|abnormality)|recommended|advised|recommend)\b/i;
+const NORMAL = /^normal study\b|^remaining\b|^scattered fibroglandular\b|\b(?:unremarkable|within (?:normal|expected) limits|normal|preserved|intact|not dilated|homogeneous|stable|patent|clear|without (?:nodules|abnormality)|recommended|advised|recommend)\b/i;
 const CRIT_EN = /hemorrhag[ei]|hematoma|active\s+bleed|hemoperitoneum|hemothorax|pulmonary\s+emboli|thromboemboli|\bstroke\b|acute\s+(?:(?:cerebral|ischemic|territorial|cortical)\s+)?infarct|acute\s+(?:cerebral\s+)?ischemi|pneumothorax|aortic\s+dissection|midline\s+shift|mass\s+effect|bowel\s+obstruction|perforation|pneumoperitoneum|free\s+(?:intraperitoneal\s+)?air|\bfracture|(?:cord|spinal)\s+compression|tamponade|ruptured\s+aortic|mesenteric\s+ischemia|cauda\s+equina|torsion|necrotizing\s+fasciitis|acute\s+appendicitis/i;
 const isMeta = (s: string) => META.test(s);
 const isAbnormal = (s: string) => !isMeta(s) && !NEG_LEAD.test(s) && !NORMAL.test(s);

@@ -26,8 +26,8 @@
   /* ---------- tokens: lightbox (light) / reading room (dark) ---------- */
   :root {
     --bg: #F2F5F7; --film: #E2E8ED; --film-2: #D3DBE2; --paper: #FFFFFF;
-    --ink: #13202A; --ink-2: #3E4D59; --slate: #5A6A77; --faint: #7F8E99; --line: #CDD6DD; --line-2: #B9C4CC;
-    --red: #D0243C; --red-wash: rgba(208, 36, 60, .07); --pass: #12875A; --partial: #B98B00;
+    --ink: #13202A; --ink-2: #3E4D59; --slate: #5A6A77; --faint: #66737D; --line: #CDD6DD; --line-2: #B9C4CC;
+    --red: #D0243C; --red-wash: rgba(208, 36, 60, .07); --pass: #12875A; --partial: #B98B00; --partial-ink: #8A6800;
     --chart: #FFFFFF; --grid: #E3E9ED;
     --sans: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
     --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
@@ -38,16 +38,16 @@
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #0F171D; --film: #141E26; --film-2: #1C2833; --paper: #18232C;
-      --ink: #E4EBF0; --ink-2: #B9C6CF; --slate: #8C9CA8; --faint: #6E7F8A; --line: #26333E; --line-2: #34434F;
-      --red: #E84D82; --red-wash: rgba(232, 77, 130, .10); --pass: #2A9C7C; --partial: #B8890C;
+      --ink: #E4EBF0; --ink-2: #B9C6CF; --slate: #8C9CA8; --faint: #8595A0; --line: #26333E; --line-2: #34434F;
+      --red: #E84D82; --red-wash: rgba(232, 77, 130, .10); --pass: #2A9C7C; --partial: #B8890C; --partial-ink: #C99A26;
       --chart: #141E26; --grid: #22303A;
       color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
     --bg: #0F171D; --film: #141E26; --film-2: #1C2833; --paper: #18232C;
-    --ink: #E4EBF0; --ink-2: #B9C6CF; --slate: #8C9CA8; --faint: #6E7F8A; --line: #26333E; --line-2: #34434F;
-    --red: #E84D82; --red-wash: rgba(232, 77, 130, .10); --pass: #2A9C7C; --partial: #B8890C;
+    --ink: #E4EBF0; --ink-2: #B9C6CF; --slate: #8C9CA8; --faint: #8595A0; --line: #26333E; --line-2: #34434F;
+    --red: #E84D82; --red-wash: rgba(232, 77, 130, .10); --pass: #2A9C7C; --partial: #B8890C; --partial-ink: #C99A26;
     --chart: #141E26; --grid: #22303A;
     color-scheme: dark;
   }
@@ -62,11 +62,12 @@
   ::selection { background: var(--ink); color: var(--bg); }
   .wrap { max-width: 1240px; margin: 0 auto; padding: 0 var(--gutter); }
   .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .skip:focus { position: fixed; left: 16px; top: 12px; width: auto; height: auto; clip: auto; z-index: 100; padding: 10px 14px; border-radius: 8px; background: var(--ink); color: var(--bg); text-decoration: none; }
   code, .mono { font-family: var(--mono); font-size: .86em; }
   button { font: inherit; color: inherit; }
 
   /* ---------- header ---------- */
-  .top { position: sticky; top: 0; z-index: 40; background: color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter: saturate(140%) blur(12px); -webkit-backdrop-filter: saturate(140%) blur(12px); border-bottom: 1px solid var(--line); }
+  .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 40; background: color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter: saturate(140%) blur(12px); -webkit-backdrop-filter: saturate(140%) blur(12px); border-bottom: 1px solid var(--line); }
   .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 20px; height: 60px; }
   .brand { display: flex; align-items: center; gap: 11px; text-decoration: none; }
   .logo { position: relative; width: 24px; height: 24px; border-radius: 50%; overflow: hidden; flex: none;
@@ -78,6 +79,7 @@
   .brand .wm span { color: var(--faint); font-weight: 500; }
   .brand .sub { color: var(--slate); font-size: 14px; padding-left: 11px; border-left: 1px solid var(--line-2); }
   .nav { display: flex; align-items: center; gap: clamp(12px, 1.8vw, 26px); }
+  .nav-links { display: contents; }
   .nav a { text-decoration: none; color: var(--slate); font-size: 15px; }
   .nav a:hover { color: var(--ink); }
   .nav .gh { color: var(--ink); font-weight: 500; }
@@ -131,7 +133,7 @@
   .stamp { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 86px; padding: 6px 12px 7px; border: 2.5px solid currentColor; border-radius: 6px; transform: rotate(-4deg); font-family: var(--sans); line-height: 1; }
   .stamp b { font-size: 22px; letter-spacing: .06em; font-weight: 700; }
   .stamp small { font-size: 11px; margin-top: 4px; font-weight: 600; opacity: .9; }
-  .stamp.PASS { color: var(--pass); } .stamp.PARTIAL { color: var(--partial); } .stamp.FAIL { color: var(--red); }
+  .stamp.PASS { color: var(--pass); } .stamp.PARTIAL { color: var(--partial-ink); } .stamp.FAIL { color: var(--red); }
   .stamp.pending { color: var(--faint); border-style: dashed; transform: none; }
   .score-line { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   .score-num { font-size: 40px; font-weight: 600; letter-spacing: -.03em; line-height: 1; }
@@ -174,7 +176,7 @@
   .checks { margin-top: 16px; border-top: 1px solid var(--line); }
   .check { display: grid; grid-template-columns: 74px 52px minmax(0, 1fr); gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14px; align-items: baseline; }
   .check .sev { font-weight: 600; font-size: 12.5px; }
-  .check .sev.critical { color: var(--red); } .check .sev.major { color: var(--partial); } .check .sev.minor { color: var(--slate); }
+  .check .sev.critical { color: var(--red); } .check .sev.major { color: var(--partial-ink); } .check .sev.minor { color: var(--slate); }
   .check .id { font-family: var(--mono); font-size: 12.5px; color: var(--slate); }
   .check .ev { color: var(--slate); display: block; font-size: 13.5px; }
   details.more { margin-top: 10px; }
@@ -199,8 +201,8 @@
   th { text-align: right; font-weight: 500; color: var(--slate); font-size: 13px; padding: 0 0 10px 12px; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
   th.l, td.l { text-align: left; padding-left: 0; }
   th button { background: none; border: 0; padding: 0; color: inherit; cursor: pointer; font: inherit; }
-  th button[aria-sort]::after { content: "↓"; margin-left: 4px; }
-  th button[aria-sort="ascending"]::after { content: "↑"; }
+  th[aria-sort] button::after { content: "↓"; margin-left: 4px; }
+  th[aria-sort="ascending"] button::after { content: "↑"; }
   td { text-align: right; padding: 12px 0 12px 12px; border-bottom: 1px solid var(--line); color: var(--ink-2); vertical-align: middle; white-space: nowrap; }
   td.l.rank { width: 30px; padding-right: 8px; color: var(--faint); }
   td.l.wrap-ok, .ladder-table td.l { white-space: normal; }
@@ -211,6 +213,8 @@
   .mini i { display: block; height: 100%; background: var(--slate); border-radius: 3px; }
   .gap { width: 150px; }
   .gap svg { display: block; width: 150px; height: 18px; }
+  .gap .g-track { stroke: var(--line); } .gap .g-span { stroke: var(--slate); }
+  .gap .g-all { fill: none; stroke: var(--slate); } .gap .g-clin { fill: var(--ink); }
   .tag { font-size: 12px; border: 1px solid var(--line-2); border-radius: 999px; padding: 2px 8px; color: var(--slate); margin-left: 8px; white-space: nowrap; font-weight: 500; }
   .board + .board { margin-top: clamp(40px, 5vw, 64px); }
   .board h3 { margin: 0; font-size: 21px; letter-spacing: -.015em; font-weight: 600; }
@@ -309,8 +313,13 @@
   }
   @media (max-width: 640px) {
     body { font-size: 16px; }
-    .top .wrap { height: 54px; }
-    .brand .sub, .nav a:not(.gh) { display: none; }
+    .brand .sub { display: none; }
+    .top .wrap { flex-wrap: wrap; height: auto; padding-top: 8px; padding-bottom: 6px; row-gap: 4px; }
+    .nav { display: contents; }
+    .nav .gh { margin-left: auto; }
+    .nav-links { order: 3; flex: 1 0 100%; display: flex; gap: 18px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .nav-links::-webkit-scrollbar { display: none; }
+    .nav a.opt { display: inline; }
     .requisition { grid-template-columns: 1fr; gap: 2px; padding: 14px 16px; }
     .requisition dd + dt { margin-top: 8px; }
     .dims { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
@@ -328,7 +337,7 @@
 </style>
 </head>
 <body>
-<a class="visually-hidden" href="#try">Skip to the scorer</a>
+<a class="visually-hidden skip" href="#try">Skip to the scorer</a>
 <header class="top">
   <div class="wrap">
     <a class="brand" href="#top" aria-label="LAIBench by Laudos.AI Research, home">
@@ -337,13 +346,15 @@
       <span class="sub">Research</span>
     </a>
     <nav class="nav" aria-label="Sections">
-      <a href="#try">Try it</a>
-      <a href="#ladder">Ladder</a>
-      <a href="#leaderboard">Leaderboard</a>
-      <a class="opt" href="#method">Method</a>
-      <a class="opt" href="#cases">Cases</a>
-      <a href="#verify">Verify</a>
-      <a class="opt" href="#research">Papers</a>
+      <span class="nav-links">
+        <a href="#try">Try it</a>
+        <a href="#ladder">Ladder</a>
+        <a href="#leaderboard">Leaderboard</a>
+        <a class="opt" href="#method">Method</a>
+        <a class="opt" href="#cases">Cases</a>
+        <a href="#verify">Verify</a>
+        <a class="opt" href="#research">Papers</a>
+      </span>
       <a class="gh" href="https://github.com/laudos-ai/laibench-public" target="_blank" rel="noopener">GitHub</a>
       <button class="iconbtn" id="theme" type="button" aria-label="Switch color theme">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17" /><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/></svg>
@@ -423,7 +434,8 @@
             <textarea id="reportIn" class="code" spellcheck="false"></textarea>
           </div>
         </div>
-        <div class="panel" aria-live="polite" id="result">
+        <div class="panel" id="result">
+          <p class="visually-hidden" aria-live="polite" id="resultSummary"></p>
           <div class="result-head" data-slot="head"></div>
           <ul class="gates" data-slot="gates"></ul>
           <div class="dims" data-slot="dims"></div>
@@ -479,10 +491,10 @@
       <ol class="pipeline">
         <li><span class="n">1</span><h4>Sanitize</h4><p>Only <code>&lt;center&gt;</code>, <code>&lt;b&gt;</code>, <code>&lt;br&gt;</code> survive. Scripts and markup injected to sway a judge are stripped.</p></li>
         <li><span class="n">2</span><h4>Deterministic checks</h4><p>Around 40 checks across five clinical dimensions: sections, terminology, coverage, laterality, measurements.</p></li>
-        <li class="gate"><span class="n">3</span><h4>Source-anchored gates</h4><p>Every critical in the input must survive with the same polarity and side; nothing critical may be invented.</p></li>
+        <li class="gate"><span class="n">3</span><h4>Source-anchored gates</h4><p>Critical findings the input states must survive with the same polarity and side, and none may be added. Criticals are recognized from a fixed vocabulary of terms.</p></li>
         <li><span class="n">4</span><h4>Optional judge, then MIN</h4><p>A pinned LLM judge can be added. Each dimension keeps the lower of the two scores, so the judge can never inflate one.</p></li>
         <li><span class="n">5</span><h4>Anti-compensation</h4><p>Perfect terminology and coverage cannot lift a clinically weak report into PASS.</p></li>
-        <li class="gate"><span class="n">6</span><h4>Critical veto</h4><p>Any failed critical check caps the case at 59.9 and forces FAIL. Every published number is re-derived through this gate.</p></li>
+        <li class="gate"><span class="n">6</span><h4>Critical veto</h4><p>Any failed critical check caps the case at 59.9 and forces FAIL. When a run is loaded for publication, every verdict is re-derived through this gate.</p></li>
       </ol>
 
       <div class="weights">
@@ -505,6 +517,7 @@
           <tbody>
             <tr><td>C09</td><td><b>Input critical findings preserved.</b> Present, affirmed and on the same side. Side must be stated for pneumothorax, fractures, bleeds, torsion and stroke; a contradicted side always fails.</td><td class="l">critical</td></tr>
             <tr><td>C10</td><td><b>No critical finding beyond the input.</b> Neither a new critical nor one moved to the other side. Recommendations and differentials are not counted.</td><td class="l">critical</td></tr>
+            <tr><td></td><td style="color:var(--slate)">C09 and C10 recognize criticals from a fixed, versioned vocabulary (pneumothorax, hemorrhage, pulmonary embolism, stroke, free air, dissection, obstruction, fracture, cord compression, torsion and others, in English and Portuguese). A critical phrased outside that vocabulary is not caught; the vocabulary is in <code>src/extract.ts</code>.</td><td></td></tr>
             <tr><td>Q16</td><td><b>Abnormal findings reflected.</b> Paraphrase-tolerant, polarity-aware; each missing finding costs separately.</td><td class="l">major</td></tr>
             <tr><td>Q17</td><td><b>No unsupported normalcy.</b> An abnormal study cannot be reported as normal.</td><td class="l">critical</td></tr>
           </tbody>
@@ -586,7 +599,7 @@ npm run bench -- provenance --suite suites/lite-public.en-US.json --out provenan
       <div class="sec-head"><h2 id="research-h">Research</h2></div>
       <div class="pubs">
         <a class="pub" href="laibench-preprint.pdf" target="_blank" rel="noopener">
-          <div><h3>Beyond Templates: A Compositional Model and Lower Bound for Radiology Report Variability</h3><p class="auth">N. Paraiso Ribeiro, P. Paraiso Ribeiro, S. Alba Herrera, F. Akira, R. Moreno. Laudos.AI Research, 2026.</p></div>
+          <div><h3>Beyond Templates: A Compositional Model and Lower Bound for Radiology Report Variability</h3><p class="auth">N. Paraiso Ribeiro, P. Paraiso Ribeiro, S. Alba Herrera, F. Akira, R. Moreno. Laudos.AI Research, 2026. A companion theory paper on report variability; it does not describe the LAIBench scoring.</p></div>
           <span class="kind">Preprint, PDF</span>
         </a>
         <a class="pub" href="https://github.com/laudos-ai/laibench-public/blob/main/docs/public-ladder.md" target="_blank" rel="noopener">

@@ -128,7 +128,7 @@ function marksFromResult(result) {
       const m = /not reflected: "(.+)"$/.exec(ev);
       notes.push({ section: "findings", sev: "major", text: `<b>Not in the report:</b> “${esc(m ? m[1] : ev)}” <span class="id">(Q16)</span>` });
     } else if (c.id === "Q17" && !c.passed) {
-      notes.push({ section: "impression", sev: "critical", text: `<b>Reads as normal; the input is abnormal.</b> <span class="id">(Q17)</span>` });
+      notes.push({ section: "impression", sev: "critical", text: `<b>None of the input's abnormal findings is in the report.</b> <span class="id">(Q17)</span>` });
     } else if (/^T\d\d$|^TO\d|^TM\d|^C01$/.test(c.id) && !c.passed && ev && ev !== "ok") {
       const words = ev.split(/,\s*/).filter(Boolean).slice(0, 4);
       for (const w of words) marks.push({ kind: "wave", sentence: (s) => termRx(w).test(s), word: termRx(w), title: `${c.id}: ${c.name}` });
@@ -288,14 +288,19 @@ async function runHero() {
   // One orchestrated moment: run when the duel is on screen.
   const target = $(".duel");
   if (!("IntersectionObserver" in window) || reduceMotion) { start(); return; }
-  const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); start(); } }, { threshold: 0.35 });
+  // threshold 0 + a bottom margin works on short viewports where the duel is
+  // taller than the screen; the timeout guarantees the verdicts always appear.
+  let started = false;
+  const go = () => { if (!started) { started = true; io.disconnect(); start(); } };
+  const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) go(); }, { threshold: 0, rootMargin: "0px 0px -25% 0px" });
   io.observe(target);
+  setTimeout(go, 2500);
 }
 
 // ---------------------------------------------------------------- perturbations (same rules as scripts/public-ladder.ts)
 const META = /\b(?:synthetic|harness|demonstration|for testing|testing\b|example\b|high-risk patient context)/i;
 const NEG_LEAD = /^(?:no|without|negative for|absent)\b/i;
-const NORMAL = /^normal study\b|^remaining\b|\b(?:unremarkable|within (?:normal|expected) limits|normal|preserved|intact|not dilated|homogeneous|stable|patent|clear|without (?:nodules|abnormality)|recommended|advised|recommend)\b/i;
+const NORMAL = /^normal study\b|^remaining\b|^scattered fibroglandular\b|\b(?:unremarkable|within (?:normal|expected) limits|normal|preserved|intact|not dilated|homogeneous|stable|patent|clear|without (?:nodules|abnormality)|recommended|advised|recommend)\b/i;
 const CRIT_EN = /hemorrhag[ei]|hematoma|active\s+bleed|hemoperitoneum|hemothorax|pulmonary\s+emboli|thromboemboli|\bstroke\b|acute\s+(?:(?:cerebral|ischemic|territorial|cortical)\s+)?infarct|acute\s+(?:cerebral\s+)?ischemi|pneumothorax|aortic\s+dissection|midline\s+shift|mass\s+effect|bowel\s+obstruction|perforation|pneumoperitoneum|free\s+(?:intraperitoneal\s+)?air|\bfracture|(?:cord|spinal)\s+compression|tamponade|ruptured\s+aortic|mesenteric\s+ischemia|cauda\s+equina|torsion|necrotizing\s+fasciitis|acute\s+appendicitis/i;
 const sentencesOf = (t) => t.replace(/\s*(?:,\s*)?\b(?:in|for|of)\s+the\s+example\b/gi, "").split(/(?<=[a-z)\]]\.)\s+/i).map((s) => s.trim()).filter(Boolean);
 const isAbnormal = (s) => !META.test(s) && !NEG_LEAD.test(s) && !NORMAL.test(s);
@@ -383,6 +388,12 @@ function scheduleScore() { clearTimeout(play.timer); play.timer = setTimeout(sco
 async function scorePlayground() {
   const seq = ++play.seq;
   const input = { exam: $("#examIn").value, findings: $("#findIn").value, locale: "en-US", html: $("#reportIn").value, id: play.current?.id ?? "custom" };
+  // The scorer runs on the main thread; keep inputs in the range real reports use.
+  if (input.html.length > 30000 || input.findings.length > 6000 || input.exam.length > 600) {
+    $('#result [data-slot="head"]').innerHTML = `<p class="hint">This is longer than the playground scores (report 30,000, findings 6,000, exam 600 characters). Shorten it, or run the CLI for long inputs.</p>`;
+    $("#resultSummary").textContent = "Input too long to score in the browser.";
+    return;
+  }
   let r;
   try { r = await LB.scoreReport(input); } catch (e) { $('#result [data-slot="head"]').textContent = `The scorer could not score this input: ${e.message}`; return; }
   if (seq !== play.seq) return;
@@ -391,6 +402,7 @@ async function scorePlayground() {
   $('[data-slot="head"]', root).innerHTML = `${verdictStamp(r)}
     <div><div class="score-line"><span class="score-num">${fmt1(r.score)}</span><span class="score-of">/ 100</span></div>
     <div class="${r.score < weighted - 0.05 ? "veto-line" : "score-of"}">${r.score < weighted - 0.05 ? `Weighted ${fmt1(weighted)}, capped at ${fmt1(r.score)}` : `${r.criteriaPassed} of ${r.criteriaTotal} checks passed`}</div></div>`;
+  $("#resultSummary").textContent = `${r.verdict}, ${fmt1(r.score)} out of 100, ${r.checks.filter((c) => !c.passed).length} failing checks.`;
   $('[data-slot="gates"]', root).innerHTML = r.gateReasons.map((g) => `<li title="${esc(g)}">${esc(humanGate(g))}</li>`).join("");
   $('[data-slot="dims"]', root).innerHTML = dimsHtml(r);
   fillBars(root, true);
@@ -516,11 +528,12 @@ function initLadder(ladder) {
 
   const prev = ladder.previous;
   const P = (id) => prev?.levels.find((l) => l.id === id);
-  const fab = ladder.levels.find((l) => l.id === "L6");
-  const crit = ladder.levels.filter((l) => l.critical);
-  const allVetoed = crit.every((l) => l.criticalVetoRate === 100 || l.id === "L7");
-  if (prev && fab && P("L6")) {
-    $("#ladderCallout").innerHTML = `Under LAIBench ${esc(prev.benchmarkVersion)}, ${fmt1(P("L6").passRate)}% of reports with an invented critical finding still passed. <span class="muted">Under ${esc(ladder.benchmarkVersion)}, ${fab.passRate === 0 ? "none do" : `${fmt1(fab.passRate)}% do`}, and ${allVetoed ? "every omitted, denied or invented critical finding is vetoed" : "critical errors are vetoed"}. We found that gap in our own scorer and closed it.</span>`;
+  const L = (id) => ladder.levels.find((l) => l.id === id);
+  const fab = L("L6"), omit = L("L5"), deny = L("L4"), nul = L("L7");
+  if (prev && fab && P("L6") && omit && deny && nul) {
+    const count = (l, rate) => Math.round((l.n * rate) / 100);
+    const none = (l) => (l.passRate === 0 ? "none" : `${count(l, l.passRate)}`);
+    $("#ladderCallout").innerHTML = `Under LAIBench ${esc(prev.benchmarkVersion)}, ${fmt1(P("L6").passRate)}% of these reports with an invented critical finding still passed. <span class="muted">Under ${esc(ladder.benchmarkVersion)}, ${none(fab)} of the ${fab.n} do; ${count(omit, omit.criticalVetoRate)} of ${omit.n} omitted and ${count(deny, deny.criticalVetoRate)} of ${deny.n} denied criticals are vetoed; and ${nul.passRate === 0 ? "no" : count(nul, nul.passRate)} null report passes. These are the errors this ladder injects, recognized from a fixed vocabulary of critical terms.</span>`;
   }
   const head = `<thead><tr><th class="l">Rung</th><th class="l">Error injected</th><th>Cases</th><th>Mean score</th><th>PASS</th><th>Critical veto</th>${prev ? `<th>PASS under ${esc(prev.benchmarkVersion)}</th>` : ""}</tr></thead>`;
   const rows = ladder.levels.map((l, i) => `<tr><td class="l">${i}</td><td class="l">${esc(l.label)}<br><span style="color:var(--slate);font-size:13px">${esc(l.description)}</span></td><td>${l.n}</td><td>${fmt1(l.meanScore)}</td><td class="big">${fmt1(l.passRate)}%</td><td>${fmt1(l.criticalVetoRate)}%</td>${prev ? `<td>${P(l.id) ? `${fmt1(P(l.id).passRate)}%` : "—"}</td>` : ""}</tr>`).join("");
@@ -529,11 +542,9 @@ function initLadder(ladder) {
 }
 
 // ---------------------------------------------------------------- leaderboard
-function gapSvg(clinical, strict) {
+function gapSvg(clinical, allPass) {
   const x = (v) => 6 + (v ?? 0) * 138;
-  const css = getComputedStyle(document.documentElement);
-  const ink = css.getPropertyValue("--ink").trim(), slate = css.getPropertyValue("--slate").trim(), grid = css.getPropertyValue("--line").trim();
-  return `<svg viewBox="0 0 150 18" aria-hidden="true"><line x1="6" x2="144" y1="9" y2="9" stroke="${grid}" stroke-width="1"/><line x1="${x(strict)}" x2="${x(clinical)}" y1="9" y2="9" stroke="${slate}" stroke-width="2"/><circle cx="${x(strict)}" cy="9" r="4" fill="none" stroke="${slate}" stroke-width="1.6"/><circle cx="${x(clinical)}" cy="9" r="4.5" fill="${ink}"/></svg>`;
+  return `<svg viewBox="0 0 150 18" aria-hidden="true"><line class="g-track" x1="6" x2="144" y1="9" y2="9" stroke-width="1"/><line class="g-span" x1="${x(allPass)}" x2="${x(clinical)}" y1="9" y2="9" stroke-width="2"/><circle class="g-all" cx="${x(allPass)}" cy="9" r="4" stroke-width="1.6"/><circle class="g-clin" cx="${x(clinical)}" cy="9" r="4.5"/></svg>`;
 }
 
 const BOARDS_META = [{ key: "pt-BR", name: "the controlled evaluation" }, { key: "en-US", name: "the public smoke test" }];
@@ -543,67 +554,71 @@ function initLeaderboard(data) {
   if (notes.length && data.currentBenchmarkVersion) {
     $("#rescore").hidden = false;
     const by = BOARDS_META.map((m) => data.locales?.[m.key]?.scoredWith ? `${m.name} with ${data.locales[m.key].scoredWith.replace(/^pre-3\.11 \(≤ (.+)\)$/, "$1 or earlier")}` : null).filter(Boolean).join(", ");
-    $("#rescoreText").textContent = `These rows were scored before version ${data.currentBenchmarkVersion}: ${by}. Version ${data.currentBenchmarkVersion} changes scoring on both paths (critical gate without answer keys, unsupported normalcy, list-scoped negation), so these numbers will move when the systems are re-run. They are shown under the version that produced them.`;
+    $("#rescoreText").textContent = `These rows were scored before version ${data.currentBenchmarkVersion}: ${by}. Version ${data.currentBenchmarkVersion} changes scoring on both paths (critical gate without answer keys, unsupported normalcy, list-scoped negation), so every number below, first-party included, will move when the systems are re-run. They are shown under the version that produced them.`;
   }
   const BOARDS = [
-    { key: "pt-BR", title: "Controlled evaluation, first-party", sub: "Gated, aggregate-only, not external validation.", prod: true },
-    { key: "en-US", title: "Public smoke test, open models", sub: "Synthetic and contaminable; a diagnostic baseline, not a ranking. Free endpoints are rate-limited and incomplete runs are excluded.", prod: false },
+    { key: "pt-BR", title: "Controlled evaluation, first-party", sub: "Gated, aggregate-only, not external validation. The suite id says lite-public for historical reasons; its cases are not public.", prod: true, defaultKey: "clinicalScore" },
+    { key: "en-US", title: "Public smoke test, open models", sub: "Synthetic and contaminable; a diagnostic baseline, not a ranking, so rows are listed alphabetically. Free endpoints are rate-limited and incomplete runs are excluded.", prod: false, defaultKey: "system" },
   ];
   const host = $("#boards");
   host.innerHTML = "";
+  let disclosure = "";
   for (const b of BOARDS) {
     const loc = data.locales?.[b.key];
     if (!loc || !(loc.entries || []).length) continue;
+    disclosure = loc.disclosure || disclosure;
     const div = document.createElement("div");
     div.className = "board";
     host.appendChild(div);
-    const state = { key: "clinicalScore", dir: -1 };
+    const state = { key: b.defaultKey, dir: b.defaultKey === "system" ? 1 : -1 };
     const cols = [
-      ["clinicalScore", "Clinical"], ["strictPass", "Strict pass"], ["gap", "Clinical vs strict"],
+      ["clinicalScore", "Clinical"], ["strictPass", "PASS rate"], ["allPass", "Every check passes"], ["gap", "Clinical vs every check"],
       ...DIM_ORDER.map((d) => [`dim:${d}`, d]), ["latencyMs", "Latency"],
     ];
-    const val = (e, k) => (k.startsWith("dim:") ? e.dims?.[k.slice(4)] : e[k]);
-    const render = () => {
-      // dir -1 = descending (best first), +1 = ascending; missing values sort last.
+    const val = (e, k) => (k === "system" ? e.system : k.startsWith("dim:") ? e.dims?.[k.slice(4)] : e[k]);
+    const render = (focusKey) => {
       const entries = loc.entries.slice().sort((a, c) => {
         const va = val(a, state.key), vc = val(c, state.key);
+        if (typeof va === "string" || typeof vc === "string") return state.dir * String(va).localeCompare(String(vc));
         if (va == null && vc == null) return 0;
         if (va == null) return 1;
         if (vc == null) return -1;
         return state.dir === -1 ? vc - va : va - vc;
       });
+      const sortAttr = (k) => (state.key === k ? ` aria-sort="${state.dir === -1 ? "descending" : "ascending"}"` : "");
       const th = cols.map(([k, label]) => k === "gap"
-        ? `<th class="gap">${label}<br><span style="font-size:11.5px;font-weight:400">○ strict, ● clinical</span></th>`
-        : `<th><button type="button" data-k="${k}" ${state.key === k ? `aria-sort="${state.dir === -1 ? "descending" : "ascending"}"` : ""}>${label}</button></th>`).join("");
-      const tr = entries.map((e, i) => `<tr>
-        <td class="l rank">${i + 1}</td>
+        ? `<th class="gap">${label}<br><span style="font-size:11.5px;font-weight:400">○ every check, ● clinical</span></th>`
+        : `<th${sortAttr(k)}><button type="button" data-k="${k}">${label}</button></th>`).join("");
+      const tr = entries.map((e) => `<tr>
         <td class="l sys">${esc(e.system)}<span class="tag">${b.prod ? "product agent" : "open model"}</span></td>
         <td class="big">${pct(e.clinicalScore)}</td>
         <td>${pct(e.strictPass)}</td>
-        <td class="gap">${gapSvg(e.clinicalScore, e.strictPass)}</td>
+        <td>${pct(e.allPass)}</td>
+        <td class="gap">${gapSvg(e.clinicalScore, e.allPass)}</td>
         ${DIM_ORDER.map((d) => `<td>${e.dims?.[d] == null ? "—" : fmt1(e.dims[d] * 100)}<span class="mini"><i style="width:${(e.dims?.[d] ?? 0) * 100}%"></i></span></td>`).join("")}
         <td>${e.latencyMs != null ? `${fmt1(e.latencyMs / 1000)} s` : "—"}</td></tr>`).join("");
       div.innerHTML = `<h3>${esc(b.title)}</h3>
-        <p class="meta">${esc(loc.suite)}, ${esc(String(loc.cases))} cases, ${esc(loc.scoring)} scoring${loc.scoredWith ? `, scored with ${esc(loc.scoredWith)}` : ""}. ${esc(b.sub)}</p>
-        <div class="t-scroll"><table><thead><tr><th class="l">#</th><th class="l">System</th>${th}</tr></thead><tbody>${tr}</tbody></table></div>
-        ${b.key === "en-US" ? insight(loc.entries) : ""}
-        ${b.key === "en-US" && loc.disclosure ? `<p class="disclosure">${esc(loc.disclosure)}</p>` : ""}`;
+        <p class="meta">Suite id ${esc(loc.suite)}, ${esc(String(loc.cases))} cases, ${esc(loc.scoring)} scoring${loc.scoredWith ? `, scored with ${esc(loc.scoredWith.replace(/^pre-3\.11 \(≤ (.+)\)$/, "$1 or earlier"))}` : ""}. ${esc(b.sub)}</p>
+        <div class="t-scroll"><table><thead><tr><th class="l"${sortAttr("system")}><button type="button" data-k="system">System</button></th>${th}</tr></thead><tbody>${tr}</tbody></table></div>
+        ${b.key === "en-US" ? insight(loc.entries) : ""}`;
       $$("th button", div).forEach((btn) => btn.addEventListener("click", () => {
-        if (state.key === btn.dataset.k) state.dir *= -1; else { state.key = btn.dataset.k; state.dir = -1; }
-        render();
+        if (state.key === btn.dataset.k) state.dir *= -1;
+        else { state.key = btn.dataset.k; state.dir = btn.dataset.k === "system" ? 1 : -1; }
+        render(btn.dataset.k);
       }));
+      if (focusKey) $(`th button[data-k="${focusKey}"]`, div)?.focus();
     };
     render();
   }
+  if (disclosure) host.insertAdjacentHTML("beforeend", `<p class="disclosure">${esc(disclosure)}</p>`);
 }
 
 function insight(entries) {
   const n = entries.length;
   const meanClin = entries.reduce((s, e) => s + (e.clinicalScore || 0), 0) / n;
-  const bestStrict = Math.max(...entries.map((e) => e.strictPass || 0));
+  const maxAll = Math.max(...entries.map((e) => e.allPass || 0));
   const meanGuide = entries.reduce((s, e) => s + (e.dims?.GUIDE || 0), 0) / n;
-  const meanCrit = entries.reduce((s, e) => s + (e.dims?.CRIT || 0), 0) / n;
-  return `<p class="insight">Averages hide failures. These ${n} open models average ${fmt1(meanClin * 100)}% on the clinical score, yet the best of them passes every criterion on only ${fmt1(bestStrict * 100)}% of cases. Their weakest dimension is anatomical and guideline coverage (GUIDE, mean ${fmt1(meanGuide * 100)}); their CRIT scores (mean ${fmt1(meanCrit * 100)}) predate the ${esc(LB.BENCHMARK_VERSION)} critical gate.</p>`;
+  return `<p class="insight">Averages hide failures. These ${n} open models average ${fmt1(meanClin * 100)}% on the clinical score, yet no model has every check pass on more than ${fmt1(maxAll * 100)}% of cases. Their weakest dimension is anatomical and guideline coverage (GUIDE, mean ${fmt1(meanGuide * 100)}).</p>`;
 }
 
 // ---------------------------------------------------------------- cases explorer
@@ -632,6 +647,7 @@ function initCases(cases) {
     $$("#caseList .case").forEach((b) => b.addEventListener("click", () => {
       setCase(play.cases.find((c) => c.id === b.dataset.id));
       $("#try").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
+      $("#caseSel").focus({ preventScroll: true });
     }));
   };
   $$("button", host).forEach((b) => b.addEventListener("click", () => {

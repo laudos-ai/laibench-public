@@ -82,7 +82,7 @@ npm run ladder              # public discrimination ladder → site/ladder.json 
 
 ### Does the score fall when the report gets worse?
 
-`npm run ladder` degrades a template reference report by exactly one error per rung on the 49 public cases — no answer keys needed — and scores every version with the real harness. Under v3.11.0 every critical rung (critical denied, omitted or fabricated, and a "No acute abnormality." null report) is vetoed, and no critical rung passes. Full table, including the same ladder under v3.10.0: [docs/public-ladder.md](docs/public-ladder.md).
+`npm run ladder` degrades a template reference report by exactly one error per rung on the 49 public cases — no answer keys needed — and scores every version with the real harness. Under v3.11.0 every critical rung (critical denied, omitted or fabricated, and a "No acute abnormality." null report) is vetoed, and no critical rung passes. Full table: [docs/public-ladder.md](docs/public-ladder.md).
 
 Run the synthetic public en-US suite with a local command adapter:
 

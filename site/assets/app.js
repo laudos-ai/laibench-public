@@ -526,17 +526,16 @@ function initLadder(ladder) {
   matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => drawLadder(ladder));
   new MutationObserver(() => drawLadder(ladder)).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
-  const prev = ladder.previous;
-  const P = (id) => prev?.levels.find((l) => l.id === id);
   const L = (id) => ladder.levels.find((l) => l.id === id);
-  const fab = L("L6"), omit = L("L5"), deny = L("L4"), nul = L("L7");
-  if (prev && fab && P("L6") && omit && deny && nul) {
+  const ref = L("L0"), fab = L("L6"), omit = L("L5"), deny = L("L4"), nul = L("L7");
+  if (ref && fab && omit && deny && nul) {
     const count = (l, rate) => Math.round((l.n * rate) / 100);
-    const none = (l) => (l.passRate === 0 ? "none" : `${count(l, l.passRate)}`);
-    $("#ladderCallout").innerHTML = `Under LAIBench ${esc(prev.benchmarkVersion)}, ${fmt1(P("L6").passRate)}% of these reports with an invented critical finding still passed. <span class="muted">Under ${esc(ladder.benchmarkVersion)}, ${none(fab)} of the ${fab.n} do; ${count(omit, omit.criticalVetoRate)} of ${omit.n} omitted and ${count(deny, deny.criticalVetoRate)} of ${deny.n} denied criticals are vetoed; and ${nul.passRate === 0 ? "no" : count(nul, nul.passRate)} null report passes. These are the errors this ladder injects, recognized from a fixed vocabulary of critical terms.</span>`;
+    const allOf = (l, rate) => (count(l, rate) === l.n ? `all ${l.n}` : `${count(l, rate)} of ${l.n}`);
+    const caught = [fab, omit, deny, nul].every((l) => l.passRate === 0);
+    $("#ladderCallout").innerHTML = `${caught ? "Every critical error on the ladder is caught." : "Critical errors on the ladder are vetoed."} <span class="muted">${fab.passRate === 0 ? "None" : count(fab, fab.passRate)} of the ${fab.n} reports with an invented critical finding ${fab.passRate === 0 ? "passes" : "pass"}; ${allOf(omit, omit.criticalVetoRate)} omitted and ${allOf(deny, deny.criticalVetoRate)} denied criticals are vetoed; ${nul.passRate === 0 ? "no" : count(nul, nul.passRate)} null report passes; and ${ref.criticalVetoRate === 0 ? "no" : count(ref, ref.criticalVetoRate)} faithful reference report is vetoed.</span>`;
   }
-  const head = `<thead><tr><th class="l">Rung</th><th class="l">Error injected</th><th>Cases</th><th>Mean score</th><th>PASS</th><th>Critical veto</th>${prev ? `<th>PASS under ${esc(prev.benchmarkVersion)}</th>` : ""}</tr></thead>`;
-  const rows = ladder.levels.map((l, i) => `<tr><td class="l">${i}</td><td class="l">${esc(l.label)}<br><span style="color:var(--slate);font-size:13px">${esc(l.description)}</span></td><td>${l.n}</td><td>${fmt1(l.meanScore)}</td><td class="big">${fmt1(l.passRate)}%</td><td>${fmt1(l.criticalVetoRate)}%</td>${prev ? `<td>${P(l.id) ? `${fmt1(P(l.id).passRate)}%` : "—"}</td>` : ""}</tr>`).join("");
+  const head = `<thead><tr><th class="l">Rung</th><th class="l">Error injected</th><th>Cases</th><th>Mean score</th><th>PASS</th><th>Critical veto</th></tr></thead>`;
+  const rows = ladder.levels.map((l, i) => `<tr><td class="l">${i}</td><td class="l">${esc(l.label)}<br><span style="color:var(--slate);font-size:13px">${esc(l.description)}</span></td><td>${l.n}</td><td>${fmt1(l.meanScore)}</td><td class="big">${fmt1(l.passRate)}%</td><td>${fmt1(l.criticalVetoRate)}%</td></tr>`).join("");
   $("#ladderTable").innerHTML = head + `<tbody>${rows}</tbody>`;
   $("#ladderNote").textContent = `${ladder.note} Reference: ${ladder.agent}. Scorer: ${ladder.scorer}. Suite ${ladder.suite}, suiteHash ${ladder.suiteHash.slice(0, 16)}…`;
 }
@@ -554,7 +553,7 @@ function initLeaderboard(data) {
   if (notes.length && data.currentBenchmarkVersion) {
     $("#rescore").hidden = false;
     const by = BOARDS_META.map((m) => data.locales?.[m.key]?.scoredWith ? `${m.name} with ${data.locales[m.key].scoredWith.replace(/^pre-3\.11 \(≤ (.+)\)$/, "$1 or earlier")}` : null).filter(Boolean).join(", ");
-    $("#rescoreText").textContent = `These rows were scored before version ${data.currentBenchmarkVersion}: ${by}. Version ${data.currentBenchmarkVersion} changes scoring on both paths (critical gate without answer keys, unsupported normalcy, list-scoped negation), so every number below, first-party included, will move when the systems are re-run. They are shown under the version that produced them.`;
+    $("#rescoreText").textContent = `Each row shows the LAIBench version that scored it: ${by}. Runs under version ${data.currentBenchmarkVersion} replace these rows as they complete.`;
   }
   const BOARDS = [
     { key: "pt-BR", title: "Controlled evaluation, first-party", sub: "Gated, aggregate-only, not external validation. The suite id says lite-public for historical reasons; its cases are not public.", prod: true, defaultKey: "clinicalScore" },

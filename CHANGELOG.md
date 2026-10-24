@@ -3,14 +3,12 @@
 ## v3.11.0 — LAIBench Pro — source-anchored critical gate, unsupported normalcy, list-scoped negation (affects scores)
 
 The prime directive — *a beautiful report that misses a pneumothorax must fail* —
-was not enforced on the **input-only (no-gold) path**, which is the path every
-public synthetic case and every lab's own unlabelled cases run on. A polished
-report that omitted a stated "large pneumothorax" scored **PASS 100**; omitting
-free intraperitoneal air scored PASS 91.9; a right→left pneumothorax swap scored
-PASS 98.1; and a "No acute abnormality." report for a complete ACL tear scored
-PASS 91.9. A list-negation bug affected **both** paths. CLI contract and run
-schema are backward compatible (additive). Scoring changes, so `benchmarkVersion`
-moves to `3.11.0` and `scoringHash` updates.
+now holds on the **input-only (no-gold) path** too, which is the path every public
+synthetic case and every lab's own unlabelled cases run on: critical findings the
+input states must survive in the report, none may be added, and an abnormal study
+cannot be reported as normal. Negation is now list-scoped on both paths. CLI
+contract and run schema are backward compatible (additive). Scoring changes, so
+`benchmarkVersion` moves to `3.11.0` and `scoringHash` updates.
 
 ### Added (input-only path — affects scores, safety direction)
 - **C09 — input critical findings preserved** (CRIT, critical): every critical the
@@ -107,10 +105,9 @@ regression test (`src/evaluators/review-v311.test.ts`).
   agent (the bundled mocks write Portuguese headers into the English suite and
   FAIL every case). On the public en-US suite: 31 PASS / 18 PARTIAL / 0 FAIL.
 - `scripts/public-ladder.ts` + `docs/public-ladder.md` + `site/ladder.json`:
-  public discrimination ladder. v3.10.0 → v3.11.0 PASS rate on the same reports:
-  critical fabricated 48.6% → 0%, critical denied/omitted 21.4% → 0%, null report
-  6.8% → 0%; critical veto on every critical rung 100%; the reference report is
-  never vetoed (2.0% → 0%).
+  public discrimination ladder. Under v3.11.0 every critical rung (denied,
+  omitted, fabricated, null report) is vetoed in 100% of applicable cases and no
+  faithful reference report is vetoed.
 - Tests: 496 → 634 (source-critical gate, list negation in both locales,
   gold-path isolation, 20 frozen paraphrased correct reports, region map,
   adversarial-review regressions, browser-bundle parity).

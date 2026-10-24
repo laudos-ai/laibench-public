@@ -28,6 +28,7 @@
  * Usage:
  *   npx tsx scripts/public-ladder.ts [--src ./src] [--out site/ladder.json] [--markdown docs/public-ladder.md]
  */
+import { abnormalInputClauses } from "../src/evaluators/source-findings.ts";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -75,7 +76,10 @@ const NEG_LEAD = /^(?:no|without|negative for|absent)\b/i;
 const NORMAL = /^normal study\b|^remaining\b|^scattered fibroglandular\b|\b(?:unremarkable|within (?:normal|expected) limits|normal|preserved|intact|not dilated|homogeneous|stable|patent|clear|without (?:nodules|abnormality)|recommended|advised|recommend)\b/i;
 const CRIT_EN = /hemorrhag[ei]|hematoma|active\s+bleed|hemoperitoneum|hemothorax|pulmonary\s+emboli|thromboemboli|\bstroke\b|acute\s+(?:(?:cerebral|ischemic|territorial|cortical)\s+)?infarct|acute\s+(?:cerebral\s+)?ischemi|pneumothorax|aortic\s+dissection|midline\s+shift|mass\s+effect|bowel\s+obstruction|perforation|pneumoperitoneum|free\s+(?:intraperitoneal\s+)?air|\bfracture|(?:cord|spinal)\s+compression|tamponade|ruptured\s+aortic|mesenteric\s+ischemia|cauda\s+equina|torsion|necrotizing\s+fasciitis|acute\s+appendicitis/i;
 const isMeta = (s: string) => META.test(s);
-const isAbnormal = (s: string) => !isMeta(s) && !NEG_LEAD.test(s) && !NORMAL.test(s);
+// A sentence is abnormal only if the scorer's own rule agrees (postfix negation such
+// as "Lung fields without focal opacities" is a normal statement), so a null report
+// is only ever injected into a study that actually has an abnormal finding.
+const isAbnormal = (s: string) => !isMeta(s) && !NEG_LEAD.test(s) && !NORMAL.test(s) && abnormalInputClauses(s, "en-US").length > 0;
 const affirmsCritical = (s: string) => isAbnormal(s) && CRIT_EN.test(s);
 
 function perturb(rung: string, findings: string, region: string): string | null {

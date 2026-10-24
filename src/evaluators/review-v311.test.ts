@@ -324,3 +324,50 @@ describe("pilot audit: correct radiology read as fabrication or as a finding", (
     assert.deepEqual(abnormalInputClauses("Achados sintéticos classificados como categoria BI-RADS 4.", "pt-BR"), []);
   });
 });
+
+describe("pilot audit 2: conventions are not clinical errors", () => {
+  const US = { exam: "Ultrassonografia do abdome superior.", findings: "Vesícula biliar com pequeno cálculo móvel. Sem espessamento parietal. Fígado com ecotextura preservada.", locale: "pt-BR" as const };
+  it("findings under organ headings, without an 'Análise' header, are an analysis", async () => {
+    const r = await run(US, "<center><b>ULTRASSONOGRAFIA DO ABDOME SUPERIOR</b></center><br><br><b>VESÍCULA BILIAR</b><br>Pequeno cálculo móvel.<br>Paredes sem espessamento.<br><br><b>FÍGADO</b><br>Ecotextura preservada, contornos regulares e dimensões normais.<br><br><b>IMPRESSÃO</b><br>Colelitíase.");
+    assert.deepEqual(failed(r, /^Q08$/), []);
+  });
+  it("a missing </b> in the title and a one-letter typo still name the exam", async () => {
+    const r1 = await run(US, "<center><b>ULTRASSONOGRAFIA DO ABDOME SUPERIOR</center><br><br><b>Análise</b><br>Vesícula biliar com pequeno cálculo móvel, sem espessamento parietal.<br>Fígado com ecotextura preservada.<br><br><b>Conclusão</b><br>Colelitíase.");
+    const r2 = await run(US, "<center><b>ULTRASONOGRAFIA DO ABDOME SUPERIOR</b></center><br><br><b>Análise</b><br>Vesícula biliar com pequeno cálculo móvel, sem espessamento parietal.<br>Fígado com ecotextura preservada.<br><br><b>Conclusão</b><br>Colelitíase.");
+    assert.deepEqual(failed(r1, /^R01$/), []);
+    assert.deepEqual(failed(r2, /^R01$/), []);
+  });
+  it("a wrong exam in the title still fails", async () => {
+    const r = await run(US, "<center><b>TOMOGRAFIA DE CRÂNIO</b></center><br><br><b>Análise</b><br>Vesícula biliar com pequeno cálculo móvel.<br><br><b>Conclusão</b><br>Colelitíase.");
+    assert.equal(failed(r, /^R01$/).length, 1);
+  });
+  it("'sem hérnias discais' preserves 'sem hérnia discal'", async () => {
+    const r = await run(
+      { exam: "Ressonância magnética da coluna lombar, sem contraste.", findings: "Exame normal. Sem hérnia discal, estenose do canal ou redução dos forames neurais.", locale: "pt-BR" },
+      "<center><b>RESSONÂNCIA MAGNÉTICA DA COLUNA LOMBAR</b></center><br><br><b>Análise</b><br>Discos intervertebrais com hidratação preservada, sem hérnias discais.<br>Canal vertebral sem estenose.<br>Forames neurais sem reduções.<br><br><b>Conclusão</b><br>Coluna lombar sem alterações.");
+    assert.deepEqual(failed(r, /^(C07|R05)$/), []);
+  });
+  it("'isquemia aguda' for 'alterações isquêmicas precoces' is not a fabrication", () => {
+    const out = evaluateSourceCriticals("<b>Análise</b><br>Oclusão do segmento M1 da artéria cerebral média esquerda.<br>Alterações isquêmicas precoces no território da ACM esquerda.<br><br><b>Conclusão</b><br>Oclusão de M1 à esquerda com isquemia aguda no território da ACM esquerda.", "Oclusão do segmento M1 da artéria cerebral média esquerda. Alterações isquêmicas precoces no território da ACM esquerda.", "pt-BR");
+    assert.equal(out.fabricated.length, 0, JSON.stringify(out.fabricated));
+  });
+  it("style conventions and anatomical checklists are minor, never a FAIL on their own", async () => {
+    const r = await run(US, "<center><b>ULTRASSONOGRAFIA DO ABDOME SUPERIOR</b></center><br><br><b>Análise</b><br>Vesícula biliar com pequeno cálculo móvel, sem evidências de espessamento parietal.<br>Fígado com ecotextura preservada.<br><br><b>Conclusão</b><br>Colelitíase.");
+    for (const c of r.checks.filter((k) => /^(G\d|T\d|TO|Q10|C05)/.test(k.id))) assert.equal(c.severity, "minor", c.id);
+    assert.notEqual(r.verdict, "FAIL");
+  });
+});
+
+describe("pilot audit 3: pertinent negatives and brief normal reports", () => {
+  const CHEST = { exam: "Radiografia de tórax, sem contraste.", findings: "Campos pulmonares sem opacidades focais. Silhueta cardiomediastinal normal. Sem derrame pleural ou pneumotórax.", locale: "pt-BR" as const };
+  it("'espaços pleurais livres' for 'sem derrame pleural' is not a missing finding", async () => {
+    const r = await run(CHEST, "<center><b>RADIOGRAFIA DE TÓRAX</b></center><br><br><b>Técnica</b><br>Incidências habituais.<br><br><b>Análise</b><br>Campos pulmonares sem opacidades focais.<br>Silhueta cardiomediastinal com dimensões normais.<br>Espaços pleurais livres.<br><br><b>Conclusão</b><br>Exame dentro da normalidade.");
+    assert.deepEqual(failed(r, /^(C07|R05)$/), []);
+    assert.deepEqual(r.checks.filter((c) => !c.passed && c.severity !== "minor").map((c) => c.id), []);
+  });
+  it("an affirmed finding that is dropped is still missing", async () => {
+    const r = await run({ exam: "Radiografia de tórax, sem contraste.", findings: "Derrame pleural moderado à direita. Sem pneumotórax.", locale: "pt-BR" },
+      "<center><b>RADIOGRAFIA DE TÓRAX</b></center><br><br><b>Técnica</b><br>Incidências habituais.<br><br><b>Análise</b><br>Campos pulmonares sem opacidades focais.<br>Silhueta cardiomediastinal normal.<br><br><b>Conclusão</b><br>Exame dentro da normalidade.");
+    assert.equal(r.verdict, "FAIL");
+  });
+});

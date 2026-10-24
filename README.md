@@ -15,7 +15,7 @@
   <a href="https://github.com/laudos-ai/laibench-public/actions/workflows/ci.yml"><img src="https://github.com/laudos-ai/laibench-public/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-111111.svg" alt="License: MIT"></a>
   <img src="https://img.shields.io/badge/benchmarkVersion-3.11.0-0e7c7b" alt="benchmark version 3.11.0">
-  <img src="https://img.shields.io/badge/tests-642%20passing-2ea44f" alt="642 tests passing">
+  <img src="https://img.shields.io/badge/tests-650%20passing-2ea44f" alt="650 tests passing">
   <img src="https://img.shields.io/badge/node-20%20%7C%2022-111111" alt="Node 20 | 22">
   <img src="https://img.shields.io/badge/dependencies-zero%20runtime-0e7c7b" alt="zero runtime dependencies">
 </p>

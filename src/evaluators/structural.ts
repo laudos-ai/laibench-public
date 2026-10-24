@@ -83,7 +83,7 @@ function getCompiledLocaleRegexes(localeKey: LocaleKey, locale: ReturnType<typeo
 const HEDGE_RX = /a esclarecer|nao se pode excluir|nao e possivel excluir|a depender de|a criterio|correlacionar? clinica|nao podemos afastar|sugerir? complementac|avaliar? possibilidade|convem correlacionar/i;
 
 function getTitle(html: string): string {
-  const centered = html.replace(/^(?:\s|<br\s*\/?>)*/i, "").match(/<center><b>([^<]+)<\/b><\/center>/i)?.[1]?.trim();
+  const centered = html.replace(/^(?:\s|<br\s*\/?>)*/i, "").match(/<center>\s*<b>([^<]+)(?:<\/b>)?\s*<\/center>/i)?.[1]?.trim();
   if (centered) return centered;
 
   const plain = stripTags(html.replace(/<br\s*\/?>/gi, "\n")).replace(/\s+/g, " ").trim();
@@ -137,16 +137,25 @@ function extractSectionOrder(html: string, locale: ReturnType<typeof getLocale>)
   return labels.filter((label) => locale.sections.analysis.test(label) || locale.sections.conclusion.test(label) || locale.sections.technique.test(label));
 }
 
-function extractFindingsPreservation(patterns: ReturnType<typeof getLocale>["preservationPatterns"], findingsInput: string, reportHtml: string): { expected: string[]; missing: string[]; ratio: number } {
+function extractFindingsPreservation(patterns: ReturnType<typeof getLocale>["preservationPatterns"], findingsInput: string, reportHtml: string, localeKey: LocaleKey): { expected: string[]; missing: string[]; ratio: number } {
   const expected: string[] = [];
   const missing: string[] = [];
+  const sentences = findingsInput.split(/(?<!\d)\.(?!\d)|[;\n]/).map((x) => x.trim()).filter(Boolean);
 
   for (const pattern of patterns) {
-    const inputRx = new RegExp(pattern.input.source, pattern.input.flags);
+    const inputRx = new RegExp(pattern.input.source, pattern.input.flags.replace("g", ""));
     const reportRx = new RegExp(pattern.report.source, pattern.report.flags);
-    if (inputRx.test(findingsInput)) {
+    // A pertinent negative ("Sem derrame pleural") is not a finding to preserve
+    // verbatim: "espaços pleurais livres" says the same thing. Only affirmed
+    // input mentions are required here; denials of criticals are C09's job.
+    const affirmed = sentences.some((sentence) => {
+      const m = inputRx.exec(sentence);
+      return m !== null && !isFindingNegated(sentence, m[0], localeKey);
+    });
+    if (affirmed) {
       expected.push(pattern.label);
-      if (!reportRx.test(reportHtml)) missing.push(pattern.label);
+      const singularRx = new RegExp(pattern.report.source, pattern.report.flags);
+      if (!reportRx.test(reportHtml) && !singularRx.test(singularize(reportHtml))) missing.push(pattern.label);
     }
   }
 
@@ -156,10 +165,72 @@ function extractFindingsPreservation(patterns: ReturnType<typeof getLocale>["pre
   return { expected: uniqueExpected, missing: uniqueMissing, ratio };
 }
 
+function editDistance(a: string, b: string): number {
+  const dp = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    let prev = dp[0];
+    dp[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = dp[j];
+      dp[j] = Math.min(dp[j] + 1, dp[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = tmp;
+    }
+  }
+  return dp[b.length];
+}
+
+// A title still names the exam when a modality word carries a spelling variant or a
+// one-letter typo ("ULTRASONOGRAFIA", "RESONÂNCIA", "ANGIOTSOMOGRAFIA"). A wrong
+// exam or region still fails: the tolerance is one edit for words of 8+ letters.
 function isTitleMatch(title: string, tokens: string[]): boolean {
   const n = normalizeLoose(title);
-  return tokens.every((token) => token.split("|").some((variant) => n.includes(normalizeLoose(variant))));
+  const words = n.split(/[^a-z0-9]+/).filter((w) => w.length >= 8);
+  return tokens.every((token) => token.split("|").some((variant) => {
+    const v = normalizeLoose(variant);
+    if (n.includes(v)) return true;
+    if (v.length < 8 || /\s/.test(v)) return false;
+    return words.some((w) => editDistance(w.slice(0, v.length + 1), v) <= 1 || editDistance(w, v) <= 1);
+  }));
 }
+
+// Plural-insensitive matching for preserved-finding labels ("hérnias discais" keeps
+// "hérnia discal"; "pleural effusions" keeps "pleural effusion").
+function singularize(text: string): string {
+  return text
+    .replace(/([a-zà-ú]{2,})ais\b/gi, "$1al")
+    .replace(/([a-zà-ú]{2,})(?:ões|ãos|ães)\b/gi, "$1ão")
+    .replace(/([a-zà-ú]{2,})eis\b/gi, "$1el")
+    .replace(/([a-zà-ú]{2,})ies\b/gi, "$1y")
+    .replace(/([a-zà-ú]{3,}[^s\W])s\b/gi, "$1");
+}
+
+// A structure named another standard way is covered ("estruturas ósseas" covers bone,
+// "silhueta cardíaca" the heart, "cerebelo" the posterior fossa).
+const COVERAGE_SYNONYMS: Record<string, string[]> = {
+  "osso": ["osse", "ossos", "osteo", "arcabouco", "calota", "vertebra"],
+  "calota": ["cranian", "calvari", "osse", "ossos do cranio"],
+  "area cardiac": ["silhueta cardi", "cardiomediastin", "coracao", "cardiac"],
+  "coracao": ["cardiac", "silhueta cardi", "cardiomediastin", "camaras cardi"],
+  "hilos": ["hilar", "hilo"],
+  "parenquima": ["campos pulmonares", "pulmoes", "parenquim"],
+  "partes moles": ["tecidos moles", "planos moles", "partes mol"],
+  "musculatura": ["muscul", "partes moles", "paravertebra"],
+  "seios paranasal": ["seios da face", "paranasa", "seios maxilares", "cavidades paranasais"],
+  "orbit": ["orbita"],
+  "fossa posterior": ["cerebel", "tronco encefalico", "quarto ventriculo", "infratentorial"],
+  "esofago": ["esofag"],
+  "traque": ["vias aereas", "traque"],
+  "seios costofren": ["costofren", "costo-fren", "recessos pleurais"],
+  "gordura": ["gordur", "adipos"],
+  "linfonod": ["linfonod", "linfadenomegal", "adenomegal"],
+  "difusao": ["difus", "dwi"],
+  "bone": ["osseous", "skeletal", "bony", "osse"],
+  "heart": ["cardiac", "cardiomediastinal"],
+  "hila": ["hilar", "hilum"],
+  "soft tissue": ["soft-tissue", "soft tissues"],
+  "posterior fossa": ["cerebell", "brainstem", "fourth ventricle", "infratentorial"],
+  "paranasal": ["sinuses"],
+};
 
 function hasAllowedTagsOnly(html: string): boolean {
   return matchAll(/<(?!\/?(?:center|b|br)\s*\/?>)[a-z][^>]*>/gi, html).length === 0;
@@ -180,8 +251,17 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
   const analysis = getSectionContent(html, locale.sections.analysis);
   const conclusion = getSectionContent(html, locale.sections.conclusion);
   const title = getTitle(html);
+  // Words between the title and the conclusion header: the findings body, whatever
+  // headers (organ names, none) the report uses.
+  const bodyWords = (() => {
+    const afterTitle = html.replace(/^[\s\S]*?<\/center>/i, "");
+    const m = new RegExp(`<b>(?:${locale.sections.conclusion.source})`, "i").exec(afterTitle);
+    const body = m ? afterTitle.slice(0, m.index) : afterTitle;
+    const noTechnique = body.replace(new RegExp(`<b>(?:${locale.sections.technique.source})[^<]*<\\/b>[\\s\\S]*?(?=<br><br><b>|$)`, "i"), "");
+    return stripTags(noTechnique.replace(/<br>/g, " ")).trim().split(/\s+/).filter(Boolean).length;
+  })();
   const normalizedHtml = normalizeLoose(stripTags(html));
-  const preservation = extractFindingsPreservation(locale.preservationPatterns, findingsInput, html);
+  const preservation = extractFindingsPreservation(locale.preservationPatterns, findingsInput, html, localeKey);
   const laterality = extractLateralityTokens(findingsInput);
   const levels = extractLevelTokens(findingsInput);
   const measures = extractMeasurements(findingsInput);
@@ -208,7 +288,7 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
   }
   const foreignMarkup = matchAll(/^#{1,3}\s|^\*\*|```|<\/?(?:p|div|span|h[1-6]|ul|ol|li|em|strong|a)\b/gm, html);
   ck(checks, "CRIT", "C04", "No markdown or foreign HTML/XML", "critical", foreignMarkup.length === 0, foreignMarkup.length ? `found: ${Array.from(new Set(foreignMarkup.map((m) => m.trim()))).slice(0, 4).join(" ")}` : "ok");
-  ck(checks, "CRIT", "C05", "No measurements in conclusion", "major", matchAll(/\b\d+(?:[\.,]\d+)?\s*(?:cm|mm)\b|\b\d+\s*x\s*\d+\b/gi, conclusion).length === 0, "ok");
+  ck(checks, "CRIT", "C05", "No measurements in conclusion", "minor", matchAll(/\b\d+(?:[\.,]\d+)?\s*(?:cm|mm)\b|\b\d+\s*x\s*\d+\b/gi, conclusion).length === 0, "ok");
   if (meta.abnormalStudy) {
     const firstConclusionLine = firstLineFromSection(conclusion);
     const isNormalLead = locale.normalPatterns.some((pattern) => pattern.test(firstConclusionLine));
@@ -290,7 +370,8 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
   ck(checks, "QUAL", "Q06", "Only allowed tags", "major", hasAllowedTagsOnly(html), hasAllowedTagsOnly(html) ? "ok" : "tags outside <center>, <b>, <br>");
   const placeholders = matchAll(/\[[A-Z_]{2,}\]|_{3,}|(?<!\w)XXX(?!\w)|####/g, html);
   ck(checks, "QUAL", "Q07", "No placeholders", "critical", placeholders.length === 0, placeholders.length ? `found: ${placeholders.slice(0, 3).join(" ")}` : "ok");
-  ck(checks, "QUAL", "Q08", "Analysis section present", "critical", locale.sections.analysis.test(html), locale.sections.analysis.test(html) ? "ok" : `missing "${locale.sectionLabels.analysis}" section`);
+  const analysisPresent = locale.sections.analysis.test(html) || bodyWords >= 15;
+  ck(checks, "QUAL", "Q08", "Analysis section present", "critical", analysisPresent, locale.sections.analysis.test(html) ? "ok" : analysisPresent ? "findings described without a section header" : `missing "${locale.sectionLabels.analysis}" section`);
   if (meta.modality === "US") {
     const hasTechniqueSection = nonGlobal(locale.sections.technique).test(html);
     ck(
@@ -306,12 +387,13 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
   const analysisLongLines = analysis.split("<br>").map((l) => stripTags(l).trim()).filter((l) => l.length > 25);
   const conclusionText = normalizeLoose(stripTags(conclusion));
   const copiedLines = analysisLongLines.filter((l) => conclusionText.includes(normalizeLoose(l).slice(0, 35)));
-  ck(checks, "QUAL", "Q10", "Conclusion is synthesis not copy-paste of analysis", "major", copiedLines.length <= 1, copiedLines.length > 1 ? `${copiedLines.length} lines copied` : "ok");
+  ck(checks, "QUAL", "Q10", "Conclusion is synthesis not copy-paste of analysis", "minor", copiedLines.length <= 1, copiedLines.length > 1 ? `${copiedLines.length} lines copied` : "ok");
 
   ck(checks, "QUAL", "Q11", "Conclusion section present and non-empty", "critical", conclusion.length > 0 && stripTags(conclusion).trim().length > 10, conclusion.length === 0 ? "missing" : `${stripTags(conclusion).trim().length} chars`);
 
-  const analysisWordCount = stripTags(analysis).trim().split(/\s+/).filter(Boolean).length;
-  ck(checks, "QUAL", "Q12", "Analysis has substantive content", "major", analysisWordCount >= 15, `${analysisWordCount} words`);
+  const analysisWordCount = Math.max(stripTags(analysis).trim().split(/\s+/).filter(Boolean).length, locale.sections.analysis.test(html) ? 0 : bodyWords);
+  // A normal study can be described in a few words; only a near-empty analysis is a real gap.
+  ck(checks, "QUAL", "Q12", "Analysis has substantive content", analysisWordCount < 5 ? "major" : "minor", analysisWordCount >= 15, `${analysisWordCount} words`);
 
   // TERM - Report language must match the suite locale. A Portuguese report on the
   // en-US suite (or vice versa) previously sailed through TERM at 100% while CRIT/QUAL
@@ -339,7 +421,7 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
   const foldedMatch = (rx: RegExp) => matchAll(new RegExp(foldDiacritics(rx.source), rx.flags), foldedHtml);
   locale.forbiddenTerms.forEach(([rx, label], index) => {
     const hits = foldedMatch(rx);
-    ck(checks, "TERM", `T${String(index).padStart(2, "0")}`, label, "major", hits.length === 0, hits.length ? hits[0] : "ok");
+    ck(checks, "TERM", `T${String(index).padStart(2, "0")}`, label, "minor", hits.length === 0, hits.length ? hits[0] : "ok");
   });
   locale.forbiddenOpeners.forEach((opener, index) => {
     // Accent-insensitive, like the forbiddenTerms/TM checks above: fold the opener
@@ -347,7 +429,7 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
     // for "Presença de") cannot evade the check.
     const escaped = foldDiacritics(opener).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const rx = new RegExp(`(?:<br>|<\\/b>|\\.)\\s*${escaped}`, "gi");
-    ck(checks, "TERM", `TO${index}`, `No forbidden opener: ${opener}`, "major", !rx.test(foldedHtml), "ok");
+    ck(checks, "TERM", `TO${index}`, `No forbidden opener: ${opener}`, "minor", !rx.test(foldedHtml), "ok");
   });
   if (meta.modality === "US") {
     const hits = foldedMatch(locale.modalityVocab.US_forbidden);
@@ -390,8 +472,8 @@ export function runStructuralChecks(html: string, meta: ExamMeta, findingsInput:
   if (matrix && matrix.length > 0) {
     for (let gi = 0; gi < matrix.length; gi++) {
       const token = matrix[gi];
-      const found = normalizedHtml.includes(normalizeLoose(token));
-      ck(checks, "GUIDE", `G${String(gi + 1).padStart(2, "0")}`, `Anatomical coverage: ${token}`, "major", found, found ? "ok" : `missing: ${token}`);
+      const found = [token, ...(COVERAGE_SYNONYMS[normalizeLoose(token)] ?? [])].some((t) => normalizedHtml.includes(normalizeLoose(t)));
+      ck(checks, "GUIDE", `G${String(gi + 1).padStart(2, "0")}`, `Anatomical coverage: ${token}`, "minor", found, found ? "ok" : `missing: ${token}`);
     }
   }
 

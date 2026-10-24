@@ -90,6 +90,21 @@ regression test (`src/evaluators/review-v311.test.ts`).
   "Pneumotórax não identificado".
 - Linear-time analysis: a 36k-character single-sentence report scores in
   milliseconds (was quadratic).
+- **Conventions are not clinical errors** (found by the same pilot, where a
+  radiologist reviewed every flagged error): on the input-only path the
+  anatomical-coverage checklist (G), preferred-term and opener lists (T/TO),
+  conclusion copy-over (Q10), measurements in the conclusion (C05) and a short
+  analysis of a normal study (Q12, still major when near-empty) are `minor`, so
+  they lower their dimension but never cap a correct report into FAIL. Standard
+  anatomical synonyms count as coverage ("estruturas ósseas", "silhueta
+  cardíaca", "cerebelo"). Title spelling variants and one-letter typos still
+  name the exam; a missing `</b>` no longer hides the title. Findings written
+  under organ headings count as the analysis. Preserved-finding checks (C07/R05)
+  are plural-insensitive and no longer require a pertinent negative verbatim
+  ("espaços pleurais livres" for "sem derrame pleural"). "Alterações isquêmicas
+  precoces" / "early ischemic changes" anchor an acute stroke, so "isquemia
+  aguda" is not a fabrication. The ladder injects its null report only into
+  studies the scorer itself calls abnormal.
 - **Correct radiology read as a fabrication** (found by a private pt-BR pilot):
   a hyperattenuating extra-axial / subdural / epidural collection is now an
   acute-bleed anchor, so a report that names it "hematoma subdural agudo" is not
@@ -115,7 +130,7 @@ regression test (`src/evaluators/review-v311.test.ts`).
   public discrimination ladder. Under v3.11.0 every critical rung (denied,
   omitted, fabricated, null report) is vetoed in 100% of applicable cases and no
   faithful reference report is vetoed.
-- Tests: 496 → 642 (source-critical gate, list negation in both locales,
+- Tests: 496 → 650 (source-critical gate, list negation in both locales,
   gold-path isolation, 20 frozen paraphrased correct reports, region map,
   adversarial-review regressions, browser-bundle parity).
 

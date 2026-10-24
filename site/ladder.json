@@ -15,8 +15,8 @@
    "description": "Faithful restructuring of the input findings.",
    "critical": false,
    "n": 49,
-   "meanScore": 90.8,
-   "passRate": 63.3,
+   "meanScore": 94.5,
+   "passRate": 73.5,
    "failRate": 0,
    "criticalVetoRate": 0,
    "meanDrop": 0,
@@ -28,38 +28,38 @@
    "description": "The first measurement is changed (e.g. 7 mm → 8 mm).",
    "critical": false,
    "n": 18,
-   "meanScore": 82.1,
-   "passRate": 11.1,
+   "meanScore": 84.3,
+   "passRate": 5.6,
    "failRate": 0,
    "criticalVetoRate": 0,
-   "meanDrop": 8,
-   "detectedRate": 83.3
+   "meanDrop": 10.1,
+   "detectedRate": 72.2
   },
   {
    "id": "L2",
    "label": "Non-critical omission",
    "description": "One non-critical abnormal finding is dropped.",
    "critical": false,
-   "n": 11,
-   "meanScore": 72.3,
-   "passRate": 27.3,
-   "failRate": 54.5,
-   "criticalVetoRate": 54.5,
-   "meanDrop": 18.9,
-   "detectedRate": 81.8
+   "n": 10,
+   "meanScore": 78.3,
+   "passRate": 40,
+   "failRate": 40,
+   "criticalVetoRate": 40,
+   "meanDrop": 17.7,
+   "detectedRate": 90
   },
   {
    "id": "L3",
    "label": "Laterality swap",
    "description": "The first right/left in an abnormal finding is swapped.",
    "critical": false,
-   "n": 27,
-   "meanScore": 67.3,
-   "passRate": 18.5,
-   "failRate": 81.5,
-   "criticalVetoRate": 81.5,
-   "meanDrop": 23.7,
-   "detectedRate": 81.5
+   "n": 26,
+   "meanScore": 66.1,
+   "passRate": 15.4,
+   "failRate": 84.6,
+   "criticalVetoRate": 84.6,
+   "meanDrop": 27.2,
+   "detectedRate": 84.6
   },
   {
    "id": "L4",
@@ -71,7 +71,7 @@
    "passRate": 0,
    "failRate": 100,
    "criticalVetoRate": 100,
-   "meanDrop": 33.2,
+   "meanDrop": 35.9,
    "detectedRate": 100
   },
   {
@@ -84,7 +84,7 @@
    "passRate": 0,
    "failRate": 100,
    "criticalVetoRate": 100,
-   "meanDrop": 33.2,
+   "meanDrop": 35.9,
    "detectedRate": 100
   },
   {
@@ -97,7 +97,7 @@
    "passRate": 0,
    "failRate": 100,
    "criticalVetoRate": 100,
-   "meanDrop": 31.6,
+   "meanDrop": 34.9,
    "detectedRate": 100
   },
   {
@@ -105,12 +105,12 @@
    "label": "Null report",
    "description": "\"No acute abnormality.\" written for an abnormal study.",
    "critical": true,
-   "n": 44,
+   "n": 42,
    "meanScore": 59.9,
    "passRate": 0,
    "failRate": 100,
    "criticalVetoRate": 100,
-   "meanDrop": 30.8,
+   "meanDrop": 34.5,
    "detectedRate": 100
   }
  ],
@@ -122,12 +122,10 @@
    "region": "chest",
    "cells": {
     "L0": {
-     "score": 91.9,
+     "score": 97.5,
      "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 2"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,
@@ -136,19 +134,7 @@
     "L4": null,
     "L5": null,
     "L6": null,
-    "L7": {
-     "score": 59.9,
-     "verdict": "FAIL",
-     "criticalVeto": true,
-     "gateReasons": [
-      "severity cap: critical failure",
-      "deterministic critical failure"
-     ],
-     "failedCritical": [
-      "C07",
-      "R05"
-     ]
-    }
+    "L7": null
    }
   },
   {
@@ -161,7 +147,7 @@
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 4"
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
@@ -232,12 +218,10 @@
    "region": "abdomen",
    "cells": {
     "L0": {
-     "score": 83.9,
-     "verdict": "PARTIAL",
+     "score": 96,
+     "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 4"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,
@@ -322,11 +306,11 @@
    "region": "head",
    "cells": {
     "L0": {
-     "score": 75.9,
+     "score": 83.9,
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 6"
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
@@ -367,6 +351,7 @@
       "deterministic critical failure"
      ],
      "failedCritical": [
+      "C09",
       "Q17",
       "R02"
      ]
@@ -383,7 +368,6 @@
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 2",
       "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
@@ -393,22 +377,12 @@
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 4"
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
-    "L2": {
-     "score": 59.9,
-     "verdict": "FAIL",
-     "criticalVeto": true,
-     "gateReasons": [
-      "severity cap: critical failure",
-      "deterministic critical failure"
-     ],
-     "failedCritical": [
-      "R02"
-     ]
-    },
+    "L2": null,
     "L3": {
      "score": 59.9,
      "verdict": "FAIL",
@@ -567,10 +541,12 @@
      "failedCritical": []
     },
     "L2": {
-     "score": 100,
-     "verdict": "PASS",
+     "score": 83.9,
+     "verdict": "PARTIAL",
      "criticalVeto": false,
-     "gateReasons": [],
+     "gateReasons": [
+      "severity cap: severe failure weight 4"
+     ],
      "failedCritical": []
     },
     "L3": null,
@@ -638,11 +614,12 @@
      "failedCritical": []
     },
     "L1": {
-     "score": 91.9,
-     "verdict": "PASS",
+     "score": 83.9,
+     "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 2"
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
@@ -682,10 +659,8 @@
       "deterministic critical failure"
      ],
      "failedCritical": [
-      "C07",
       "Q17",
-      "R02",
-      "R05"
+      "R02"
      ]
     }
    }
@@ -712,13 +687,7 @@
      ],
      "failedCritical": []
     },
-    "L3": {
-     "score": 100,
-     "verdict": "PASS",
-     "criticalVeto": false,
-     "gateReasons": [],
-     "failedCritical": []
-    },
+    "L3": null,
     "L4": null,
     "L5": null,
     "L6": {
@@ -757,16 +726,17 @@
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 4"
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
     "L1": {
-     "score": 75.9,
+     "score": 83.9,
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 6"
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
@@ -817,20 +787,21 @@
    "region": "head",
    "cells": {
     "L0": {
-     "score": 75.9,
+     "score": 83.9,
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 6"
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
     "L1": {
-     "score": 67.9,
+     "score": 83.9,
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 8"
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
@@ -891,17 +862,11 @@
     },
     "L1": null,
     "L2": {
-     "score": 59.9,
-     "verdict": "FAIL",
-     "criticalVeto": true,
-     "gateReasons": [
-      "severity cap: critical failure",
-      "deterministic critical failure"
-     ],
-     "failedCritical": [
-      "C07",
-      "R05"
-     ]
+     "score": 100,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
     },
     "L3": {
      "score": 100,
@@ -955,11 +920,9 @@
       "deterministic critical failure"
      ],
      "failedCritical": [
-      "C07",
       "C09",
       "Q17",
-      "R02",
-      "R05"
+      "R02"
      ]
     }
    }
@@ -970,12 +933,10 @@
    "region": "chest",
    "cells": {
     "L0": {
-     "score": 91.9,
+     "score": 98.3,
      "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 2"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": {
@@ -983,7 +944,8 @@
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 4"
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
@@ -1023,10 +985,8 @@
       "deterministic critical failure"
      ],
      "failedCritical": [
-      "C07",
       "Q17",
-      "R02",
-      "R05"
+      "R02"
      ]
     }
    }
@@ -1037,12 +997,10 @@
    "region": "chest",
    "cells": {
     "L0": {
-     "score": 91.9,
+     "score": 98.3,
      "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 2"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": {
@@ -1050,7 +1008,8 @@
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 4"
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
@@ -1177,12 +1136,10 @@
    "region": "pelvis",
    "cells": {
     "L0": {
-     "score": 91.9,
+     "score": 98.2,
      "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 2"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": {
@@ -1190,7 +1147,8 @@
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 4"
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
@@ -1244,12 +1202,10 @@
    "region": "pelvis",
    "cells": {
     "L0": {
-     "score": 91.9,
+     "score": 98.2,
      "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 2"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,
@@ -1460,20 +1416,19 @@
    "region": "abdomen",
    "cells": {
     "L0": {
+     "score": 97,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L1": {
      "score": 83.9,
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 4"
-     ],
-     "failedCritical": []
-    },
-    "L1": {
-     "score": 75.9,
-     "verdict": "PARTIAL",
-     "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 6"
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
@@ -1545,12 +1500,10 @@
    "region": "abdomen",
    "cells": {
     "L0": {
-     "score": 91.9,
+     "score": 93.9,
      "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 2"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,
@@ -1579,11 +1532,11 @@
    "region": "head",
    "cells": {
     "L0": {
-     "score": 75.9,
+     "score": 83.9,
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 6"
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
@@ -1654,12 +1607,10 @@
    "region": "head",
    "cells": {
     "L0": {
-     "score": 91.9,
+     "score": 97.9,
      "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 2"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": {
@@ -1667,16 +1618,17 @@
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 4"
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
     "L2": {
-     "score": 83.9,
-     "verdict": "PARTIAL",
+     "score": 91.9,
+     "verdict": "PASS",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 4"
+      "severity cap: severe failure weight 2"
      ],
      "failedCritical": []
     },
@@ -1731,7 +1683,7 @@
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 4"
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
@@ -1776,7 +1728,7 @@
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 4"
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
@@ -1996,29 +1948,28 @@
    "region": "abdomen",
    "cells": {
     "L0": {
+     "score": 96,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L1": {
+     "score": 83.9,
+     "verdict": "PARTIAL",
+     "criticalVeto": false,
+     "gateReasons": [
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
+     ],
+     "failedCritical": []
+    },
+    "L2": {
      "score": 83.9,
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
       "severity cap: severe failure weight 4"
-     ],
-     "failedCritical": []
-    },
-    "L1": {
-     "score": 75.9,
-     "verdict": "PARTIAL",
-     "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 6"
-     ],
-     "failedCritical": []
-    },
-    "L2": {
-     "score": 67.9,
-     "verdict": "PARTIAL",
-     "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 8"
      ],
      "failedCritical": []
     },
@@ -2059,12 +2010,10 @@
    "region": "abdomen",
    "cells": {
     "L0": {
-     "score": 91.9,
+     "score": 98.2,
      "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 2"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,
@@ -2084,19 +2033,7 @@
       "C10"
      ]
     },
-    "L7": {
-     "score": 59.9,
-     "verdict": "FAIL",
-     "criticalVeto": true,
-     "gateReasons": [
-      "severity cap: critical failure",
-      "deterministic critical failure"
-     ],
-     "failedCritical": [
-      "C07",
-      "R05"
-     ]
-    }
+    "L7": null
    }
   },
   {
@@ -2105,20 +2042,19 @@
    "region": "abdomen",
    "cells": {
     "L0": {
+     "score": 96,
+     "verdict": "PASS",
+     "criticalVeto": false,
+     "gateReasons": [],
+     "failedCritical": []
+    },
+    "L1": {
      "score": 83.9,
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 4"
-     ],
-     "failedCritical": []
-    },
-    "L1": {
-     "score": 75.9,
-     "verdict": "PARTIAL",
-     "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 6"
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
@@ -2158,12 +2094,10 @@
    "region": "other",
    "cells": {
     "L0": {
-     "score": 91.9,
+     "score": 98.2,
      "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 2"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,
@@ -2217,12 +2151,10 @@
    "region": "abdomen",
    "cells": {
     "L0": {
-     "score": 83.9,
-     "verdict": "PARTIAL",
+     "score": 96,
+     "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 4"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,
@@ -2268,7 +2200,6 @@
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 2",
       "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
@@ -2278,7 +2209,8 @@
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 4"
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
@@ -2365,7 +2297,6 @@
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 2",
       "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
@@ -2375,7 +2306,8 @@
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 4"
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
@@ -2465,7 +2397,6 @@
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 2",
       "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
@@ -2519,12 +2450,10 @@
    "region": "chest",
    "cells": {
     "L0": {
-     "score": 91.9,
+     "score": 97.5,
      "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 2"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,
@@ -2640,12 +2569,10 @@
    "region": "chest",
    "cells": {
     "L0": {
-     "score": 91.9,
+     "score": 97.5,
      "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 2"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,
@@ -2686,11 +2613,11 @@
    "region": "chest",
    "cells": {
     "L0": {
-     "score": 75.9,
+     "score": 83.9,
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 6"
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },
@@ -2787,12 +2714,10 @@
    "region": "chest",
    "cells": {
     "L0": {
-     "score": 91.9,
+     "score": 97.5,
      "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 2"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,
@@ -2862,12 +2787,10 @@
    "region": "chest",
    "cells": {
     "L0": {
-     "score": 91.9,
+     "score": 98.3,
      "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 2"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,
@@ -2896,10 +2819,8 @@
       "deterministic critical failure"
      ],
      "failedCritical": [
-      "C07",
       "Q17",
-      "R02",
-      "R05"
+      "R02"
      ]
     }
    }
@@ -2910,12 +2831,10 @@
    "region": "chest",
    "cells": {
     "L0": {
-     "score": 91.9,
+     "score": 97.5,
      "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 2"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,
@@ -2933,12 +2852,10 @@
    "region": "head",
    "cells": {
     "L0": {
-     "score": 91.9,
+     "score": 98.3,
      "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: severe failure weight 2"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": {
@@ -2946,7 +2863,8 @@
      "verdict": "PARTIAL",
      "criticalVeto": false,
      "gateReasons": [
-      "severity cap: severe failure weight 4"
+      "severity cap: severe failure weight 2",
+      "severity cap: deterministic dimension failure"
      ],
      "failedCritical": []
     },

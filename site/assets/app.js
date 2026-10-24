@@ -620,6 +620,35 @@ function insight(entries) {
   return `<p class="insight">Averages hide failures. These ${n} open models average ${fmt1(meanClin * 100)}% on the clinical score, yet no model has every check pass on more than ${fmt1(maxAll * 100)}% of cases. Their weakest dimension is anatomical and guideline coverage (GUIDE, mean ${fmt1(meanGuide * 100)}).</p>`;
 }
 
+// ---------------------------------------------------------------- head-to-head pilot
+function initPilot(p) {
+  const host = $("#pilot");
+  if (!host || !p?.entries?.length) return;
+  const top = p.entries[0];
+  const best = p.entries.find((e) => e.kind !== "product agent");
+  const minLead = p.paired.reduce((m, x) => (x.lead < m.lead ? x : m), p.paired[0]);
+  const rows = p.entries.map((e, i) => `<tr class="${i === 0 ? "first" : ""}">
+      <td class="l rank">${i + 1}</td>
+      <td class="l sys">${esc(e.system)}${e.org && e.org !== e.system ? ` · ${esc(e.org)}` : ""}<span class="tag${e.kind === "product agent" ? " prod" : ""}">${esc(e.kind)}</span></td>
+      <td class="big">${fmt1(e.meanScore)}</td>
+      <td>${pct(e.passRate)} <span style="color:var(--faint)">(${fmt1(e.passCI[0] * 100)}–${fmt1(e.passCI[1] * 100)})</span></td>
+      <td>${pct(e.criticalVetoRate)}</td>
+      <td>${e.cases}</td></tr>`).join("");
+  const pairs = p.paired.map((x) => `<tr><td class="l sys">${esc(x.versus)} · ${esc(x.org)}</td><td class="big">+${fmt1(x.lead)}</td><td>${fmt1(x.ci[0])} to ${fmt1(x.ci[1])}</td><td>${x.higher}</td><td>${x.tie}</td><td>${x.lower}</td></tr>`).join("");
+  host.innerHTML = `<h3>${esc(p.title)}: ${esc(top.system)} first</h3>
+    <p class="meta">${esc(p.cases)} cases, LAIBench ${esc(p.benchmarkVersion)}, ${esc(p.date)}. ${esc(p.caseSource)}</p>
+    <div class="lead">
+      <div><div class="k">Mean score</div><div class="v">${fmt1(top.meanScore)}</div><div class="s">Best open model: ${esc(best.system)}, ${fmt1(best.meanScore)}</div></div>
+      <div><div class="k">Critical veto</div><div class="v">${pct(top.criticalVetoRate)}</div><div class="s">Reports failed by a critical error</div></div>
+      <div><div class="k">Smallest paired lead</div><div class="v">+${fmt1(minLead.lead)}</div><div class="s">over ${esc(minLead.versus)}, 95% CI ${fmt1(minLead.ci[0])} to ${fmt1(minLead.ci[1])}</div></div>
+    </div>
+    <div class="t-scroll"><table><thead><tr><th class="l">#</th><th class="l">System</th><th>Mean score</th><th>PASS (95% CI)</th><th>Critical veto</th><th>Cases</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <h4>${esc(top.system)} against each model on the same cases</h4>
+    <div class="t-scroll"><table><thead><tr><th class="l">Model</th><th>Mean lead</th><th>95% CI</th><th>${esc(top.system)} higher</th><th>Tie</th><th>Lower</th></tr></thead><tbody>${pairs}</tbody></table></div>
+    <p class="disclosure">${esc(p.method)} ${esc(p.scoring)} ${esc(p.disclosure)}</p>`;
+  host.hidden = false;
+}
+
 // ---------------------------------------------------------------- cases explorer
 const FILTERS = [
   ["all", "All", () => true],
@@ -710,6 +739,7 @@ async function getJSON(url) {
     getJSON("ladder.json").catch(() => null),
     getJSON("provenance.json").catch(() => null),
   ]);
+  getJSON("pilot.json").then(initPilot).catch(() => { /* optional board */ });
   initPlayground(cases || []);
   if (cases) { initCases(cases); initVerify(cases, prov, data); }
   else $("#caseList").textContent = "The public cases could not be loaded.";

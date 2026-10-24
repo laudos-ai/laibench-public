@@ -116,6 +116,15 @@
   .gap .g-track { stroke:var(--line); } .gap .g-span { stroke:var(--muted); }
   .gap .g-all { fill:none; stroke:var(--muted); } .gap .g-clin { fill:var(--ink); }
   .disclosure { font-size:12px; line-height:1.6; color:var(--faint); margin-top:18px; max-width:90ch; }
+  .pilot { margin-bottom:clamp(44px,5.5vw,72px); }
+  .pilot .lead { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1px; background:#d6d2cc; border:1px solid #d6d2cc; margin:4px 0 26px; }
+  .pilot .lead > div { background:var(--paper); padding:18px 20px; }
+  .pilot .lead .k { font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); }
+  .pilot .lead .v { font-size:clamp(28px,3vw,38px); font-weight:500; letter-spacing:-.04em; margin-top:6px; }
+  .pilot .lead .s { font-size:13px; color:var(--muted); margin-top:4px; line-height:1.45; }
+  .pilot tr.first td { color:var(--ink); }
+  .pilot tr.first td.sys::before { content:""; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--pass); margin-right:8px; vertical-align:2px; }
+  .pilot h4 { margin:30px 0 10px; font-size:16px; font-weight:500; letter-spacing:-.01em; }
   .insight { margin:18px 0 0; font-size:15px; line-height:1.55; color:var(--ink2); max-width:72ch; }
   .notice { display:flex; gap:12px; align-items:flex-start; padding:14px 18px; border:1px solid var(--line2); background:var(--paper); font-size:14.5px; line-height:1.55; color:var(--ink2); margin-bottom:30px; }
   .notice svg { flex:none; width:18px; height:18px; margin-top:2px; color:var(--partial); }
@@ -526,6 +535,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.5"/></svg>
         <span id="rescoreText"></span>
       </div>
+      <div class="board pilot" id="pilot" hidden></div>
       <div id="boards"></div>
     </div>
   </section>

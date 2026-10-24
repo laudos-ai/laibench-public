@@ -1,0 +1,154 @@
+{
+ "title": "Head-to-head pilot, pt-BR",
+ "date": "2026-10-24",
+ "benchmarkVersion": "3.11.0",
+ "scoringHash": "1a87f81570ce17fe4bbdf821f7d1ca9b9b1d425c3188000d80fb49ccdce9a565",
+ "suite": "pilot-30.pt-BR",
+ "cases": 30,
+ "caseSource": "The first 30 public synthetic cases in suite order, translated to Brazilian Portuguese. None were selected or edited after the run.",
+ "scoring": "LAIBench 3.11.0, deterministic only (no LLM judge), conservative-min.",
+ "method": "Every system received the same exam and findings and the same output contract. Laudos.AI ran its production model and prompt, without per-user templates or memory. Open models ran on OpenRouter with the public LAIBench prompt (mini-laibench-agent-v1). One formatting normalization, headings and markdown to the contract tags with the text unchanged, was applied to every output.",
+ "disclosure": "First-party: Laudos.AI maintains LAIBench. Three scorer false positives found by this pilot (a hyperattenuating extra-axial collection named as a hematoma, the anatomical cauda equina roots, and pt-BR context lines) were fixed for every system before these scores; Laudos.AI ranked first before and after the fix. Synthetic cases, not clinical validation.",
+ "entries": [
+  {
+   "system": "Laudos.AI",
+   "org": "Laudos.AI",
+   "kind": "product agent",
+   "cases": 30,
+   "meanScore": 74.3,
+   "passRate": 0.2333,
+   "passCI": [
+    0.1179,
+    0.4093
+   ],
+   "criticalVetoRate": 0.0333
+  },
+  {
+   "system": "Nemotron 3 Ultra 550B",
+   "org": "NVIDIA",
+   "kind": "open model",
+   "cases": 30,
+   "meanScore": 67.6,
+   "passRate": 0.2333,
+   "passCI": [
+    0.1179,
+    0.4093
+   ],
+   "criticalVetoRate": 0.1
+  },
+  {
+   "system": "Gemma 4 31B",
+   "org": "Google",
+   "kind": "open model",
+   "cases": 30,
+   "meanScore": 61.8,
+   "passRate": 0.1,
+   "passCI": [
+    0.0346,
+    0.2562
+   ],
+   "criticalVetoRate": 0.2
+  },
+  {
+   "system": "Dots 3 Note (preview)",
+   "org": "Dots Studio",
+   "kind": "open model",
+   "cases": 30,
+   "meanScore": 61.2,
+   "passRate": 0.1,
+   "passCI": [
+    0.0346,
+    0.2562
+   ],
+   "criticalVetoRate": 0.0667
+  },
+  {
+   "system": "Inkling",
+   "org": "Thinking Machines",
+   "kind": "open model",
+   "cases": 30,
+   "meanScore": 60.2,
+   "passRate": 0.1333,
+   "passCI": [
+    0.0531,
+    0.2968
+   ],
+   "criticalVetoRate": 0.0333
+  },
+  {
+   "system": "Nemotron 3.5 Super VL",
+   "org": "NVIDIA",
+   "kind": "open model",
+   "cases": 30,
+   "meanScore": 57.2,
+   "passRate": 0.0667,
+   "passCI": [
+    0.0185,
+    0.2132
+   ],
+   "criticalVetoRate": 0.1
+  }
+ ],
+ "paired": [
+  {
+   "versus": "Inkling",
+   "org": "Thinking Machines",
+   "lead": 14.1,
+   "ci": [
+    8,
+    20.3
+   ],
+   "higher": 21,
+   "tie": 8,
+   "lower": 1
+  },
+  {
+   "versus": "Nemotron 3 Ultra 550B",
+   "org": "NVIDIA",
+   "lead": 6.7,
+   "ci": [
+    0.3,
+    14.1
+   ],
+   "higher": 14,
+   "tie": 9,
+   "lower": 7
+  },
+  {
+   "versus": "Gemma 4 31B",
+   "org": "Google",
+   "lead": 12.5,
+   "ci": [
+    7.5,
+    18.7
+   ],
+   "higher": 19,
+   "tie": 10,
+   "lower": 1
+  },
+  {
+   "versus": "Nemotron 3.5 Super VL",
+   "org": "NVIDIA",
+   "lead": 17.1,
+   "ci": [
+    10.1,
+    24.3
+   ],
+   "higher": 22,
+   "tie": 5,
+   "lower": 3
+  },
+  {
+   "versus": "Dots 3 Note (preview)",
+   "org": "Dots Studio",
+   "lead": 13.1,
+   "ci": [
+    7.7,
+    18.9
+   ],
+   "higher": 21,
+   "tie": 8,
+   "lower": 1
+  }
+ ]
+}

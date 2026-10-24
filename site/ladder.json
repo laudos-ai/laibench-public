@@ -15,8 +15,8 @@
    "description": "Faithful restructuring of the input findings.",
    "critical": false,
    "n": 49,
-   "meanScore": 94.5,
-   "passRate": 73.5,
+   "meanScore": 97.4,
+   "passRate": 100,
    "failRate": 0,
    "criticalVetoRate": 0,
    "meanDrop": 0,
@@ -32,8 +32,8 @@
    "passRate": 5.6,
    "failRate": 0,
    "criticalVetoRate": 0,
-   "meanDrop": 10.1,
-   "detectedRate": 72.2
+   "meanDrop": 13.2,
+   "detectedRate": 100
   },
   {
    "id": "L2",
@@ -45,7 +45,7 @@
    "passRate": 40,
    "failRate": 40,
    "criticalVetoRate": 40,
-   "meanDrop": 17.7,
+   "meanDrop": 19.9,
    "detectedRate": 90
   },
   {
@@ -58,7 +58,7 @@
    "passRate": 15.4,
    "failRate": 84.6,
    "criticalVetoRate": 84.6,
-   "meanDrop": 27.2,
+   "meanDrop": 31.6,
    "detectedRate": 84.6
   },
   {
@@ -71,7 +71,7 @@
    "passRate": 0,
    "failRate": 100,
    "criticalVetoRate": 100,
-   "meanDrop": 35.9,
+   "meanDrop": 38.4,
    "detectedRate": 100
   },
   {
@@ -84,7 +84,7 @@
    "passRate": 0,
    "failRate": 100,
    "criticalVetoRate": 100,
-   "meanDrop": 35.9,
+   "meanDrop": 38.4,
    "detectedRate": 100
   },
   {
@@ -97,7 +97,7 @@
    "passRate": 0,
    "failRate": 100,
    "criticalVetoRate": 100,
-   "meanDrop": 34.9,
+   "meanDrop": 37.4,
    "detectedRate": 100
   },
   {
@@ -110,7 +110,7 @@
    "passRate": 0,
    "failRate": 100,
    "criticalVetoRate": 100,
-   "meanDrop": 34.5,
+   "meanDrop": 37.7,
    "detectedRate": 100
   }
  ],
@@ -143,12 +143,10 @@
    "region": "head",
    "cells": {
     "L0": {
-     "score": 83.9,
-     "verdict": "PARTIAL",
+     "score": 96.7,
+     "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: deterministic dimension failure"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,
@@ -306,12 +304,10 @@
    "region": "head",
    "cells": {
     "L0": {
-     "score": 83.9,
-     "verdict": "PARTIAL",
+     "score": 95,
+     "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: deterministic dimension failure"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,
@@ -364,12 +360,10 @@
    "region": "breast",
    "cells": {
     "L0": {
-     "score": 83.9,
-     "verdict": "PARTIAL",
+     "score": 95,
+     "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: deterministic dimension failure"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": {
@@ -722,12 +716,10 @@
    "region": "thyroid",
    "cells": {
     "L0": {
-     "score": 83.9,
-     "verdict": "PARTIAL",
+     "score": 94.7,
+     "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: deterministic dimension failure"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": {
@@ -787,12 +779,10 @@
    "region": "head",
    "cells": {
     "L0": {
-     "score": 83.9,
-     "verdict": "PARTIAL",
+     "score": 94.9,
+     "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: deterministic dimension failure"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": {
@@ -1532,12 +1522,10 @@
    "region": "head",
    "cells": {
     "L0": {
-     "score": 83.9,
-     "verdict": "PARTIAL",
+     "score": 93.6,
+     "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: deterministic dimension failure"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,
@@ -1679,12 +1667,10 @@
    "region": "head",
    "cells": {
     "L0": {
-     "score": 83.9,
-     "verdict": "PARTIAL",
+     "score": 95.7,
+     "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: deterministic dimension failure"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,
@@ -1724,12 +1710,10 @@
    "region": "head",
    "cells": {
     "L0": {
-     "score": 83.9,
-     "verdict": "PARTIAL",
+     "score": 96.7,
+     "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: deterministic dimension failure"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,
@@ -2196,12 +2180,10 @@
    "region": "thyroid",
    "cells": {
     "L0": {
-     "score": 83.9,
-     "verdict": "PARTIAL",
+     "score": 96.3,
+     "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: deterministic dimension failure"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": {
@@ -2293,12 +2275,10 @@
    "region": "breast",
    "cells": {
     "L0": {
-     "score": 83.9,
-     "verdict": "PARTIAL",
+     "score": 95,
+     "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: deterministic dimension failure"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": {
@@ -2359,12 +2339,10 @@
    "region": "breast",
    "cells": {
     "L0": {
-     "score": 83.9,
-     "verdict": "PARTIAL",
+     "score": 91.3,
+     "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: deterministic dimension failure"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,
@@ -2393,12 +2371,10 @@
    "region": "breast",
    "cells": {
     "L0": {
-     "score": 83.9,
-     "verdict": "PARTIAL",
+     "score": 95,
+     "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: deterministic dimension failure"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,
@@ -2613,12 +2589,10 @@
    "region": "chest",
    "cells": {
     "L0": {
-     "score": 83.9,
-     "verdict": "PARTIAL",
+     "score": 92.5,
+     "verdict": "PASS",
      "criticalVeto": false,
-     "gateReasons": [
-      "severity cap: deterministic dimension failure"
-     ],
+     "gateReasons": [],
      "failedCritical": []
     },
     "L1": null,

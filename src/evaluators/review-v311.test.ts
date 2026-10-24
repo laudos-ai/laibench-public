@@ -397,3 +397,38 @@ describe("pilot audit 4: denied lists with 'ou'/'nem', and organ-labelled sectio
     assert.deepEqual(failed(r, /^(Q11|Q12|Q08)$/), []);
   });
 });
+
+describe("pilot audit 5: long denied lists and patient risk context", () => {
+  for (const [s, t] of [
+    ["Não se identificam sinais de ruptura contida, sangramento ativo, hematoma mediastinal ou hemomediastino", "sangramento ativo"],
+    ["Não há sinais de transformação hemorrágica, hematoma intraparenquimatoso, micro-hemorragia ou depósito de hemossiderina", "hematoma"],
+    ["Sem evidência de edema ósseo, fraturas, lesões osteocondrais ou neoplasias", "fraturas"],
+    ["O intestino delgado e o grosso não mostram sinais de obstrução ou perfuração", "perfuração"],
+  ] as Array<[string, string]>) it(`denied: "${t}"`, () => assert.equal(isFindingNegated(s, t, "pt-BR"), true));
+  it("a list closed with 'e' stays affirmed even with commas", () => {
+    assert.equal(isFindingNegated("Sem derrame pleural, pneumotórax volumoso à direita, enfisema subcutâneo e fratura costal", "pneumotórax", "pt-BR"), false);
+  });
+  it("'Paciente de alto risco' is context, not a finding", () => {
+    assert.deepEqual(abnormalInputClauses("Paciente de alto risco. Nódulo sólido de 7 mm no lobo superior direito.", "pt-BR"), ["Nódulo sólido de 7 mm no lobo superior direito"]);
+  });
+  it("an angiotomography is a contrast exam: 'contrastação habitual' is allowed", async () => {
+    const r = await run({ exam: "Angiotomografia de crânio e pescoço.", findings: "Oclusão do segmento M1 da artéria cerebral média esquerda.", locale: "pt-BR" },
+      "<center><b>ANGIOTOMOGRAFIA DE CRÂNIO E PESCOÇO</b></center><br><br><b>Técnica</b><br>Aquisição após contraste iodado endovenoso.<br><br><b>Análise</b><br>Oclusão do segmento M1 da artéria cerebral média esquerda.<br>Demais artérias com calibre e contrastação habituais.<br><br><b>Conclusão</b><br>Oclusão de M1 à esquerda.");
+    assert.deepEqual(failed(r, /^C01$/), []);
+  });
+  it("'cauda equina de distribuição habitual' is anatomy, not the syndrome", () => {
+    for (const s of ["Cauda equina de distribuição habitual.", "Cauda equina sem alterações.", "Cone medular e cauda equina com topografia e sinal preservados, sem compressões."]) {
+      assert.deepEqual(sourceCriticalAnchors(s, "pt-BR").map((a) => a.category), [], s);
+    }
+  });
+});
+
+describe("pilot audit 6: conventions never block PASS", () => {
+  it("a correct, focused report missing only checklist anatomy can PASS", async () => {
+    const r = await run(
+      { exam: "Tomografia computadorizada de crânio sem contraste.", findings: "Pequena coleção extra-axial hiperdensa frontoparietal direita, com discreto efeito de massa local. Sem desvio da linha média.", locale: "pt-BR" },
+      "<center><b>TOMOGRAFIA COMPUTADORIZADA DE CRÂNIO</b></center><br><br><b>Método:</b><br>Aquisição volumétrica sem contraste.<br><br><b>Análise:</b><br>Pequena coleção extra-axial hiperdensa frontoparietal direita, determinando discreto efeito de massa local.<br>Ausência de desvio das estruturas da linha média.<br>Sistema ventricular de forma e dimensões preservadas.<br>Cisternas e sulcos corticais de amplitude normal.<br>Parênquima encefálico com atenuação habitual.<br><br><b>Impressão:</b><br>Hematoma subdural agudo frontoparietal direito, com discreto efeito de massa local.");
+    assert.equal(r.checks.filter((c) => !c.passed && c.severity !== "minor").length, 0, JSON.stringify(r.checks.filter((c) => !c.passed)));
+    assert.equal(r.verdict, "PASS", r.gateReasons.join("; "));
+  });
+});

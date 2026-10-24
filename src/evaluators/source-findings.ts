@@ -36,8 +36,8 @@ import { clinicalReportBody } from "./source-critical.js";
 const HARNESS_RX = /\b(?:synthetic|harness|for testing|testing\b|texto sintetico|sintetic[oa]s?|in the example|for the example|patient context|clinical context|contexto clinico|contexto\s+d[eo]\s+paciente)\b/;
 // Indications, questions and resolved/old findings are not current abnormal findings.
 const NOT_A_FINDING_RX: Record<LocaleKey, RegExp> = {
-  "en-US": /\b(?:clinical\s+(?:indication|question|history)|indication|history\s+of|rule\s+out|r\/o|evaluate\s+for|to\s+exclude|has\s+resolved|resolved|no\s+longer)\b/,
-  "pt-BR": /\b(?:indicacao|historia\s+clinica|para\s+afastar|descartar|investigacao\s+de|resolvid[oa]s?|nao\s+mais)\b/,
+  "en-US": /\b(?:clinical\s+(?:indication|question|history)|indication|history\s+of|rule\s+out|r\/o|evaluate\s+for|to\s+exclude|has\s+resolved|resolved|no\s+longer|(?:high|low)[- ]risk\s+patient)\b/,
+  "pt-BR": /\b(?:indicacao|historia\s+clinica|para\s+afastar|descartar|investigacao\s+de|resolvid[oa]s?|nao\s+mais|paciente\s+de\s+(?:alto|baixo)\s+risco)\b/,
 };
 
 const NEG_LEAD: Record<LocaleKey, RegExp> = {

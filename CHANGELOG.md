@@ -110,6 +110,13 @@ regression test (`src/evaluators/review-v311.test.ts`).
   disjunct, modifiers included; lists closed with "e"/"and" stay affirmed. A
   section now runs to the next section header, so organ labels ("<b>Baço:</b>")
   and numbered conclusion items stay inside it.
+- **Only real errors block PASS.** A dimension that is low only on minor
+  conventions (anatomical checklist, preferred terms) lowers the score but no
+  longer caps a correct report below PASS; critical and major errors still do.
+  An angiotomography / CT angiography is a contrast exam even when its name does
+  not say "com contraste"; "Método" is a technique header; the cauda equina is a
+  critical only as a syndrome or compression; "paciente de alto risco" is
+  context, not a finding.
 - **Correct radiology read as a fabrication** (found by a private pt-BR pilot):
   a hyperattenuating extra-axial / subdural / epidural collection is now an
   acute-bleed anchor, so a report that names it "hematoma subdural agudo" is not
@@ -135,7 +142,7 @@ regression test (`src/evaluators/review-v311.test.ts`).
   public discrimination ladder. Under v3.11.0 every critical rung (denied,
   omitted, fabricated, null report) is vetoed in 100% of applicable cases and no
   faithful reference report is vetoed.
-- Tests: 496 → 662 (source-critical gate, list negation in both locales,
+- Tests: 496 → 671 (source-critical gate, list negation in both locales,
   gold-path isolation, 20 frozen paraphrased correct reports, region map,
   adversarial-review regressions, browser-bundle parity).
 

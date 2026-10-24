@@ -4,8 +4,8 @@ Suite `lite-public.en-US` (49 synthetic cases, suiteHash `013cfb0d91d7ec0a…`).
 
 | Rung | Error injected | n | Mean score | PASS | FAIL | Critical veto | Score dropped |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| L0 | Reference | 49 | 94.5 | 73.5% | 0% | 0% | — |
-| L1 | Measurement drift | 18 | 84.3 | 5.6% | 0% | 0% | 72.2% |
+| L0 | Reference | 49 | 97.4 | 100% | 0% | 0% | — |
+| L1 | Measurement drift | 18 | 84.3 | 5.6% | 0% | 0% | 100% |
 | L2 | Non-critical omission | 10 | 78.3 | 40% | 40% | 40% | 90% |
 | L3 | Laterality swap | 26 | 66.1 | 15.4% | 84.6% | 84.6% | 84.6% |
 | L4 | Critical denied | 14 | 59.9 | 0% | 100% | 100% | 100% |

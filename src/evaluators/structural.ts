@@ -87,7 +87,7 @@ function getTitle(html: string): string {
   if (centered) return centered;
 
   const plain = stripTags(html.replace(/<br\s*\/?>/gi, "\n")).replace(/\s+/g, " ").trim();
-  const sectionMatch = /\b(?:T[ée]cnica|An[áa]lise|Achados|Conclus[ãa]o|Impress[ãa]o|Technique|Findings|Analysis|Impression|Conclusion)\s*:?/i.exec(plain);
+  const sectionMatch = /\b(?:T[ée]cnica|M[ée]todo|An[áa]lise|Achados|Conclus[ãa]o|Impress[ãa]o|Technique|Findings|Analysis|Impression|Conclusion)\s*:?/i.exec(plain);
   const candidate = (sectionMatch ? plain.slice(0, sectionMatch.index) : plain).trim();
   return candidate.length <= 180 ? candidate : "";
 }

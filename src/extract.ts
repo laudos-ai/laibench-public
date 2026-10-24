@@ -434,10 +434,11 @@ const CRITICAL_CATEGORIES: CriticalCategory[] = [
   },
   {
     category: "cauda-equina",
-    // v3.11.0 pilot: the anatomical name of the roots is not the syndrome
+    // v3.11.0 pilot: the cauda equina syndrome or its compression; the anatomical
+    // name ("cauda equina de distribuição habitual") is a normal statement.
     // ("raízes da cauda equina com distribuição normal" is a normal statement).
-    rxPt: /s[ií]ndrome\s+da\s+cauda\s+equina|compress[ãa]o\s+(?:\S+\s+){0,3}?(?:da\s+)?cauda\s+equina|(?<!ra[ií]zes\s+(?:nervosas\s+)?da\s+)cauda\s+equina(?!\s+(?:ra[ií]zes|com\s+(?:distribui|aspecto|morfologia|sinal)|normal|preservad|habitua|t[oó]pic))/i,
-    rxEn: /cauda\s+equina\s+(?:syndrome|compression)|compress\w*\s+(?:\S+\s+){0,3}?(?:the\s+)?cauda\s+equina|(?<!roots\s+of\s+the\s+)cauda\s+equina(?!\s+(?:nerve\s+)?roots|\s+(?:is|are|appears?)\s+(?:normal|unremarkable|preserved))/i,
+    rxPt: /s[ií]ndrome\s+da\s+cauda\s+equina|compress[ãa]o\s+(?:\S+\s+){0,3}?(?:da\s+|das\s+ra[ií]zes\s+da\s+)?cauda\s+equina|cauda\s+equina\s+comprimida/i,
+    rxEn: /cauda\s+equina\s+(?:syndrome|compression)|compress\w*\s+(?:\S+\s+){0,3}?(?:the\s+)?cauda\s+equina/i,
   },
   {
     category: "epidural-hematoma",
@@ -618,7 +619,7 @@ export function isFindingNegated(sentence: string, matchText: string, locale: Lo
 // affirmed; a comma after the "or" ("No effusion or consolidation, apical
 // pneumothorax and …") closes the denied list.
 const DISJ_CUE_RX: Record<LocaleKey, RegExp> = {
-  "pt-BR": /\b(?:sem|nao ha|nao se (?:identifica|observa|evidencia|caracteriza|nota|visualiza|detecta)m?|nao (?:foram|foi|sao|e) (?:observad|identificad|caracterizad|evidenciad|visualizad|detectad)\w*|ausencia de|nenhum|nenhuma|negativ[oa] para|livres? de)\b/g,
+  "pt-BR": /\b(?:sem|nao ha|nao (?:mostra|demonstra|apresenta|evidencia|revela)m?|nao se (?:identifica|observa|evidencia|caracteriza|nota|visualiza|detecta)m?|nao (?:foram|foi|sao|e) (?:observad|identificad|caracterizad|evidenciad|visualizad|detectad)\w*|ausencia de|nenhum|nenhuma|negativ[oa] para|livres? de)\b/g,
   "en-US": /\b(?:no|without|absence of|negative for|free of|no evidence of)\b/g,
 };
 const DISJ_BREAK_RX = /[.;:]|\b(?:mas|porem|contudo|entretanto|exceto|observa\w*|nota-se|notam-se|identifica-se|evidencia-se|visualiza-se|presenca|but|however|except|there (?:is|are)|shows?|showing|demonstrat\w*|seen|noted|present)\b/;
@@ -636,11 +637,12 @@ function isDisjunctNegated(n: string, idx: number, end: number, locale: LocaleKe
   const last = coords[coords.length - 1];
   // The term sits in the final disjunct: "… ou [de] TERM".
   if (last && isDisjunction(last[1]) && !between.slice(last.index! + last[0].length).includes(",")) return true;
-  // The term opens a disjunction: "… TERM ou …", with no "e/and" before it.
+  // The term is a non-final item of a denied disjunction: "… TERM[, B, C] ou D",
+  // with no "e/and" before it and no assertion between it and the closing "ou".
   if (coords.some((c) => !isDisjunction(c[1]))) return false;
   const after = n.slice(end).split(/[.;:]/)[0];
   const next = new RegExp(DISJ_COORD_RX.source).exec(after);
-  return !!next && isDisjunction(next[1]) && !after.slice(0, next.index).includes(",");
+  return !!next && isDisjunction(next[1]) && !DISJ_BREAK_RX.test(after.slice(0, next.index));
 }
 
 // ---- list-scoped negation (v3.11.0) ----

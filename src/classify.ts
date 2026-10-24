@@ -12,7 +12,10 @@ function deriveModality(normalizedExam: string): Modality {
 }
 
 function deriveContrast(normalizedExam: string, normalizedFindings: string): boolean {
-  const examIndicatesContrast = /\b(cc|c\/c|com contraste|contrastado|with contrast|contrast-enhanced|contrast enhanced)\b/.test(normalizedExam);
+  // An angiotomography / CT angiography / CT urography is a contrast study by
+  // definition, even when the exam name does not say "com contraste".
+  const examIndicatesContrast = /\b(cc|c\/c|com contraste|contrastado|with contrast|contrast-enhanced|contrast enhanced)\b/.test(normalizedExam)
+    || /\b(?:angiotomografia|angio-?tc|angiotc|ct angiograph\w*|cta|computed tomography angiograph\w*|ct pulmonary angiograph\w*|urotomografia|uro-?tc|ct urograph\w*)\b/.test(normalizedExam);
   // Strong, unambiguous contrast-administration cues — locale-SYMMETRIC (pt-BR and
   // en-US). The findings branch was previously pt-BR-only, so en-US enhancement /
   // phase language did not register contrast (false C01 penalty on correct reports).

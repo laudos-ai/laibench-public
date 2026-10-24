@@ -229,7 +229,11 @@ export function combineScores(
     gateReasons.push(cap.reason);
   }
 
-  if (scoredDims.some((dim) => detDims[dim].verdict === "FAIL") && overall >= passThreshold) {
+  // A dimension blocks PASS only when it fails on a real error (a critical or major
+  // check). A dimension that is low only on minor conventions — the anatomical
+  // checklist, preferred terms — lowers the score but never blocks PASS.
+  const failsOnRealError = (dim: Dim) => checks.some((c) => c.dim === dim && !c.passed && c.severity !== "minor");
+  if (scoredDims.some((dim) => detDims[dim].verdict === "FAIL" && failsOnRealError(dim)) && overall >= passThreshold) {
     overall = round1(passThreshold - 0.1);
     gateReasons.push("severity cap: deterministic dimension failure");
   }

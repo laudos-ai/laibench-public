@@ -7,7 +7,7 @@ export const ptBR: LocaleSpec = {
   sections: {
     analysis: /An[áa]lise|Achados/i,
     conclusion: /Conclus[ãa]o|Impress[ãa]o/i,
-    technique: /T[ée]cnica/i,
+    technique: /T[ée]cnica|M[ée]todo/i,
   },
   sectionLabels: {
     analysis: "Análise",

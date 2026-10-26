@@ -85,7 +85,7 @@ function extractMeasurementsFromText(text: string): string[] {
 // / intestinal ischemia, cauda equina, testicular / ovarian torsion, necrotizing
 // fasciitis, acute appendicitis, intussusception, ectopic pregnancy, contrast
 // extravasation, and subarachnoid hemorrhage.
-export const CRITICAL_KEYWORDS_PT = /hematoma|hemorragia|embolia|tromboembolismo|pneumotorax|pneumot[oó]rax|fratura|luxação|isquemia aguda|altera[çc][õo]es\s+isqu[êe]micas\s+(?:precoces|agudas|recentes)|\bavc\b|acidente vascular|oclusão|dissecção|hernia[çc]ão cerebral|ruptura|tamponamento|efeito de massa|desvio da linha m[eé]dia|obstru[çc][ãa]o\s+intestinal|[ií]leo\s+(?:mec[âa]nico|obstrutivo)|perfura[çc][ãa]o|pneumoperit[oô]nio|compress[ãa]o\s+(?:medular|da\s+medula)|isquemia\s+mesent[eé]rica|isquemia\s+intestinal|cauda\s+equina|cole[çc][ãa]o\s+(?:extra-?axial|subdural|epidural|extradural)\s+(?:\S+\s+){0,2}?hiper(?:atenuante|densa)|cole[çc][ãa]o\s+hiper(?:atenuante|densa)\s+(?:\S+\s+){0,1}?(?:extra-?axial|subdural|epidural|extradural)|tor[çc][ãa]o\s+testicular|tor[çc][ãa]o\s+ovariana|fasci[ií]te\s+necrotizante|apendicite|mielopatia\s+compressiva|[êe]mbolo\s+pulmonar|pneumomediastino|invagina[çc][ãa]o\s+intestinal|intussuscep[çc][ãa]o|gravidez\s+ect[óo]pica|prenhez\s+ect[óo]pica|extravasamento|hemorragia\s+subaracn[óo]idea|subaracn[óo]ide[ao]|hemoperit[oô]nio|hemot[oó]rax|hemopericárdio|hemopericardio|infarto\s+(?:cerebral\s+|isqu[eê]mico\s+|lacunar\s+)?agudo(?!\s+d[oe]\s+mioc)|\bar\s+livre\s+(?:na\s+cavidade|intraperitoneal|subdiafragm)/i;
+export const CRITICAL_KEYWORDS_PT = /insulto\s+vascular|hematoma|hemorragia|embolia|tromboembolismo|pneumotorax|pneumot[oó]rax|fratura|luxação|isquemia aguda|altera[çc][õo]es\s+isqu[êe]micas\s+(?:precoces|agudas|recentes)|\bavc\b|acidente vascular|oclusão|dissecção|hernia[çc]ão cerebral|ruptura|tamponamento|efeito de massa|desvio da linha m[eé]dia|obstru[çc][ãa]o\s+intestinal|[ií]leo\s+(?:mec[âa]nico|obstrutivo)|perfura[çc][ãa]o|pneumoperit[oô]nio|compress[ãa]o\s+(?:medular|da\s+medula)|isquemia\s+mesent[eé]rica|isquemia\s+intestinal|cauda\s+equina|cole[çc][ãa]o\s+(?:extra-?axial|subdural|epidural|extradural)\s+(?:\S+\s+){0,2}?hiper(?:atenuante|densa)|cole[çc][ãa]o\s+hiper(?:atenuante|densa)\s+(?:\S+\s+){0,1}?(?:extra-?axial|subdural|epidural|extradural)|tor[çc][ãa]o\s+testicular|tor[çc][ãa]o\s+ovariana|fasci[ií]te\s+necrotizante|apendicite|mielopatia\s+compressiva|[êe]mbolo\s+pulmonar|pneumomediastino|invagina[çc][ãa]o\s+intestinal|intussuscep[çc][ãa]o|gravidez\s+ect[óo]pica|prenhez\s+ect[óo]pica|extravasamento|hemorragia\s+subaracn[óo]idea|subaracn[óo]ide[ao]|hemoperit[oô]nio|hemot[oó]rax|hemopericárdio|hemopericardio|infarto\s+(?:cerebral\s+|isqu[eê]mico\s+|lacunar\s+)?agudo(?!\s+d[oe]\s+mioc)|\bar\s+livre\s+(?:na\s+cavidade|intraperitoneal|subdiafragm)/i;
 export const CRITICAL_KEYWORDS_EN = /hemorrhage|hematoma|embolism|thromboembol|pneumothorax|fracture|dislocation|acute ischemi|early\s+ischemic\s+change|stroke|occlusion|dissection|herniation|rupture|tamponade|acute bleed|mass effect|midline shift|bowel\s+obstruction|perforation|pneumoperitoneum|free\s+(?:intraperitoneal\s+)?air|(?:cord|spinal)\s+compression|mesenteric\s+ischemia|intestinal\s+ischemia|cauda\s+equina|(?:hyperattenuating|hyperdense|high[- ]attenuation)\s+(?:\S+\s+){0,2}?(?:extra-?axial|subdural|epidural|extradural)\s+collection|(?:extra-?axial|subdural|epidural|extradural)\s+collection\s+(?:\S+\s+){0,3}?(?:hyperattenuating|hyperdense)|testicular\s+torsion|ovarian\s+torsion|necrotizing\s+fasciitis|appendicitis|intussusception|ectopic\s+pregnancy|extravasation|subarachnoid|hemoperitoneum|hemothorax|hemopericardium|acute\s+(?:(?:left|right|bilateral|mca|aca|pca|ica|middle|anterior|posterior|cerebral|cerebellar|cortical|subcortical|lacunar|embolic|ischemic|territorial|territory|watershed|frontal|parietal|temporal|occipital|insular|thalamic|pontine|brainstem|basal|ganglia|ganglionic|multifocal|punctate|small|large|vessel|artery|arterial|lobe|lobar|hemispheric|periventricular|corona|radiata|capsular|internal|external|deep|white|matter)[\s/-]+){0,4}infarct|free\s+(?:intra-abdominal|subdiaphragmatic)\s+air|perforated\s+(?:\w+\s+){0,2}?(?:viscus|bowel|ulcer|appendix|duoden\w*|gastric|colon)|(?:intimal|dissection)\s+flap\s+(?:in|within|of|involving|along)\s+the\s+(?:\w+\s+){0,3}?aort|aortic\s+(?:intimal\s+)?flap|compressive\s+myelopathy|pneumothoraces|\bptx\b|\bfx\b|embolus|pneumomediastinum/i;
 
 const MAJOR_KEYWORDS_PT = /nódulo|massa|neoplasia|tumor|metástase|lesão expansiva|coleção|abscesso|obstrução|hidronefrose|derrame pleural|consolidação|pneumonia|linfonodomegalia|estenose|trombose/i;
@@ -345,7 +345,7 @@ const CRITICAL_CATEGORIES: CriticalCategory[] = [
     // v3.11: "infarto (cerebral|isquêmico|lacunar) agudo"; never the myocardium.
     // Pilot audit: "alterações isquêmicas precoces" / "early ischemic changes" in the
     // input is an acute ischemic stroke; a report that calls it "isquemia aguda" is right.
-    rxPt: /(?:acidente\s+vascular|isquemia\s+(?:cerebral|aguda)|altera[çc][õo]es\s+isqu[êe]micas\s+(?:precoces|agudas|recentes)|sinais\s+(?:precoces\s+)?de\s+isquemia\s+(?:aguda|precoce)|infarto\s+(?:cerebral\s+|isqu[eê]mico\s+|lacunar\s+)?agudo(?!\s+d[oe]\s+mioc[áa]rdio))/i,
+    rxPt: /(?:acidente\s+vascular|insulto\s+vascular(?:\s+isqu[êe]mico)?|isquemia\s+(?:cerebral|aguda)|altera[çc][õo]es\s+isqu[êe]micas\s+(?:precoces|agudas|recentes)|sinais\s+(?:precoces\s+)?de\s+isquemia\s+(?:aguda|precoce)|infarto\s+(?:cerebral\s+|isqu[eê]mico\s+|lacunar\s+)?agudo(?!\s+d[oe]\s+mioc[áa]rdio))/i,
     // Bare "stroke" excludes non-clinical collocations (golf/swimming/sun/back/
     // breast/brush/key + stroke, "stroke of luck"); clinical "stroke"/"acute
     // stroke"/"prior stroke" still match. (Single-word forms like "heatstroke" are
@@ -629,12 +629,16 @@ const isDisjunction = (w: string) => w === "ou" || w === "nem" || w === "or" || 
 function isDisjunctNegated(n: string, idx: number, end: number, locale: LocaleKey): boolean {
   const cueRx = new RegExp(DISJ_CUE_RX[locale].source, "g");
   let cueEnd = -1;
-  for (let m = cueRx.exec(n); m && m.index < idx; m = cueRx.exec(n)) cueEnd = m.index + m[0].length;
+  let cueText = "";
+  for (let m = cueRx.exec(n); m && m.index < idx; m = cueRx.exec(n)) { cueEnd = m.index + m[0].length; cueText = m[0]; }
   if (cueEnd < 0 || idx - cueEnd > 200) return false;
   const between = n.slice(cueEnd, idx);
   if (DISJ_BREAK_RX.test(between)) return false;
   const coords = [...between.matchAll(new RegExp(DISJ_COORD_RX.source, "g"))];
   const last = coords[coords.length - 1];
+  // "Ausência de A, B e de C": the repeated "de" re-attaches C to "ausência de".
+  if (last && /^(?:e|and)$/.test(last[1]) && /^\s*(?:de|of)\s*$/.test(between.slice(last.index! + last[0].length))
+    && /(?:ausencias?|absence)\s+(?:de|of)\s*$/.test(cueText)) return true;
   // The term sits in the final disjunct: "… ou [de] TERM".
   if (last && isDisjunction(last[1]) && !between.slice(last.index! + last[0].length).includes(",")) return true;
   // The term is a non-final item of a denied disjunction: "… TERM[, B, C] ou D",

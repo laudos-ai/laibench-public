@@ -147,9 +147,9 @@ const RAW_SIDE_RX: Array<{ rx: RegExp; side: Side }> = [
 // critical (C09) nor fabricates one (C10). Management verbs ("recommend",
 // "suggest", "communicated") do NOT make a finding hypothetical.
 const HYPOTHETICAL_RX: Record<LocaleKey, RegExp> = {
-  "en-US": /\b(?:evaluate|evaluation|assess|assessment|screen)\s+for\b|\bto\s+(?:exclude|rule\s+out)\b|\brule\s+out\b|\br\/o\b|\bquestion\s+of\b|\bclinical\s+(?:question|indication|history|concern)\b|\bindication\b|\bhistory\s+of\b|\bif\s+(?:clinically\s+)?(?:concern|indicated|suspected)\b|\b(?:does|do)\s+not\s+(?:exclude|rule\s+out)\b|\bcannot\s+(?:be\s+)?(?:exclude|excluded|ruled\s+out)\b|\bnot\s+excluded\b/,
+  "en-US": /\b(?:evaluate|evaluation|assess|assessment|screen)\s+for\b|\bto\s+(?:exclude|rule\s+out)\b|\brule\s+out\b|\br\/o\b|\bquestion\s+of\b|\bclinical\s+(?:question|indication|history|concern)\b|\bindication\b|\bhistory\s+of\b|\bif\s+(?:clinically\s+)?(?:concern|indicated|suspected)\b|\b(?:does|do)\s+not\s+(?:exclude|rule\s+out)\b|\bcannot\s+(?:be\s+)?(?:exclude|excluded|ruled\s+out)\b|\bnot\s+excluded\b|\bif\s+(?:there\s+is|present|any)\b/,
   // "não exclui (completamente) apendicite" states that it is NOT ruled out: no assertion.
-  "pt-BR": /\b(?:para\s+(?:afastar|excluir|descartar|avaliar|investigar)|afastar|descartar|investigacao\s+de|pesquisa\s+de|indicacao|historia\s+(?:clinica|de)|hipotese\s+de|suspeita\s+clinica\s+de|nao\s+(?:se\s+)?(?:pode\s+)?(?:exclui|excluir|excluem|afasta|afastar|descarta|descartar)|sem\s+(?:excluir|afastar))\b/,
+  "pt-BR": /\b(?:para\s+(?:afastar|excluir|descartar|avaliar|investigar)|afastar|descartar|investigacao\s+de|pesquisa\s+de|indicacao|historia\s+(?:clinica|de)|hipotese\s+de|suspeita\s+clinica\s+de|nao\s+(?:se\s+)?(?:pode\s+)?(?:exclui|excluir|excluem|afasta|afastar|descarta|descartar)|sem\s+(?:excluir|afastar)|se\s+houver|caso\s+(?:haja|exista|houver))\b/,
 };
 // Differential phrasing is also not counted as a fabrication (C10 only).
 const DIFFERENTIAL_RX = /\b(?:differential|versus|vs|diagnostico\s+diferencial)\b/;

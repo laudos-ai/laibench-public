@@ -515,3 +515,14 @@ describe("real-input audit 2: report layouts general models actually produce", (
     assert.deepEqual(failed(r, /^Q12$/), []);
   });
 });
+
+describe("real-input audit 3: bare chatbot reports", () => {
+  it("'Ausência de A, B e de C' denies C too", () => {
+    assert.equal(isFindingNegated("Ausência de áreas de contusão, coleções hemáticas extra-axiais e de hemorragia subaracnóidea aguda", "hemorragia", "pt-BR"), true);
+  });
+  it("'se houver suspeita de apendicite' is hypothetical, and 'insulto vascular isquêmico' is a stroke", () => {
+    const occ = sourceCriticalAnchors("Hipodensidade cortical temporal direita, podendo corresponder a insulto vascular isquêmico.", "pt-BR").map((a) => a.category);
+    assert.deepEqual(occ, ["stroke"]);
+    assert.deepEqual(sourceCriticalAnchors("Se houver suspeita de apendicite, detalhar a espessura da alça.", "pt-BR"), []);
+  });
+});

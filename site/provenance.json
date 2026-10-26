@@ -1,6 +1,6 @@
 {
  "benchmarkVersion": "3.11.0",
- "scoringHash": "d31aa54a033de36c8c0c542f8226e3debb58cfb22abc9d58fe812766b25feca9",
+ "scoringHash": "1c061ff2ca49567820caf8c7b8644a2dbbb966d8c46154c2b20cc1f448c73f48",
  "scoringFiles": [
   {
    "path": "src/benchmark.ts",
@@ -36,7 +36,7 @@
   },
   {
    "path": "src/evaluators/source-critical.ts",
-   "sha256": "5ec67ba8bb8e12e8d668dabea883046e87513db41cbc4c5e95376dfecf643f35"
+   "sha256": "91b662914c9098898d86a66d4c9ce45579092870cef079f9f6c7c6b5f3e8a237"
   },
   {
    "path": "src/evaluators/source-findings.ts",
@@ -48,7 +48,7 @@
   },
   {
    "path": "src/extract.ts",
-   "sha256": "c9290c3a920e53ea3cdb6d2dc5b20c1328e868f182ea739a46d5df51e77efd2f"
+   "sha256": "b472add2bb89767ef16bed3e706e2eac6032c43c470de530667ed30034822a02"
   },
   {
    "path": "src/extractors/critical-extractor.ts",

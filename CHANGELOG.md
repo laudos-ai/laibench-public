@@ -153,6 +153,10 @@ regression test (`src/evaluators/review-v311.test.ts`).
   - Signature placeholders ("CRM: [UF] ____") are a new minor Q18; Q07 stays
     critical for placeholders in the clinical text and now also catches
     bracketed instructions left in it ("[Completar: padrão e extensão]").
+  - "Ausência de A, B e de C" denies C as well; "se houver suspeita de
+    apendicite" / "if there is" is conditional, not an affirmed critical;
+    "insulto vascular isquêmico" is a stroke, so "AVC isquêmico" in the
+    report is not a fabrication.
   The discrimination ladder is unchanged: reference 100% PASS, every critical
   rung 100% vetoed.
 

@@ -541,11 +541,6 @@ function initLadder(ladder) {
 }
 
 // ---------------------------------------------------------------- leaderboard
-function gapSvg(clinical, allPass) {
-  const x = (v) => 6 + (v ?? 0) * 138;
-  return `<svg viewBox="0 0 150 18" aria-hidden="true"><line class="g-track" x1="6" x2="144" y1="9" y2="9" stroke-width="1"/><line class="g-span" x1="${x(allPass)}" x2="${x(clinical)}" y1="9" y2="9" stroke-width="2"/><circle class="g-all" cx="${x(allPass)}" cy="9" r="4" stroke-width="1.6"/><circle class="g-clin" cx="${x(clinical)}" cy="9" r="4.5"/></svg>`;
-}
-
 const BOARDS_META = [{ key: "pt-BR", name: "the controlled evaluation" }, { key: "en-US", name: "the public smoke test" }];
 
 function initLeaderboard(data) {
@@ -571,7 +566,7 @@ function initLeaderboard(data) {
     host.appendChild(div);
     const state = { key: b.defaultKey, dir: b.defaultKey === "system" ? 1 : -1 };
     const cols = [
-      ["clinicalScore", "Clinical"], ["strictPass", "PASS rate"], ["allPass", "Every check passes"], ["gap", "Clinical vs every check"],
+      ["clinicalScore", "Clinical"], ["strictPass", "PASS rate"],
       ...DIM_ORDER.map((d) => [`dim:${d}`, d]), ["latencyMs", "Latency"],
     ];
     const val = (e, k) => (k === "system" ? e.system : k.startsWith("dim:") ? e.dims?.[k.slice(4)] : e[k]);
@@ -585,15 +580,11 @@ function initLeaderboard(data) {
         return state.dir === -1 ? vc - va : va - vc;
       });
       const sortAttr = (k) => (state.key === k ? ` aria-sort="${state.dir === -1 ? "descending" : "ascending"}"` : "");
-      const th = cols.map(([k, label]) => k === "gap"
-        ? `<th class="gap">${label}<br><span style="font-size:11.5px;font-weight:400">○ every check, ● clinical</span></th>`
-        : `<th${sortAttr(k)}><button type="button" data-k="${k}">${label}</button></th>`).join("");
+      const th = cols.map(([k, label]) => `<th${sortAttr(k)}><button type="button" data-k="${k}">${label}</button></th>`).join("");
       const tr = entries.map((e) => `<tr>
         <td class="l sys">${esc(e.system)}<span class="tag${b.prod ? " prod" : ""}">${b.prod ? "product agent" : "open model"}</span></td>
         <td class="big">${pct(e.clinicalScore)}</td>
         <td>${pct(e.strictPass)}</td>
-        <td>${pct(e.allPass)}</td>
-        <td class="gap">${gapSvg(e.clinicalScore, e.allPass)}</td>
         ${DIM_ORDER.map((d) => `<td>${e.dims?.[d] == null ? "—" : fmt1(e.dims[d] * 100)}<span class="mini"><i style="width:${(e.dims?.[d] ?? 0) * 100}%"></i></span></td>`).join("")}
         <td>${e.latencyMs != null ? `${fmt1(e.latencyMs / 1000)} s` : "—"}</td></tr>`).join("");
       div.innerHTML = `<h3>${esc(b.title)}</h3>
@@ -615,9 +606,9 @@ function initLeaderboard(data) {
 function insight(entries) {
   const n = entries.length;
   const meanClin = entries.reduce((s, e) => s + (e.clinicalScore || 0), 0) / n;
-  const maxAll = Math.max(...entries.map((e) => e.allPass || 0));
+  const maxPass = Math.max(...entries.map((e) => e.strictPass || 0));
   const meanGuide = entries.reduce((s, e) => s + (e.dims?.GUIDE || 0), 0) / n;
-  return `<p class="insight">Averages hide failures. These ${n} open models average ${fmt1(meanClin * 100)}% on the clinical score, yet no model has every check pass on more than ${fmt1(maxAll * 100)}% of cases. Their weakest dimension is anatomical and guideline coverage (GUIDE, mean ${fmt1(meanGuide * 100)}).</p>`;
+  return `<p class="insight">Averages hide failures. These ${n} open models average ${fmt1(meanClin * 100)}% on the clinical score, yet none reaches PASS on more than ${fmt1(maxPass * 100)}% of cases. Their weakest dimension is anatomical and guideline coverage (GUIDE, mean ${fmt1(meanGuide * 100)}).</p>`;
 }
 
 // ---------------------------------------------------------------- head-to-head pilot

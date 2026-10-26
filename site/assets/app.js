@@ -262,7 +262,7 @@ async function runHero() {
     renderMarked($('[data-slot="report"]', sheet), html, null); // clean first; marks arrive with the verdict
     const foot = $('[data-slot="foot"]', sheet);
     foot.innerHTML = `<span class="stamp pending"><b>…</b><small>scoring</small></span>
-      <div><div class="score-line"><span class="score-num" data-slot="num">0.0</span><span class="score-of">/ 100</span></div><div class="veto-line" data-slot="veto">&nbsp;</div></div>
+      <div><div class="score-line"><span class="score-num" data-slot="num">—</span><span class="score-of">/ 100</span></div><div class="veto-line" data-slot="veto">&nbsp;</div></div>
       <div class="dims">${dimsHtml(r)}</div>`;
   }
   const play = async (sel, html, r, delay) => {

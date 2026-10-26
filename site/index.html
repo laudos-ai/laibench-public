@@ -130,6 +130,10 @@
   .notice svg { flex:none; width:18px; height:18px; margin-top:2px; color:var(--partial); }
   .t-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain; }
   .t-scroll table{ min-width:600px; }
+  /* The gate table is prose: let it wrap instead of scrolling sideways. */
+  .gate-table table{ min-width:0; }
+  .gate-table td:nth-child(2){ white-space:normal; text-align:left; line-height:1.5; }
+  .gate-table td:first-child{ vertical-align:top; padding-right:14px; }
   .pubs { border-top:1px solid var(--line); }
   .pub { display:grid; grid-template-columns:96px 1fr auto; gap:clamp(16px,3vw,48px); align-items:start; padding:clamp(22px,2.6vw,32px) 0; border-bottom:1px solid var(--line); text-decoration:none; color:inherit; }
   .pub:hover { background:linear-gradient(90deg,var(--panel),transparent); }
@@ -335,11 +339,18 @@
     .check > span:last-child{ grid-column:1 / -1; }
     .case-list{ grid-template-columns:1fr; }
     .gate-table td:last-child{ display:none; }
+    /* Ladder table: rung, error, PASS and veto fit a phone; cases and mean stay on desktop. */
+    .ladder-table{ min-width:0 !important; }
+    .ladder-table th:nth-child(3), .ladder-table td:nth-child(3),
+    .ladder-table th:nth-child(4), .ladder-table td:nth-child(4){ display:none; }
+    .ladder-table td.l{ white-space:normal; }
   }
   @media (max-width:480px){
-    .stats .grid{ grid-template-columns:1fr; border-top:1px solid var(--line); }
-    .stats .cell{ padding:20px 0; border-right:none; border-bottom:1px solid var(--line); }
-    .stats .cell:last-child{ border-bottom:none; }
+    .stats .grid{ grid-template-columns:repeat(2,minmax(0,1fr)); border-top:1px solid var(--line); }
+    .stats .cell{ padding:18px 12px 18px 0; border-right:none; border-bottom:1px solid var(--line); min-width:0; }
+    .stats .cell:nth-child(2n){ padding-left:14px; padding-right:0; border-left:1px solid var(--line); }
+    .stats .cell:nth-last-child(-n+2){ border-bottom:none; }
+    .stats .num{ font-size:34px; }
     .quote p{ max-width:none; }
     .sec-head h2{ max-width:none; }
   }

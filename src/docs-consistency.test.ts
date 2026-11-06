@@ -32,6 +32,9 @@ describe("docs/consistency: no local command runs a cloud-private suite", () => 
     if (existsSync(docsDir)) {
       for (const f of readdirSync(docsDir)) if (f.endsWith(".md")) docFiles.push(join(docsDir, f));
     }
+    // The CLI's own --help examples and the website's copy-paste commands are
+    // documentation too: a public reader runs them verbatim.
+    for (const f of ["src/cli.ts", "site/index.html"]) if (existsSync(join(root, f))) docFiles.push(join(root, f));
 
     const violations: string[] = [];
     for (const file of docFiles) {

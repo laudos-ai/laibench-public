@@ -405,14 +405,15 @@ Providers:
   openai-compatible    Any OpenAI-like /chat/completions endpoint
   command              Local/custom agent over stdin/stdout
 
-Examples:
+Examples (lite-public.en-US ships its 49 cases; lite-public.pt-BR is controlled and runs only in the private runner):
   npm run bench -- suites
-  npm run bench -- suite --suite suites/lite-public.pt-BR.json --provider openrouter --model anthropic/claude-sonnet-4.6 --judge-model anthropic/claude-opus-4.7 --run-name sonnet-mini --out runs/sonnet-mini.json
-  npm run bench -- suite --suite suites/lite-public.pt-BR.json --provider command --cmd "node examples/mock-agent.mjs" --case-limit 10 --run-name smoke --out runs/smoke.json
-  npm run bench -- suite --suite suites/lite-public.pt-BR.json --provider openai-compatible --base-url http://localhost:8787/v1 --model custom-rad-reporter --run-name local-endpoint --out runs/local-endpoint.json
-  npm run bench -- validate-submission --suite suites/lite-public.pt-BR.json --predictions predictions/my-agent.jsonl
-  npm run bench -- eval-submission --suite suites/lite-public.pt-BR.json --predictions predictions/my-agent.jsonl --run-name my-agent --model-label my-agent --track agent --out runs/my-agent.json
-  npm run bench -- matrix --suite suites/lite-public.pt-BR.json --provider openrouter --model model-a --model model-b --judge-model judge-model --score-mode judge-primary --out-dir runs/reference-en
+  npm run bench -- suite --suite suites/lite-public.en-US.json --provider command --cmd "node examples/mock-agent.mjs" --case-limit 10 --run-name smoke --out runs/smoke.json
+  npm run bench -- suite --suite suites/lite-public.en-US.json --provider openai-compatible --base-url https://api.openai.com/v1 --model your-model-id --run-name openai-model --out runs/openai-model.json
+  npm run bench -- suite --suite suites/lite-public.en-US.json --provider openai-compatible --base-url http://localhost:8787/v1 --model custom-rad-reporter --run-name local-endpoint --out runs/local-endpoint.json
+  npm run bench -- suite --suite suites/lite-public.en-US.json --provider openrouter --model provider/model-id --judge-model provider/judge-model-id --run-name hosted-model --out runs/hosted-model.json
+  npm run bench -- validate-submission --suite suites/lite-public.en-US.json --predictions predictions/my-agent.jsonl
+  npm run bench -- eval-submission --suite suites/lite-public.en-US.json --predictions predictions/my-agent.jsonl --run-name my-agent --model-label my-agent --track agent --out runs/my-agent.json
+  npm run bench -- matrix --suite suites/lite-public.en-US.json --provider openrouter --model model-a --model model-b --judge-model judge-model --score-mode judge-primary --out-dir runs/reference-en
   npm run bench -- leaderboard --inputs runs/a.json runs/b.json --out runs/leaderboard.json --markdown runs/leaderboard.md
   npm run bench -- compare --a runs/a.json --b runs/b.json
 

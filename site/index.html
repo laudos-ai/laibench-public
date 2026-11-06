@@ -289,6 +289,8 @@
   .submit { margin-top:clamp(40px,5vw,60px); display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:32px; align-items:start; }
   .submit h3 { margin:0 0 10px; font-size:21px; font-weight:500; letter-spacing:-.02em; }
   .submit p { margin:0 0 10px; color:var(--ink2); font-size:15px; line-height:1.6; }
+  .submit .cmd-label { margin:14px 0 4px; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  .submit .cmd-label:first-child { margin-top:0; }
 
   /* Lenis smooth scroll (desktop wheel; native scroll on touch) */
   html.lenis,html.lenis body{ height:auto; }
@@ -598,15 +600,26 @@ npm run bench -- provenance --suite suites/lite-public.en-US.json --out provenan
       <div class="submit" id="submit">
         <div>
           <h3>Submit a system</h3>
-          <p>Any agent that reads a JSON job on stdin and writes report HTML to stdout can be benchmarked, no SDK required. Frozen predictions are scored the same way and cannot self-report latency or retrieval.</p>
+          <p>Any agent that reads a JSON job on stdin and writes report HTML to stdout can be benchmarked, no SDK required. Hosted models run through any OpenAI-compatible <span class="mono">/chat/completions</span> endpoint, including the OpenAI API. Frozen predictions are scored the same way and cannot self-report latency or retrieval.</p>
           <p>For the gated controlled evaluation, write to <a href="mailto:research@laudos.ai">research@laudos.ai</a>.</p>
         </div>
-        <pre class="cmd">npm run bench -- suite \
+        <div>
+          <p class="cmd-label mono">Your agent</p>
+          <pre class="cmd">npm run bench -- suite \
   --suite suites/lite-public.en-US.json \
   --provider command --cmd "node path/to/your-agent.mjs" \
   --run-name my-agent --track agent \
   --entity-name "My Lab" --entity-type org --system-type product-agent \
   --out runs/my-agent.json</pre>
+          <p class="cmd-label mono">A hosted model</p>
+          <pre class="cmd">export OPENAI_API_KEY=...
+npm run bench -- suite \
+  --suite suites/lite-public.en-US.json \
+  --provider openai-compatible \
+  --base-url https://api.openai.com/v1 \
+  --model your-model-id \
+  --run-name openai-model --out runs/openai-model.json</pre>
+        </div>
       </div>
     </div>
   </section>

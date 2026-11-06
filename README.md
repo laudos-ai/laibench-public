@@ -34,8 +34,7 @@
 
 ## Why LAIBench
 
-Why LAIBench exists? 
-Existing LLM benchmarks measure general reasoning. Radiology requires evaluation of clinical safety, report faithfulness, terminology consistency, and critical finding detection. LAIBench was created to measure those properties.
+General LLM benchmarks measure reasoning. Radiology needs something else: clinical safety, report faithfulness, terminology consistency and critical-finding detection. LAIBench measures those properties.
 
 Most "report quality" benchmarks reward fluent prose. A confidently-written report that **misses a pneumothorax** can score well. LAIBench is built so that **cannot happen**:
 
@@ -111,6 +110,23 @@ npm run bench -- suite \
 ```
 
 `examples/mock-agent.mjs` is a minimal reference adapter. OpenRouter and any OpenAI-compatible endpoint are also supported (`--provider openrouter` / `--provider openai-compatible`); `examples/smoke-openai-compatible.mjs` shows the shape.
+
+### Benchmark a hosted model in one command
+
+Any `/chat/completions` endpoint works, including the OpenAI API. The key is read from `OPENAI_API_KEY` (or `OPENAI_COMPAT_API_KEY`):
+
+```bash
+export OPENAI_API_KEY=...
+npm run bench -- suite \
+  --suite suites/lite-public.en-US.json \
+  --provider openai-compatible \
+  --base-url https://api.openai.com/v1 \
+  --model your-model-id \
+  --run-name openai-model \
+  --out runs/openai-model.json
+```
+
+The run is scored by the same gated combiner as every other row and records the `suiteHash` it ran against; `npm run bench -- provenance` pins the `scoringHash`.
 
 ### Reliability (pass^k)
 

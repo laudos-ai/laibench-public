@@ -17,6 +17,11 @@
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:image" content="https://laibench.laudos.ai/og.png" />
 <link rel="icon" href="laudos-research-logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=switzer@400,500,600,700&amp;display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=Instrument+Serif:ital@0;1&amp;display=swap" />
 <style>
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
@@ -27,9 +32,12 @@
     --ink-2:#4d4a46; --slate:#57544f; --line-2:#cbc7c0; --film:#e8e5e0; --film-2:#dad6d0;
     --paper:#f7f6f3; --chart:#f7f6f3; --grid:#e4e0da;
     --pass:#10866f; --partial:#a8780a; --partial-ink:#85600a; --red:#b8322a; --red-wash:rgba(184,50,42,.08);
-    --sans:'Helvetica Neue',Helvetica,Arial,sans-serif;
+    --sans:'Switzer','Helvetica Neue',Helvetica,Arial,sans-serif;
     --serif:Georgia,'Times New Roman',serif;
-    --mono:ui-monospace,'SF Mono',Menlo,monospace;
+    --display:'Instrument Serif',Georgia,'Times New Roman',serif;
+    --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+    --night:#0b0b0c; --night-2:#141416; --night-line:#26262a; --on-night:#ecebe7; --on-night-2:#a9a7a1; --on-night-3:#8c8a84;
+    --paper-2:#f4f3ef;
     color-scheme: light;
   }
   body { background: var(--bg); color: var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; overflow-x:hidden; }
@@ -356,10 +364,114 @@
     .quote p{ max-width:none; }
     .sec-head h2{ max-width:none; }
   }
+
+  /* ================= Research edition ================= */
+  body { letter-spacing:-.005em; }
+  .topbar { background:var(--night); color:var(--on-night-2); text-align:center; font-size:13.5px; line-height:1.4; padding:11px 18px; border-bottom:1px solid var(--night-line); }
+  .topbar b { color:var(--on-night); font-weight:600; }
+  .topbar em { font-family:var(--display); font-size:16px; color:var(--on-night); }
+  .topbar a { color:var(--on-night); margin-left:14px; text-underline-offset:4px; white-space:nowrap; }
+  nav { background:rgba(11,11,12,.95); border-bottom:1px solid var(--night-line); color:var(--on-night); }
+  nav .word .ai, nav .rsrch { color:var(--on-night-3); }
+  nav .rsrch { border-left-color:var(--night-line); }
+  nav .links a { color:var(--on-night-2); }
+  nav .links a:hover { color:var(--on-night); }
+  nav .cta { background:var(--on-night); color:var(--night)!important; }
+  nav .cta:hover { background:#fff; }
+  nav .logo::before, nav .logo::after { background:var(--night); }
+
+  .hero { background:var(--night); color:var(--on-night); position:relative; overflow:hidden;
+    padding:clamp(64px,10vw,150px) clamp(24px,5vw,72px) clamp(56px,7vw,104px); }
+  .hero::before { content:''; position:absolute; inset:0; pointer-events:none; opacity:.55;
+    background-image:linear-gradient(var(--night-line) 1px,transparent 1px),linear-gradient(90deg,var(--night-line) 1px,transparent 1px);
+    background-size:64px 64px; -webkit-mask-image:radial-gradient(ellipse 70% 60% at 62% 38%,#000 0%,transparent 72%); mask-image:radial-gradient(ellipse 70% 60% at 62% 38%,#000 0%,transparent 72%); }
+  .hero .wrap { position:relative; }
+  .kicker { font-size:11.5px; letter-spacing:.14em; color:var(--on-night-3); margin:0; display:flex; flex-wrap:wrap; gap:6px 18px; }
+  .kicker .live::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--red); margin-right:8px; vertical-align:1px; }
+  .display { margin:clamp(22px,3vw,36px) 0 0; font-weight:600; font-size:clamp(46px,9.4vw,150px); line-height:.9; letter-spacing:-.05em; }
+  .display em { display:block; font-family:var(--display); font-style:italic; font-weight:400; letter-spacing:-.025em; color:#d6d4ce; }
+  .display strong { display:block; font-weight:650; padding-left:clamp(0px,9vw,170px); }
+  .hero-grid { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:clamp(32px,6vw,96px); align-items:end; margin-top:clamp(44px,6vw,88px); }
+  .intro { font-size:clamp(20px,2vw,28px); line-height:1.32; letter-spacing:-.018em; color:var(--on-night-2); margin:0; max-width:31ch; }
+  .intro em { font-family:var(--display); font-style:italic; color:var(--on-night); font-size:1.08em; letter-spacing:0; }
+  .intro b { color:var(--on-night); font-weight:500; }
+  .facts { display:grid; grid-template-columns:1fr 1fr; margin:0; border-top:1px solid var(--night-line); }
+  .facts > div { padding:16px 0 16px; border-bottom:1px solid var(--night-line); min-width:0; }
+  .facts > div:nth-child(odd) { padding-right:16px; } .facts > div:nth-child(even) { padding-left:16px; border-left:1px solid var(--night-line); }
+  .facts dt { font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--on-night-3); }
+  .facts dd { margin:6px 0 0; font-size:clamp(17px,1.5vw,21px); letter-spacing:-.02em; color:var(--on-night); }
+  .facts dd small { font-size:12px; color:var(--on-night-3); font-family:var(--mono); letter-spacing:0; }
+  .hero .actions { margin-top:clamp(36px,4vw,52px); }
+  .hero .btn.dark { background:var(--on-night); color:var(--night); } .hero .btn.dark:hover { background:#fff; }
+  .hero .btn.ghost { color:var(--on-night); border-color:#3a3a3f; } .hero .btn.ghost:hover { border-color:var(--on-night); }
+
+  .statement { background:var(--paper-2); border-bottom:1px solid var(--line); }
+  .st-top { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:clamp(28px,6vw,96px); align-items:start; }
+  .st-top h2 { margin:0; font-size:clamp(28px,3.4vw,44px); line-height:1.04; letter-spacing:-.035em; font-weight:600; }
+  .st-top h2 em { display:block; font-family:var(--display); font-style:italic; font-weight:400; letter-spacing:-.01em; color:var(--muted); }
+  .st-top p { margin:0; font-size:16.5px; line-height:1.6; color:var(--ink2); max-width:52ch; }
+  .st-top p + p { margin-top:14px; }
+  .st-rule { display:flex; justify-content:space-between; gap:16px; margin-top:clamp(52px,7vw,104px); padding-top:12px; border-top:1px solid var(--line2); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); }
+  .st-num { font-size:clamp(150px,26vw,360px); font-weight:650; letter-spacing:-.07em; line-height:.84; margin:clamp(10px,1.5vw,20px) 0 0 -.04em; }
+  .st-cap { margin:clamp(14px,2vw,24px) 0 0; font-size:clamp(18px,1.7vw,23px); line-height:1.35; letter-spacing:-.015em; color:var(--ink2); max-width:30ch; }
+  .st-cap em { font-family:var(--display); font-style:italic; color:var(--ink); font-size:1.08em; }
+
+  .sec-head { flex-direction:column-reverse; align-items:flex-start; justify-content:flex-start; gap:20px; }
+  .sec-head .idx { display:block; width:100%; padding-top:12px; border-top:1px solid var(--ink); color:var(--ink2); font-size:11.5px; letter-spacing:.1em; }
+  .sec-head h2 { font-weight:600; font-size:clamp(30px,4.4vw,58px); line-height:1.02; letter-spacing:-.04em; max-width:22ch; }
+  .sec-head h2 em { font-family:var(--display); font-style:italic; font-weight:400; letter-spacing:-.012em; color:var(--muted); }
+  .card h3, .verify-grid h3, .submit h3, .board h3 { font-weight:600; }
+  .card .n, .board .meta { font-family:var(--mono); }
+
+  .pubs { border-top:1px solid var(--line2); }
+  .pub { grid-template-columns:72px minmax(0,1fr) 200px 22px; gap:clamp(16px,2.6vw,40px); align-items:baseline; padding:clamp(22px,2.4vw,30px) 0; border-bottom:1px solid var(--line2); }
+  .pub:hover { background:none; }
+  .pub::after { content:'↗'; justify-self:end; color:var(--faint); font-size:15px; transition:transform .25s ease,color .25s ease; }
+  .pub:hover::after { color:var(--ink); transform:translate(2px,-2px); }
+  .pub .yr { font-family:var(--mono); font-size:12px; letter-spacing:.06em; padding-top:0; }
+  .pub h3 { font-weight:500; font-size:clamp(19px,1.9vw,25px); line-height:1.2; letter-spacing:-.025em; max-width:46ch; }
+  .pub:hover h3 { text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:5px; }
+  .pub .venue { border:none; border-radius:0; padding:0; background:none; font-family:var(--mono); font-size:11px; letter-spacing:.1em; color:var(--faint); justify-self:end; align-self:baseline; white-space:normal; text-align:right; }
+  .pub .venue.wip { background:none; }
+  .pub .venue.wip::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--partial); margin-right:8px; vertical-align:1px; }
+
+  #cite pre.bib { font-size:12.5px; line-height:1.7; padding:18px 54px 18px 18px; max-width:880px; }
+  #cite .cite-note { font-size:14.5px; line-height:1.6; color:var(--ink2); max-width:66ch; margin:0 0 18px; }
+
+  .quote { background:var(--night); color:var(--on-night); border-bottom:1px solid var(--night-line); padding-top:clamp(80px,11vw,160px); padding-bottom:clamp(80px,11vw,160px); }
+  .quote .k { color:var(--on-night-3); }
+  .quote p { font-weight:600; font-size:clamp(32px,5vw,72px); line-height:1.02; letter-spacing:-.045em; max-width:20ch; margin-top:30px; }
+  .quote p { text-wrap:balance; }
+  .quote p em { font-family:var(--display); font-style:italic; font-weight:400; letter-spacing:-.015em; color:#cfcdc7; }
+  footer { background:var(--night); color:var(--on-night); }
+  footer .col .h, footer .legal span { color:var(--on-night-3); }
+  footer .col a { color:var(--on-night-2); } footer .col a:hover { color:var(--on-night); }
+  footer .legal { border-top-color:var(--night-line); }
+  footer .logo::before, footer .logo::after { background:var(--night); }
+  footer .wordmark { font-weight:650; font-size:clamp(64px,17vw,250px); letter-spacing:-.065em; line-height:.8; color:var(--night-2); margin:clamp(48px,7vw,96px) 0 0 -.04em; user-select:none; -webkit-text-stroke:1px #2a2a2f; }
+
+  @media (max-width:900px){
+    .hero-grid, .st-top { grid-template-columns:1fr; }
+    .display strong { padding-left:0; }
+  }
+  @media (max-width:760px){
+    .topbar { font-size:12.5px; }
+    .topbar em { font-size:14.5px; }
+    .topbar a { display:block; margin:4px 0 0; }
+    .pub { grid-template-columns:minmax(0,1fr) 18px; gap:6px 12px; padding:22px 0; }
+    .pub .yr { grid-column:1; order:-1; }
+    .pub > div { grid-column:1; }
+    .pub .venue { grid-column:1; justify-self:start; text-align:left; margin-top:4px; }
+    .pub::after { grid-column:2; grid-row:1 / span 3; align-self:center; }
+    .facts dd { font-size:17px; }
+    .sec-head h2 { font-size:clamp(28px,8.4vw,40px); }
+  }
+  @media (prefers-reduced-motion: reduce){ .pub::after { transition:none; } }
 </style>
 </head>
 <body>
   <a class="visually-hidden skip" href="#try">Skip to the scorer</a>
+  <div class="topbar"><b>Open benchmark:</b> <em>how faithfully an AI turns dictated findings into a radiology report.</em><a href="#research">Read the preprint →</a></div>
   <nav>
     <a class="brand" href="#top">
       <span class="logo" style="width:26px;height:26px"></span>
@@ -378,11 +490,19 @@
     </div>
   </nav>
 
-  <header id="top">
+  <header id="top" class="hero">
     <div class="wrap">
-      <div class="eyebrow"><span class="dot"></span><span>Benchmark · AI-assisted radiology reporting</span></div>
-      <h1>LAIBench</h1>
-      <p class="lede">A governance-oriented benchmark for turning an exam descriptor and concise findings into a <strong>faithful</strong> radiology report — scored where it matters clinically, not on prose. A missed or fabricated critical finding is a hard veto, never a soft deduction.</p>
+      <p class="kicker mono"><span class="live">LAIBENCH</span><span>SCORER v<span data-bind="version">3.11.0</span></span><span>MIT LICENSE</span><span>LAUDOS.AI RESEARCH</span></p>
+      <h1 class="display"><span class="visually-hidden">LAIBench: </span><em>Form never</em> <strong>rescues substance.</strong></h1>
+      <div class="hero-grid">
+        <p class="intro"><em>LAIBench</em> scores how an AI turns an exam descriptor and concise findings into a full radiology report. A missed or fabricated critical finding is a <b>hard veto</b>, never a soft deduction, and the score has <em>no</em> axis for style.</p>
+        <dl class="facts" aria-label="Benchmark at a glance">
+          <div><dt>Weighted dimensions</dt><dd>5 clinical</dd></div>
+          <div><dt>Controlled suite</dt><dd>120 pt-BR cases</dd></div>
+          <div><dt>Public suite</dt><dd>49 cases</dd></div>
+          <div><dt>Laudos.AI</dt><dd>90.0% <small>clinical · v3.10.0</small></dd></div>
+        </dl>
+      </div>
       <div class="actions">
         <a class="btn dark" href="#leaderboard">View leaderboard <span class="mono">→</span></a>
         <a class="btn ghost" href="#try">Try the scorer</a>
@@ -391,22 +511,28 @@
     </div>
   </header>
 
-  <div class="stats wrap">
-    <div class="grid" data-reveal>
-      <div class="cell"><div class="num">5</div><div class="lbl mono">weighted clinical dimensions</div></div>
-      <div class="cell"><div class="num">120</div><div class="lbl mono">controlled pt-BR cases</div></div>
-      <div class="cell"><div class="num">90.0<span class="u">%</span></div><div class="lbl mono">Laudos.AI clinical score (v3.10.0)</div></div>
-      <div class="cell"><div class="num">0</div><div class="lbl mono">prose / aesthetic axes</div></div>
+  <section class="statement" aria-labelledby="st-h">
+    <div class="wrap">
+      <div class="st-top" data-reveal>
+        <h2 id="st-h">Scored where it matters clinically, <em>never on prose.</em></h2>
+        <div>
+          <p>Most report metrics compare the AI’s text with a reference report and reward whatever resembles it, so a fluent report that drops a finding can still score well.</p>
+          <p>LAIBench reads the findings the AI was given and checks the report against them: critical findings kept, affirmed and on the right side; nothing invented; an abnormal study never written up as normal.</p>
+        </div>
+      </div>
+      <div class="st-rule mono" data-reveal><span>Prose or aesthetic axes in the score</span><span>Fig. 00</span></div>
+      <div class="st-num" data-reveal aria-hidden="true">0</div>
+      <p class="st-cap" data-reveal><span class="visually-hidden">Zero </span>dimensions for style, fluency or “communication quality”. Style earns <em>nothing.</em></p>
     </div>
-  </div>
+  </section>
 
   <main>
   <!-- ======================= 01 THE TEST ======================= -->
   <section id="test" aria-labelledby="test-h">
     <div class="wrap">
       <div class="sec-head" data-reveal>
-        <h2 id="test-h">Our principle, scored live</h2>
-        <span class="idx mono">01 — THE TEST</span>
+        <h2 id="test-h">Our principle, <em>scored live.</em></h2>
+        <span class="idx mono">01 / 09 · THE TEST</span>
       </div>
       <p class="sec-lede">Two reports for the same chest radiograph. One reads like a senior radiologist and never mentions the pneumothorax; the other is short and correct. Both are being graded right now, in this tab, by the real LAIBench scorer.</p>
 
@@ -438,8 +564,8 @@
   <section id="scoring" class="panel">
     <div class="wrap">
       <div class="sec-head" data-reveal>
-        <h2>Designed so form never rescues substance</h2>
-        <span class="idx mono">02 — HOW IT SCORES</span>
+        <h2>Method, <em>gate by gate.</em></h2>
+        <span class="idx mono">02 / 09 · HOW IT SCORES</span>
       </div>
       <div class="cards">
         <div class="card" data-reveal><span class="n mono">01</span><div class="sw" style="background:#161616"></div><h3>Hard critical-finding veto</h3><p>A missed or fabricated critical finding caps the score and forces FAIL — regardless of how polished the rest of the report reads.</p></div>
@@ -468,8 +594,8 @@
   <section id="try" aria-labelledby="try-h">
     <div class="wrap">
       <div class="sec-head" data-reveal>
-        <h2 id="try-h">Score any report</h2>
-        <span class="idx mono">03 — TRY IT</span>
+        <h2 id="try-h">Score <em>any report.</em></h2>
+        <span class="idx mono">03 / 09 · TRY IT</span>
       </div>
       <p class="sec-lede">Pick a case, start from a reference report or one of the classic mistakes, then edit freely. The score updates as you type. Reports use the same contract models are given: plain text with <code>&lt;center&gt;</code>, <code>&lt;b&gt;</code> and <code>&lt;br&gt;</code> only.</p>
       <div class="play">
@@ -520,8 +646,8 @@
   <section id="ladder" class="panel" aria-labelledby="ladder-h">
     <div class="wrap">
       <div class="sec-head" data-reveal>
-        <h2 id="ladder-h">Make a report worse. The score should follow.</h2>
-        <span class="idx mono">04 — PROOF</span>
+        <h2 id="ladder-h">Make a report worse. <em>The score should follow.</em></h2>
+        <span class="idx mono">04 / 09 · PROOF</span>
       </div>
       <p class="sec-lede">For each of the 49 public cases we take a faithful reference report and inject exactly one error, from a changed measurement up to inventing a critical finding. Every version is scored against the original case. No answer keys are needed: the input findings are the evidence.</p>
       <div class="chart-wrap">
@@ -540,8 +666,8 @@
   <section id="leaderboard" aria-labelledby="lb-h">
     <div class="wrap">
       <div class="sec-head" data-reveal>
-        <h2 id="lb-h">Leaderboard</h2>
-        <span class="idx mono">05 — RESULTS</span>
+        <h2 id="lb-h">The <em>leaderboard.</em></h2>
+        <span class="idx mono">05 / 09 · RESULTS</span>
       </div>
       <p class="disc-tiny" style="margin:-24px 0 30px">Two governance tiers, never mixed: <b>controlled-eval</b> (gated, first-party, aggregate-only) and <b>public-smoke</b> (synthetic, contaminable, diagnostic baselines — not a ranking). See the <a href="https://github.com/laudos-ai/laibench-public/blob/main/docs/benchmark-cards.md" style="color:var(--muted);text-decoration:underline">benchmark cards</a> for case source, leakage risk, and adjudication status. Click a column to sort.</p>
       <div class="notice" id="rescore" hidden>
@@ -557,8 +683,8 @@
   <section id="cases" class="panel" aria-labelledby="cases-h">
     <div class="wrap">
       <div class="sec-head" data-reveal>
-        <h2 id="cases-h">The 49 public cases</h2>
-        <span class="idx mono">06 — CASES</span>
+        <h2 id="cases-h">The 49 <em>public cases.</em></h2>
+        <span class="idx mono">06 / 09 · CASES</span>
       </div>
       <p class="sec-lede">Synthetic, input-only demonstration cases: normals, critical findings, and traps for negation, laterality, measurements and hallucination. They are open so anyone can reproduce the harness; they are not clinically reviewed. Choose one to score it in the playground.</p>
       <div class="chips" role="group" aria-label="Filter cases" id="caseFilters"></div>
@@ -570,8 +696,8 @@
   <section id="verify" aria-labelledby="verify-h">
     <div class="wrap">
       <div class="sec-head" data-reveal>
-        <h2 id="verify-h">Don’t take this page’s word for it</h2>
-        <span class="idx mono">07 — VERIFY</span>
+        <h2 id="verify-h">Don’t take this page’s <em>word for it.</em></h2>
+        <span class="idx mono">07 / 09 · VERIFY</span>
       </div>
       <p class="sec-lede">Every number here is pinned to hashes you can recompute, in this browser or from a clone of the repository.</p>
       <div class="verify-grid">
@@ -628,8 +754,8 @@ npm run bench -- suite \
   <section id="research" class="panel">
     <div class="wrap">
       <div class="sec-head" data-reveal>
-        <h2>Research</h2>
-        <span class="idx mono">08 — PAPERS</span>
+        <h2>Selected <em>papers.</em></h2>
+        <span class="idx mono">08 / 09 · PAPERS</span>
       </div>
       <div class="pubs">
         <a class="pub" data-reveal href="laibench-preprint.pdf" target="_blank" rel="noopener">
@@ -654,7 +780,7 @@ npm run bench -- suite \
             <h3>Radiologist adjudication &amp; inter-rater agreement for automated report scoring</h3>
             <div class="auth">Laudos.AI Research · blinded multi-reader study protocol to move gold labels from internal review to independent third-party adjudication (κ/α, scorer-vs-radiologist).</div>
           </div>
-          <span class="venue wip">Protocol · em andamento</span>
+          <span class="venue wip">Protocol · in progress</span>
         </a>
         <a class="pub" data-reveal href="external-validation-protocol.pdf" target="_blank" rel="noopener">
           <span class="yr mono">2026</span>
@@ -662,16 +788,33 @@ npm run bench -- suite \
             <h3>External validation of finding-to-report faithfulness across sites and equipment</h3>
             <div class="auth">Laudos.AI Research · hidden-holdout protocol: cross-institution generalization, frozen submissions, per-run contamination audit.</div>
           </div>
-          <span class="venue wip">Protocol · em andamento</span>
+          <span class="venue wip">Protocol · in progress</span>
         </a>
       </div>
+    </div>
+  </section>
+
+  <section id="cite" aria-labelledby="cite-h">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <h2 id="cite-h">Cite <em>LAIBench.</em></h2>
+        <span class="idx mono">09 / 09 · CITATION</span>
+      </div>
+      <p class="cite-note">If you report results on LAIBench, cite the benchmark and state the scorer version and the <span class="mono">scoringHash</span> you ran.</p>
+      <pre class="cmd bib">@misc{laibench2026,
+  title        = {LAIBench: a benchmark for finding-to-report fidelity in radiology},
+  author       = {{Laudos.AI Research}},
+  year         = {2026},
+  howpublished = {\url{https://laibench.laudos.ai}},
+  note         = {Scorer v3.11.0, MIT License}
+}</pre>
     </div>
   </section>
 
   <section class="quote">
     <div class="wrap" data-reveal>
       <span class="k mono">Our principle</span>
-      <p>A beautiful report that misses a pneumothorax should fail.<br>A plain report that detects it should win.</p>
+      <p>A beautiful report that misses a pneumothorax <em>should fail.</em><br>A plain report that detects it <em>should win.</em></p>
     </div>
   </section>
   </main>
@@ -709,6 +852,7 @@ npm run bench -- suite \
           </div>
         </div>
       </div>
+      <div class="wordmark" aria-hidden="true">LAIBench</div>
       <div class="legal">
         <span>© <span id="yr">2026</span> Laudos.AI Research — LAIBench is released under the MIT License.</span>
         <span class="mono">São Paulo · Brasil</span>

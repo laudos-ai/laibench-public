@@ -731,7 +731,10 @@ async function getJSON(url) {
     getJSON("ladder.json").catch(() => null),
     getJSON("provenance.json").catch(() => null),
   ]);
-  getJSON("pilot.json").then(initPilot).catch(() => { /* optional board */ });
+  // Optional board: fetched only when the page declares a source (data-src on #pilot),
+  // so a deploy without pilot.json makes no 404 request.
+  const pilotSrc = $("#pilot")?.dataset.src;
+  if (pilotSrc) getJSON(pilotSrc).then(initPilot).catch(() => { /* optional board */ });
   initPlayground(cases || []);
   if (cases) { initCases(cases); initVerify(cases, prov, data); }
   else $("#caseList").textContent = "The public cases could not be loaded.";

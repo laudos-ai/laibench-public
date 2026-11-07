@@ -163,6 +163,14 @@ npx serve site       # or any static server
 
 The public stratified page is a **reference-vs-null sanity check**: it verifies the harness is not inverted by comparing public reference reports against a fixed unsafe null baseline. That is a sanity check, not a claim that the null baseline measures realistic model degradation. Dose-response controls require answer-key material and are generated only inside the controlled environment; public releases publish aggregate calibration summaries only — never case-level predictions or gold labels.
 
+## Decision judge (shadow)
+
+A lower-only judge built on a decision model: typed questions about the report against its input findings, answered with probabilities, so the judge can only lower a score and only when it is confident (P ≥ 0.9). It runs in shadow and does not affect any published number until it passes calibration on the public ladder and ships in a versioned scorer release. Design, mapping and commands: [docs/decision-judge.md](docs/decision-judge.md).
+
+```bash
+npm run decision:calibrate -- --dry-run
+```
+
 ## Open vs controlled (read this before citing)
 
 Two distinct artifacts exist, and only one is open:

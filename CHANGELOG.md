@@ -1,5 +1,34 @@
 # Changelog
 
+## Unreleased — decision judge (shadow; does not affect scores)
+
+### Added
+- **Decision judge** (`src/decision-judge.ts`, `src/providers/decisions.ts`): a
+  lower-only, confident-or-silent judge built on a decision model served by the
+  OpenRouter Decisions API. One `choice` question per input critical
+  finding (kept / other side / side dropped / stated absent / not mentioned) and
+  `noul` questions for invented criticals, normal-despite-abnormal, omitted
+  abnormal findings, side and measurement changes and self-contradiction.
+  Errors move a score only at P ≥ 0.9; the [0.5, 0.9) band and refusals change
+  nothing and go to human review. Model ids must be pinned; thresholds,
+  penalties and question templates are bound into `decisionJudgeConfigHash`.
+- `npm run decision:calibrate`: calibration on the public ladder with
+  construction ground truth (Brier, ECE, recall and false-positive rate at the
+  threshold, per question; veto rate per rung) and an adoption gate.
+- `npm run decision:shadow -- --run <run>.json`: shadow scoring of a finished
+  run with the real combiner, verdict agreement, and an adjudication queue
+  (`.review.jsonl`) for the human double-blind review.
+- `docs/decision-judge.md`: design, mapping, path to promotion.
+
+### Changed
+- Ladder rungs and perturbations moved to `scripts/ladder-core.ts`, shared by the
+  ladder and the calibration. `site/ladder.json` is byte-identical.
+
+### Unchanged
+- The decision judge is not reachable from the scoring entrypoints:
+  `scoringHash`, `benchmarkVersion`, the site scorer and every published number
+  are unchanged. Promotion into `benchmark.ts` will ship as a new scorer version.
+
 ## v3.11.0 — LAIBench Pro — source-anchored critical gate, unsupported normalcy, list-scoped negation (affects scores)
 
 The prime directive — *a beautiful report that misses a pneumothorax must fail* —

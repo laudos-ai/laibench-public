@@ -16,6 +16,8 @@
     "smoke:mock": "tsx src/cli.ts suite --suite suites/lite-public.en-US.json --provider command --cmd \"node examples/mock-agent.mjs\" --run-name mock-agent --out runs/mock-agent.json",
     "smoke:reference": "tsx src/cli.ts suite --suite suites/lite-public.en-US.json --provider command --cmd \"node examples/reference-agent.mjs\" --run-name reference --track agent --out runs/reference.json",
     "ladder": "tsx scripts/public-ladder.ts --out site/ladder.json --markdown docs/public-ladder.md",
+    "decision:calibrate": "tsx scripts/decision-calibrate.ts",
+    "decision:shadow": "tsx scripts/decision-shadow.ts",
     "smoke:leaderboard": "tsx src/cli.ts leaderboard --inputs runs/mock-agent.json --out runs/leaderboard.json --markdown runs/leaderboard.md",
     "smoke:en": "tsx src/cli.ts suite --suite suites/lite-public.en-US.json --provider command --cmd \"node examples/mock-agent.mjs\" --run-name mock-en --out runs/mock-en.json",
     "smoke:reliability": "tsx src/cli.ts suite --suite suites/lite-public.en-US.json --provider command --cmd \"node examples/mock-agent.mjs\" --run-name mock-agent-2 --out runs/mock-agent-2.json && tsx src/cli.ts reliability --inputs runs/mock-agent.json runs/mock-agent-2.json --out runs/reliability.json --markdown runs/reliability.md",
